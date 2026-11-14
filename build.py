@@ -9,7 +9,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).parent
 SRC = ROOT / "src"
-FONTS = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Pixelify+Sans:wght@400;600&display=swap"
+FONTS = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Jersey+10&family=Tiny5&display=swap"
 
 
 def read(name):
@@ -25,7 +25,7 @@ def body():
     scripts = "".join('<script id="%s">%s</script>\n' % (sid, read(f)) for sid, f in
                       [("sprites", "sprites.js"), ("fx", "fx.js"), ("demos", "demos.js"), ("main", "app.js")])
     return ('<title>CV Please</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
-            '<link rel="stylesheet" href="%s">\n<style id="page-style">%s</style>\n'
+            '<link rel="stylesheet" href="%s" id="fonts">\n<style id="page-style">%s</style>\n'
             '<div id="app"></div>\n<div id="intro-root"></div>\n<div id="fixed-root"></div>\n'
             '<script type="application/json" id="cv-data">%s</script>\n%s') % (FONTS, read("styles.css"), blob, scripts)
 

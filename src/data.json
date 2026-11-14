@@ -105,7 +105,8 @@
    ],
    "stack": "React Native, Expo, Node.js, Express.js, PostgreSQL (Supabase), JWT, bcrypt, Playwright, Google Gemini, Groq, VirusTotal, Google Safe Browsing, URLScan.io, URLhaus, Railway",
    "aside": "",
-   "featured": "yes"
+   "featured": "yes",
+   "short": ""
   },
   {
    "name": "PolicyLens: Policy Compliance Checker",
@@ -123,7 +124,8 @@
    ],
    "stack": "Python, FastAPI, PostgreSQL, Supabase, pgvector, Azure AI Foundry (GPT-4o), OpenAI embeddings, React, GitHub Actions",
    "aside": "",
-   "featured": "yes"
+   "featured": "yes",
+   "short": ""
   },
   {
    "name": "S.H.I.E.L.D: AI Incident Response Assistant",
@@ -143,7 +145,8 @@
    ],
    "stack": "Python, FastAPI, React, WebSockets, faster-whisper (Whisper STT), Ollama with Mistral, ElevenLabs TTS, DeepFace, Redis, Supabase PostgreSQL, Docker Compose",
    "aside": "",
-   "featured": ""
+   "featured": "",
+   "short": ""
   },
   {
    "name": "STEMulate: Learning Management System",
@@ -162,7 +165,8 @@
    ],
    "stack": "Next.js, TypeScript, Supabase (PostgreSQL), Express.js, Socket.IO, AES-256, PayMongo",
    "aside": "",
-   "featured": ""
+   "featured": "",
+   "short": ""
   },
   {
    "name": "IOC Enricher: Threat Intelligence Tool",
@@ -179,7 +183,8 @@
    ],
    "stack": "Python, regular expressions, VirusTotal API, AbuseIPDB API, Shodan API, DOCX/Markdown/JSON reporting",
    "aside": "",
-   "featured": ""
+   "featured": "",
+   "short": ""
   },
   {
    "name": "Help Out, Reach Out: CSR Volunteer Matching Platform",
@@ -197,7 +202,8 @@
    ],
    "stack": "PHP, MySQL, object-oriented programming (boundary-control-entity design), PHPUnit, GitHub Actions",
    "aside": "",
-   "featured": ""
+   "featured": "",
+   "short": ""
   },
   {
    "name": "Shadow AI Data Leakage Prevention Prototype",
@@ -213,7 +219,8 @@
    ],
    "stack": "Python, mitmproxy",
    "aside": "",
-   "featured": "yes"
+   "featured": "yes",
+   "short": "Shadow AI DLP"
   }
  ],
  "awards": [

@@ -20,7 +20,8 @@ All content lives in `src/data.json`. The page is assembled from:
 |---|---|
 | `src/data.json` | CV content: profile, projects, awards, skills, strengths, board phrases, radio lines |
 | `src/app.js` | The desk, scroll scenes, stamp, paper handling, list view and amend mode |
-| `src/sprites.js` | Pixel art, drawn as SVG rects |
+| `src/sprites.js` | Pixel art, drawn as SVG rects, plus the embedded portrait |
+| `assets/thea-portrait.png` | The 55x59 portrait. `src/sprites.js` carries a base64 copy, so update both if it changes |
 | `src/fx.js` | Sounds and the split-flap board |
 | `src/demos.js` | In-browser case file demos (no network calls) |
 | `src/styles.css` | Styles and colour tokens |

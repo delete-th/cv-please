@@ -70,11 +70,6 @@ window.SPR = (function () {
       ".kffffkkkkffffk.", ".kffffffffffffk.", ".kffffffffffffk.", ".kffffffffffffk.", ".kffffffffffffk.", ".kkkkkkkkkkkkkk.",
       "................", "................", "................", "................",
     ],
-    tool: [
-      "................", "......kkkk......", ".....kwWWwk.....", ".....kwWWwk.....", ".....kwWWwk.....", "......kwwk......",
-      "......kwwk......", "......kwwk......", ".....kkwwkk.....", "....kbbBBbbk....", "...kbbbBBbbbk...", "...kbbbbbbbbk...",
-      "...kkkkkkkkkk...", "...krrrrrrrrk...", "....kkkkkkkk....", "................",
-    ],
     // 24 x 24 crest: a shield with a keyhole, a checked band and laurel marks. Left half, mirrored.
     emblem: mirror([
       "....yyyyyyyy", "...yYYYYYYYY", "..yYyyyyyyyy", "..yYyccccccc", "y.yYycccccyy", ".yyYyccccyyy",
@@ -82,39 +77,9 @@ window.SPR = (function () {
       "..yYyccccccc", "y.yYyyyyyyyy", ".yyYyYyYyYyY", "..yYyyyyyyyy", "...yYycccccc", "...yYycccccc",
       "....yYyccccc", ".....yYycccc", "......yYyccc", ".......yYyyc", "........yYyy", "..........yy",
     ]),
-    // 32 x 40 portrait. Left half, mirrored, then shaded on the right because the light comes from the top left.
-    portrait: (function () {
-      const rows = mirror([
-        "................", "................", "...........kkkkk", ".........kkkkkkk", "........kkKKkkkk", ".......kkKKkkkkk",
-        "......kkKkkkkkkk", "......kkkkkkkkkk", ".....kkkkkkkksss", ".....kkkkkksssss", ".....kkkkkssssss", ".....kkkksssssss",
-        ".....kkkksssssss", ".....kkksskkkkss", ".....kkkssssssss", ".....kkkssfeefss", ".....kkkssssssss", ".....kkkssssssds",
-        ".....kkkssssssds", ".....kkkssssssdd", ".....kkkssssssss", ".....kkkksssssrr", ".....kkkkssssrRR", ".....kkkkdssssss",
-        "......kkkdssssss", "......kkkkdsssss", "......kkkkkdssss", ".....kkkkkkkdddd", ".....kkkkkk.ddss", "....kkkkkkk.dsss",
-        "....kkkkkk.fdsss", "..ccckkkkcffssss", ".ccccckkccCffsss", "cccccccccccCffss", "ccccccccccccCffs", "cccccccccccccCff",
-        "ccccccccccccccCf", "cccccccccccccccC", "cccccccccccccccc", "cccccccccccccccc",
-      ]);
-      return rows.map((r, y) => r.split("").map((ch, x) => {
-        if (x >= 16 && ch === "K") return "k";
-        if (x >= 22 && y >= 9 && y <= 26 && ch === "s") return "d";
-        if (x >= 16 && y >= 31 && ch === "c" && x >= 26) return "C";
-        return ch;
-      }).join(""));
-    })(),
   };
 
   // ----- desk objects -----
-  const toolHalf = [
-    "........kkkk", "......kkwsss", ".....kwsWWWW", ".....kwWWWWW", ".....kwWWWWW", "......kwWWWW", ".......kkwWW",
-    "........kwWW", "........kwWW", "........kwWW", "........kwWW", ".......kkkkk", "....kkkkkkkk", "...kBBBBBBBB",
-    "...kBbbbbbbb", "...kbbbbbbbb", "...kkkkkkkkk", "...kXXXXXXXX", "...kXXXXXXXX", "....kkkkkkkk",
-  ];
-  S.tool = mirror(toolHalf).map((r) => r.split("").map((ch, x) => {
-    if (x >= 12 && ch === "s") return "W";
-    if (x >= 14 && ch === "W") return "w";
-    if (x >= 12 && ch === "B") return "b";
-    if (ch === "X") return x < 12 ? "X" : "Z";
-    return ch;
-  }).join(""));
   S.radio = [
     "................kk..", "...............k....", "..............k.....", "..kkkkkkkkkkkkkkkk..", ".kBBBBBBBBBBBBBBBBk.",
     ".kBkkkkkkkBBBByyBbk.", ".kBkKbKbKkBBByYYybk.", ".kBkbKbKbkBBBByyBbk.", ".kBkKbKbKkBBBBBBBbk.", ".kBkkkkkkkBkkBkkBbk.",
@@ -183,9 +148,45 @@ window.SPR = (function () {
     const rows = S[name] || S.paper;
     return wrap(rows[0].length, rows.length, scale, rects(rows, map), label);
   }
-  // The two stamps share one drawing; only the rubber colour changes.
-  function tool(kind, scale, label) {
-    return draw("tool", scale, label, kind === "denied" ? { X: "stamp-red", Z: "red-dark" } : { X: "green-light", Z: "stamp-green" });
+
+  // The rubber stamps on the stamp bar, seen from above and a little from the front:
+  // a round knob, a short neck and collar, then the coloured block. Light comes from the top left.
+  function stampRows() {
+    const W = 64, H = 48, g = [];
+    for (let y = 0; y < H; y++) {
+      let row = "";
+      for (let x = 0; x < W; x++) {
+        let ch = ".";
+        const kx = (x - 31.5) / 11, ky = (y - 9) / 7.5, kd = kx * kx + ky * ky;
+        if (kd <= 1) ch = kd > 0.72 ? "k" : kx + ky < -0.55 ? "B" : kx + ky > 0.55 ? "o" : "b";
+        else if (y >= 15 && y <= 21 && x >= 27 && x <= 36) ch = x === 27 || x === 36 ? "k" : x === 29 ? "B" : x >= 34 ? "o" : "b";
+        else if (y >= 20 && y <= 23 && x >= 16 && x <= 47) ch = y === 20 || x === 16 || x === 47 ? "k" : x < 22 ? "b" : "o";
+        if (y >= 23 && y <= 47 && x >= 3 && x <= 60) {
+          const edge = x === 3 || x === 60 || y === 23 || y === 47 || y === 29;
+          ch = edge ? "k" : y < 29 ? (x < 8 ? "T" : x > 55 ? "F" : "T") : x > 56 ? "D" : "F";
+          if (!edge && y === 24 && x < 40) ch = "H";
+        }
+        row += ch;
+      }
+      g.push(row);
+    }
+    return g;
+  }
+  S.stamp = stampRows();
+  const STAMP_INK = {
+    approved: { T: "green-light", F: "stamp-green", D: "booth-dark", H: "paper" },
+    denied: { T: "stamp-red", F: "red-dark", D: "ink", H: "paper" },
+  };
+  function stamp(kind, scale) { return draw("stamp", scale, "", STAMP_INK[kind]); }
+  // Where the rubber face sits inside the stamp drawing, in drawing pixels.
+  const STAMP_FACE = { x: 4, y: 30, w: 56, h: 17 };
+
+  // Applicants who can stand at the booth window. Each is a small PNG with a transparent background,
+  // shown at whole-number scales only. Add another entry here to drop in a new sprite.
+  const APPLICANTS = { thea: { w: 55, h: 59, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADcAAAA7CAYAAADfGRI9AAAE7UlEQVR42tWZPW8aSRjHn13xLWhYZIptXWyABCQKK4quuMIVyFIorY2uSbgqUgpLVwW5ibxyaUtWrjiltCyUYiUIYLagOokCZNxQXXEfYa/JrGZm52V3Zhb7puJlmZnfPP/nbbCg4FGtlGPedw+PO6vItUtFA7mOI3o0fnjcWfQBmIIuFQElAlpttwS0yLK6wyrKUggCH6LvipCtVYS1RJvnAdLWRt/rAJZMgmW1SN41VAFtU1EQB3Mdh+t3PLmuttvUHLrDLgIsjxURGD4X/VvVoGOZDB4m5Un7sIo0bd3FiwBjzaNiPfspwFzHAf/4yIhfGZNltVKOWSFfBucfHxHvW41a8noyXwMAQPDte6aDzCPPkgoYC0IEhsPwhn98BOFyA6vtlggy6H2h0RKdmGkw/PvO4UGmAGMcrlopx6KSStVieYNLnsCiFS3pHKUK1mrUkufRnKxyLK/1jERLkxYTSTNvmsntc6KFipKiaqeQy3KioKILhlKCqbpSueWhnRoHO7u4I+BF0JP5OslvruMQkmTlvbwlmHKvhAP+OfS5lkCbpJ/pDoIEiIbHoXUa15IqGNpsdxBIk7Psc1ySdOD69O6NdI3C7lC+fP4IAP8SFpEBskoulALwZz+9e/N0F0Rok7isaIuyJNtq1GAyXydA+DO4FXkWLRxOtjALipe4WeD4e15RXUgSf3jcWcG378ZyGs/fWo0adAcB7P0OhXfSpoauv2lf7cnSgUjSWXLfk17toYWzVOp0FJVJ2sSVegn2NPJY1tSwTU1UhN89qc/xqhZ6nF3cMVsbXtn17P7lcR0HuoOAKT8U+VhJ/38hy9vwh/XwuLNEdWC43AhlbdJqRmWZVaL7AisULkuENJnTCpUlK/RP5mtuu3J2cQfhcgP+8RG3LXpWeY5O5q1GDcLlJtWdszpv9HvXceA2/PG8omW1Uo4X0xEAALx4+ZqIlJP5WnirhcZiOoJoNobVdhubkKhtGoxXXGcdXrP9fALK7V9BjG+of3LKrehlVUy43MDVzWVifV3raf1tXK2U499+/yNXe5R1LKajZA3Vf1a1ZUnLsXN4wCy3ZB04/35mj5ZDJ7mYjpiXp2/fD5QK6XC5Ad/vpfzPdRzCisbh0MS/dF7Fi+kIRMEDAMD3e8JSiydRXjCJZmNA6w4/9DNL1cqSt1gw/ZPTxPl5GwqCr9LrAiRh0Vy8tVDK4QUeWyY9mZXoTfRPTgkrZJGnCEzm7yLJ2ryclQcKgeXtBFiBBz8gXObX50Mh5JfPH+Gf3d8xrjgCDvlUFhD8tNFmfL9HVCJXN5fQOTwQWo+ex/d74Ps9AtBrtqU+7DXbKZmWcIvhC0WzsbRauD4fpqKcW/eIz9++H0D/5DQVQLqDgFAHAkNres02c36Wb6PfLKYjePHydZyCyzM6hwcQzcbg1j1w6x7zENy6B6v7CLxmG65uLlOVCw4WzcYEGJFWfspRBGi0cEa5THr18NOKeO5Dt8iL6a8pSeuslSvPIVmoDK/ZTqzg1r3Et8LlhpDj9fkw8TGVgjmajWF1H4nhZFW96kAbjmbjBBBVNUjWup0AmoOuSTNVKLwQrwpIv9YBE1lNCkefii6g6d4tXG6Ec9g8LZtuHE2CRbMxVwkEXLVSjnVbi32C5ekFbd5i11h+0fU700Cr+wiC4Cv4fo9rNQCA/wCpOh0i3MFL3gAAAABJRU5ErkJggg==" } };
+  function applicant(id, scale, alt, cls) {
+    const a = APPLICANTS[id] || APPLICANTS.thea;
+    return '<img class="spr ' + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ">";
   }
   function lamp(on, scale) { return draw("lamp", scale, "", { L: on ? "cover-ink" : "rule" }); }
 
@@ -271,5 +272,5 @@ window.SPR = (function () {
     root.setProperty("--worn-size", 16 * scale + "px");
   }
 
-  return { draw: draw, tool: tool, lamp: lamp, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
+  return { draw: draw, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, lamp: lamp, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
 })();
