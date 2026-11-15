@@ -963,32 +963,6 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .room-pan { position: relative; transition: translate 0.25s ease-out; translate: 0 calc(var(--pan, 0px) * -1); }
   .scene .stage { position: relative; top: auto; }
   .floor { position: relative; height: 1600px; background: var(--wood-1); box-shadow: inset 0 10px 8px -6px var(--shade); }
-  .room-record.record-sec { display: flex; flex-direction: column; justify-content: center; padding: 16px var(--gut-r) 220px var(--gut-l); border-top: 0; box-shadow: none; }
-  .room-record .record-wrap { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 1040px; margin: 0 auto; padding: 0; }
-  .room-record .record-intro { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
-  .room-record .record-intro p { flex: 1 1 360px; margin: 0; }
-  .room-record .record-intro .btn-quiet { margin: 0; }
-  .room-record .record-area { display: block; min-height: 0; }
-  .room-record .receipt { width: 100%; max-width: none; }
-  .room-record .rec { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0 28px; padding: 18px 22px 16px; }
-  .room-record .rec > .r-title, .room-record .rec > p:nth-of-type(2) { grid-column: 1 / -1; }
-  .room-record .rec > dl { grid-column: 1; grid-row: 3 / span 3; align-self: start; margin-top: 16px; }
-  .room-record .rec > p.r-h:nth-of-type(3) { grid-column: 2; grid-row: 3; }
-  .room-record .rec > ul:nth-of-type(1) { grid-column: 2; grid-row: 4 / span 2; }
-  .room-record .rec > p.r-h:nth-of-type(4) { grid-column: 3; grid-row: 3; }
-  .room-record .rec > ul:nth-of-type(2) { grid-column: 3; grid-row: 4; }
-  .room-record .rec > .stamp-box { grid-column: 3; grid-row: 5; margin-top: 12px; }
-  .room-record .rec > .r-h { margin-top: 16px; }
-  .room-record .slip { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; padding: 12px 22px 14px; }
-  .room-record .slip .email, .room-record .slip .row { margin-top: 0; }
-  .room-record .rec dl { grid-template-columns: 72px minmax(0, 1fr); gap: 8px 10px; }
-}
-@media (min-width: 821px) and (max-height: 720px) {
-  .room-record.record-sec { justify-content: flex-start; padding-top: 12px; }
-  .room-record .record-intro p { display: none; }
-  .room-record .rec { padding-top: 14px; }
-  .room-record .rec > .r-h { margin-top: 10px; }
-  .room-record .foot { display: none; }
 }
 @media (min-width: 821px) and (prefers-reduced-motion: reduce) { .rooms, .room-pan { transition: none; } }
 @keyframes room-fade { 0% { opacity: 0.2; } 100% { opacity: 1; } }
@@ -1049,16 +1023,75 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 /* short screens: a slimmer booth, and papers that are wider and lower so they start inside the desk */
 .plate-row .tagline { max-width: 40ch; }
 @media (min-width: 821px) and (max-height: 759px) {
-  .booth .board { display: none; }
-  .desk.short .p-id { width: 350px; }
-  .desk.short .p-diploma { width: 390px; }
-  .desk.short .p-honours { width: 540px; }
+  .desk.short .p-diploma { width: 330px; }
+  .desk.short .p-honours { width: 420px; }
   .desk.short .doc-title, .desk.short .p-diploma .doc-title { margin-bottom: 12px; }
   .desk.short .honour { padding-block: 6px; }
   .desk.short .p-honours .pad { padding-top: 10px; padding-bottom: 10px; }
   .desk.short .dip-line + .dip-line { margin-top: 6px; }
   .desk.short .fields dd { margin-bottom: 8px; }
 }
+
+/* ---------- after the rooms update ---------- */
+@media (min-width: 821px) {
+  /* 11. nothing scrolls the page on desktop, the passport screen included */
+  html.desk-mode .intro { overflow: hidden; }
+  /* 2. the Records room: printer at the top centre, a narrow thermal receipt under it, scrolling inside the room if it must */
+  .room-record.record-sec { display: flex; flex-direction: column; align-items: center; padding: 16px var(--gut-r) 0 var(--gut-l); border-top: 0; box-shadow: none; }
+  .room-record .record-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: none; height: calc(100svh - 236px); margin: 0; padding: 0; }
+  .room-record .record-intro { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .room-record .record-intro .btn-quiet { display: none; }
+  .rec-printer { position: relative; z-index: 3; flex: none; line-height: 0; }
+  .rec-printer .art { filter: var(--rest-shadow); }
+  .rec-printer .printer-btn:hover .art, .rec-printer .printer-btn:focus-visible .art { filter: var(--shape-ring) var(--rest-shadow); }
+  .room-record .record-area { flex: 1 1 auto; width: 420px; min-height: 0; margin-top: -14px; padding: 0 0 16px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--ink-soft) transparent; }
+  .room-record .receipt { width: 400px; max-width: none; margin: 0 auto; }
+  .room-record .record-empty { margin-top: 30px; text-align: center; color: var(--on-desk); }
+  .room-record .foot { display: none; }
+}
+@media (max-width: 820px) { .rec-printer { display: none; } }
+/* the receipt: Courier Prime throughout, and a slight curl at the bottom */
+.rec, .rec .r-title, .rec .r-h, .rec dt, .slip, .slip .s-title, .slip .btn-quiet { font-family: var(--typed); -webkit-font-smoothing: auto; }
+.rec .r-title { font-size: var(--t-title); font-weight: 700; }
+.rec .r-h { font-size: 16px; font-weight: 700; }
+.rec dt { font-size: var(--t-typed); font-weight: 400; color: var(--ink-soft); padding-top: 0; }
+.receipt::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 6px; background: linear-gradient(to bottom, var(--shade-rest), transparent); border-radius: 0 0 50% 50% / 0 0 100% 100%; pointer-events: none; }
+/* 3. the contact slip, stacked */
+.slip { display: block; }
+.slip .s-title { font-size: 16px; font-weight: 700; }
+.slip .email { display: block; margin-top: 6px; font: 700 16px/1.3 var(--typed); }
+.slip .row { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; }
+.slip .btn-quiet { font-size: var(--t-typed); font-weight: 700; }
+/* 4/5. the pulled drawer leaves an empty slot in the desk edge; its own front closes it */
+.dw.pulled { visibility: visible; }
+.dw.pulled .dw-art, .dw.pulled .dw-plate { visibility: hidden; }
+.dw.pulled .dw-front { background: var(--wood-1); box-shadow: inset 0 6px 6px -2px var(--shade); }
+.dw-big-front { position: absolute; left: 0; right: 0; bottom: 0; height: var(--front-h, 48px); padding: 0; border: 0; background: none; cursor: pointer; }
+.dw-big-front:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: -4px; }
+/* 6. the lifted card, over the drawer, with the room dimmed */
+.sk-lift { inset: 0; left: 0; top: 0; translate: none; width: auto; background: rgba(20, 15, 10, 0.35); }
+.sk-lift-card { position: absolute; margin: 0; padding: 26px 30px 22px; }
+.sl-chips { gap: 10px 12px; }
+.sl-used { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; margin-top: 16px; font: 400 var(--t-body)/1.4 var(--sans); }
+.sl-used-lab { font-weight: 600; }
+.sl-file { padding: 2px 10px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font: 400 var(--t-body)/1.4 var(--sans); text-decoration: underline; text-underline-offset: 3px; }
+/* 8. the pinboard shrinks a step, or steps aside, to keep clear of the links */
+.pinboard.small { right: 112px; top: 24px; }
+.pinboard.small > .art { width: 248px; height: 92px; }
+.pinboard.small .pb-map { left: 24px; top: 14px; }
+.pinboard.small .pb-map .art { width: 70px; height: 62px; }
+.pinboard.small .pb-pin { left: 32px; top: -3px; }
+.pinboard.small .pb-scrap { left: 108px; top: 18px; width: 124px; padding: 6px 8px; }
+.pinboard.away { display: none !important; }
+/* 9. the passport screen's words fade before the passport leaves */
+.intro .intro-say, .intro .intro-actions, .intro .denied-note { transition: opacity 0.25s ease-out; }
+.intro.quiet .intro-say, .intro.quiet .intro-actions, .intro.quiet .denied-note { opacity: 0; }
+/* 10. labels at the larger label size, with room above each */
+.fields dt, .visa-lines dt { font: 400 var(--t-label)/1 var(--pixel); }
+.fields dt:not(:first-of-type) { margin-top: 6px; }
+.visa-lines dt { padding-top: 0; }
+.sb-label { font: 400 var(--t-label)/1 var(--pixel); }
+.pp-front span { font: 700 16px/1.3 var(--typed); }
 
 /* ---------- phones and small tablets ---------- */
 .phone-hint { display: none; }
@@ -1211,3 +1244,9 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 }
 /* a roomy passport gets a 3x photo */
 @media (min-width: 821px) and (min-height: 800px) { .intro .pp-photo img { width: 165px; height: 177px; } }
+/* the lifted card is solid paper */
+.sk-lift-card { opacity: 1; background-color: var(--field); background-image: repeating-linear-gradient(to bottom, transparent 0 25px, var(--rule) 25px 26px); }
+@keyframes card-lift { 0% { translate: 0 40px; } 100% { translate: 0 0; } }
+/* the passport's bio page stays inside its page on short screens */
+.passport .fields dd { margin-bottom: 2px; }
+@media (min-width: 821px) and (max-height: 759px) { .passport .pp-mrz { display: none; } }

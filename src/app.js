@@ -202,6 +202,17 @@
     if (!ui.lampTouched && (ph === "dusk" || ph === "night") !== ui.lampOn) toggleLamp(true);
   }
   setInterval(checkSky, 60000);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitPinboard(); layoutDrawer(false); });
+  function fitPinboard() {
+    const pb = $(".pinboard"), main = $(".booth-main");
+    if (!pb || isPhone()) return;
+    pb.classList.remove("small", "away");
+    const side = $(".booth-side"); if (side) pb.style.right = Math.round(window.innerWidth - rectOf(side).left + 24) + "px";
+    const room = () => { const b = rectOf(pb); if (!b.width) return true; return $$(".booth-links > button, .booth-links .owner > *, .plate-row .tagline, .nameplate", main).every((e) => { const x = rectOf(e); return !x.width || x.right + 24 <= b.left || x.bottom < b.top || x.top > b.bottom; }); };
+    if (room()) return;
+    pb.classList.add("small");
+    if (!room()) pb.classList.add("away");
+  }
   function deskHTML() {
     const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + (id === "mug" ? '<span class="steam">' + SPR.draw("steam1", PX) + SPR.draw("steam2", PX) + "</span>" : "") + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
@@ -244,6 +255,7 @@
     return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
       "<p>The 60-second version, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
+      '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer", SC) + "</button></div>" +
       '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk, or print it from here.</p>') +
       receipt + (ui.slipTorn ? slip : "") + "</div></div></section>";
   }
@@ -350,7 +362,7 @@
     const u = usable(), avail = u.bottom - u.top, el = (id) => paperEl(id);
     const mids = ["id", "diploma", "honours"].map(el), midH = Math.max.apply(null, mids.map((e, k) => e.offsetHeight + [8, 16, 0][k]));
     const left = boxRect().w + 30, minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
-    ui.fit = 1;
+    ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.72, 1);
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
   function landing(id, el) {
@@ -455,7 +467,7 @@
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     placeStickers(); checkLamp();
     layoutDrawer(false);
-    $$(".pobj").forEach(placePobj); drawHands();
+    $$(".pobj").forEach(placePobj); drawHands(); fitPinboard();
     applyScene(true);
   }
 
@@ -639,7 +651,8 @@
   // the open drawer, pulled out toward the visitor: one big drawer whose floor shows the chosen drawer's contents
   function bigDrawerHTML() {
     if (isPhone()) return "";
-    return '<div class="dw-big" id="dw-big" role="region" aria-label="Open drawer"><img class="dw-big-art" id="dw-big-art" alt="" aria-hidden="true">' + floorHTML("skills") + floorHTML("personal") + "</div>";
+    return '<div class="dw-big" id="dw-big" role="region" aria-label="Open drawer"><img class="dw-big-art" id="dw-big-art" alt="" aria-hidden="true">' + floorHTML("skills") + floorHTML("personal") +
+      '<button class="dw-big-front" id="dw-big-front" data-act="dw-close" aria-label="Close the drawer"></button></div>';
   }
   // Skills as an index-card file: one card per group, standing back to front, tabs staggered
   function cardsHTML() {
@@ -654,7 +667,22 @@
     const g = state.skills[i], p = frontCase();
     return '<div class="sk-lift-card" role="dialog" aria-label="' + esc(g.group) + ' skills"><p class="sl-tab">' + esc(g.group) + '</p><div class="sl-chips">' +
       g.items.map((s) => '<button class="sk' + (ui.hot === s ? " hot" : "") + (p && uses(p.stack, s) ? " used" : "") + '" data-act="skill" data-s="' + esc(s) + '" aria-pressed="' + (ui.hot === s) + '">' + esc(s) + "</button>").join("") +
-      '</div><p class="sl-note">Pick a skill to mark the case files that used it.</p><button class="btn-quiet sl-back" data-act="card-back">Back in the drawer</button></div>';
+      "</div>" + usedInHTML(g) + '<button class="btn-quiet sl-back" data-act="card-back">Back in the drawer</button></div>';
+  }
+  function usedInHTML(g) {
+    const sk = ui.hot && g.items.includes(ui.hot) ? ui.hot : null;
+    if (!sk) return '<p class="sl-note">Pick a skill to see which case files used it.</p>';
+    const files = state.projects.map((x, i) => [x, i]).filter((x) => uses(x[0].stack, sk));
+    return '<div class="sl-used"><span class="sl-used-lab">Used in:</span>' + (files.length ? files.map((x) => '<button class="sl-file" data-act="open-from-card" data-id="case-' + x[1] + '">' + esc(shortName(x[0])) + "</button>").join("") : "<span>no case file yet</span>") + "</div>";
+  }
+  // the card sits centred over the open drawer, with the room dimmed a little behind it
+  function placeLift() {
+    const ov = $("#sk-lift"), big = $("#dw-big");
+    if (!ov || ov.hidden || !big) return;
+    const r = rectOf(big), card = $(".sk-lift-card", ov), w = Math.min(980, r.width - 48, window.innerWidth - 32);
+    card.style.width = w + "px";
+    const h = card.offsetHeight, top = clamp(r.top + (Math.min(r.bottom, window.innerHeight - 84) - r.top - h) / 2, 40, window.innerHeight - 84 - h);
+    card.style.left = Math.round(r.left + (r.width - w) / 2) + "px"; card.style.top = Math.round(top) + "px";
   }
   function liftCard(i) {
     let ov = $("#sk-lift");
@@ -662,6 +690,7 @@
     if (i == null) { ov.hidden = true; ov.innerHTML = ""; const was = ui.liftCard; ui.liftCard = null; refreshSkills(); const t = $('.ic-tab[data-i="' + was + '"]'); if (t) t.focus({ preventScroll: true }); return; }
     ui.liftCard = i; FX.play("flip");
     ov.innerHTML = liftHTML(i); ov.hidden = false;
+    placeLift();
     refreshSkills();
     const first = $(".sk", ov) || $(".sl-back", ov); if (first) first.focus({ preventScroll: true });
   }
@@ -718,7 +747,11 @@
       const art = $("#dw-big-art");
       art.src = stretchedDrawer(gm.cols); art.width = gm.w; art.height = gm.h;
       big.style.width = gm.w + "px"; big.style.height = gm.h + "px";
-      big.style.left = Math.round((window.innerWidth - gm.w) / 2) + "px";
+      // line the drawer up under the front that was pulled, kept on screen
+      const fr = ui.dwOpen && $("#dw-" + ui.dwOpen), dr2 = rectOf(desk);
+      const cx = fr ? rectOf(fr).left - dr2.left + fr.offsetWidth / 2 : window.innerWidth / 2;
+      big.style.left = Math.round(clamp(cx - gm.w / 2, 8, window.innerWidth - gm.w - 8)) + "px";
+      big.style.setProperty("--front-h", DW_FRONT * gm.sc + "px");
       big.style.setProperty("--ps", gm.sc);
       big.style.setProperty("--fl-x", 14 * gm.sc + "px"); big.style.setProperty("--fl-y", 14 * gm.sc + "px");
       big.style.setProperty("--fl-w", (182 + gm.extra) * gm.sc + "px"); big.style.setProperty("--fl-h", 90 * gm.sc + "px");
@@ -742,9 +775,16 @@
     layoutDrawer(true);
     if (!id) { hideNote(); if (ui.liftCard != null) liftCard(null); }
   }
+  function closeDrawer(noFocus) {
+    const id = ui.dwOpen;
+    if (!id) return;
+    if (ui.liftCard != null) liftCard(null);
+    setDrawer(null);
+    if (!noFocus) { const f = $("#dw-" + id + " .dw-front"); if (f) f.focus({ preventScroll: true }); }
+  }
   function refreshSkills() {
     const b = $("#drawer-box"); if (b) b.innerHTML = isPhone() ? skillsHTML() : cardsHTML();
-    const ov = $("#sk-lift"); if (ov && !ov.hidden && ui.liftCard != null) { const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.s; ov.innerHTML = liftHTML(ui.liftCard); if (f) { const k = $('.sk[data-s="' + CSS.escape(f) + '"]', ov); if (k) k.focus({ preventScroll: true }); } }
+    const ov = $("#sk-lift"); if (ov && !ov.hidden && ui.liftCard != null) { const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.s; ov.innerHTML = liftHTML(ui.liftCard); placeLift(); if (f) { const k = $('.sk[data-s="' + CSS.escape(f) + '"]', ov); if (k) k.focus({ preventScroll: true }); } }
   }
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
@@ -911,7 +951,7 @@
   function revealNav() {
     const g = $("#pills"), dock = $("#stampdock"), nav = $("#pill");
     if (!g || !g.classList.contains("solo")) return;
-    if (reduced()) { g.classList.remove("solo"); placeTray(); return; }
+    if (reduced()) { g.classList.remove("solo"); placeTray(); fitPinboard(); return; }
     const before = rectOf(dock).left;
     nav.classList.add("below");
     g.classList.remove("solo");
@@ -921,7 +961,7 @@
     dock.classList.add("sliding");
     dock.style.translate = "";
     setTimeout(() => {
-      dock.classList.remove("sliding"); placeTray(); layoutDrawer(false);
+      dock.classList.remove("sliding"); placeTray(); layoutDrawer(false); fitPinboard();
       nav.classList.add("rising"); nav.classList.remove("below");
       setTimeout(() => nav.classList.remove("rising"), 260);
     }, 300);
@@ -1041,12 +1081,15 @@
     $("#say").textContent = kind === "approved" ? "Entry granted. Come on through to the booth." : deniedLine();
     $$("#intro .intro-actions button").forEach((b) => { b.disabled = true; });
     const n = $("#denied-note"); if (n) n.hidden = kind !== "denied";
-    // hold so the ink is seen, then hand the passport back
+    // hold so the ink is seen, fade the words, slide the passport away, and only then show the booth
+    const r = reduced();
     setTimeout(() => {
-      const pp = $("#passport");
-      if (pp) pp.classList.add("gone");
-      setTimeout(closeIntro, reduced() ? 0 : 460);
-    }, 400 + (kind === "approved" ? 1200 : 2400));
+      const intro = $("#intro"); if (intro) intro.classList.add("quiet");
+      setTimeout(() => {
+        const pp = $("#passport"); if (pp) pp.classList.add("gone");
+        setTimeout(closeIntro, r ? 0 : 480);
+      }, r ? 0 : 300);
+    }, kind === "approved" ? 1200 : 2400);
   }
 
   // ----- the printer on the desk; the entry record lands in its own section below -----
@@ -1087,7 +1130,7 @@
     if (empty) empty.remove();
     if (!r) return;
     r.hidden = false;
-    $$('[data-act="print"]', $("#record")).forEach((b) => { b.textContent = "Print it again"; });
+    $$('.record-intro [data-act="print"]', $("#record")).forEach((b) => { b.textContent = "Print it again"; });
     renderMarks("record");
     r.classList.remove("landing");
     if (animate && !reduced()) { void r.offsetWidth; r.classList.add("landing"); FX.play("settle"); }
@@ -1420,7 +1463,7 @@
     renderMarks("record"); renderMarks("id");
     if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
     layoutDrawer(false);
-    $$(".pobj").forEach(placePobj); drawHands();
+    $$(".pobj").forEach(placePobj); drawHands(); fitPinboard();
     applyScene(true);
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     updatePill(); updateBar();
@@ -1660,8 +1703,10 @@
     "close-case"(b) { closeCase(b.dataset.id); },
     flip(b) { flipCase(b.dataset.id, 1); },
     return(b) { returnPaper(b.dataset.id); },
-    dw(b) { if (drawerDrag && drawerDrag.moved) return; setDrawer(ui.dwOpen === b.dataset.dw ? null : b.dataset.dw); },
+    dw(b) { if (drawerDrag && drawerDrag.moved) return; if (ui.dwOpen === b.dataset.dw) closeDrawer(); else setDrawer(b.dataset.dw); },
     "sk-turn"(b) { sketchSpread = Math.max(0, sketchSpread + +b.dataset.dir); FX.play("flip"); openSketchbook(); },
+    "dw-close"() { closeDrawer(); },
+    "open-from-card"(b) { const id = b.dataset.id; liftCard(null); closeDrawer(true); setTimeout(() => { openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); }, reduced() ? 0 : 280); },
     card(b) { const i = +b.dataset.i; if (ui.liftCard === i) liftCard(null); else liftCard(i); },
     "card-back"() { liftCard(null); },
     "sk-close"() { const ov = $("#sketchbook-view"); if (ov) ov.hidden = true; },
@@ -1948,6 +1993,7 @@
       if (slow) { setSlow(false); return; }
       const sv = $("#sketchbook-view"); if (sv && !sv.hidden) { sv.hidden = true; return; }
       if (ui.liftCard != null) { liftCard(null); return; }
+      if (ui.dwOpen && !isPhone()) { closeDrawer(); return; }
       if (ui.dwOpen && !isPhone()) { const f = $("#dw-" + ui.dwOpen + " .dw-front"); setDrawer(null); if (f) f.focus({ preventScroll: true }); return; }
       const open = paperIds().filter((id) => pst(id).open);
       const which = open.includes(ui.front) ? ui.front : open[open.length - 1];
