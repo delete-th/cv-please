@@ -63,19 +63,14 @@ window.FX = (function () {
       const g = ++gen;
       text = String(text).toUpperCase().slice(0, n).padEnd(n, " ");
       if (instant || reduced()) { for (let i = 0; i < n; i++) set(i, text[i]); next(); return; }
-      let busy = 0;
-      for (let i = 0; i < n; i++) {
-        if (cur[i] === text[i]) continue;
-        busy++;
-        // each tile drops to blank and then lands on its own letter, so no stray letters are ever shown
-        const step = (k) => {
-          if (g !== gen) return;
-          if (k === 0 && cur[i] !== " ") { set(i, " "); play("tick"); setTimeout(() => step(1), 60); }
-          else { set(i, text[i]); if (text[i] !== " ") play("tick"); if (--busy === 0) next(); }
-        };
-        setTimeout(() => step(0), text[i] === " " ? 0 : 60 + i * 26);
-      }
-      if (busy === 0) next();
+      // two passes, so two phrases are never mixed: every tile clears to blank, then each flips to its own letter
+      const lit = [];
+      for (let i = 0; i < n; i++) if (cur[i] !== " ") lit.push(i);
+      lit.forEach((i, k) => setTimeout(() => { if (g !== gen) return; set(i, " "); play("tick"); }, k * 22));
+      const flipAt = lit.length * 22 + 120, todo = [];
+      for (let i = 0; i < n; i++) if (text[i] !== " ") todo.push(i);
+      todo.forEach((i, k) => setTimeout(() => { if (g !== gen) return; set(i, text[i]); play("tick"); }, flipAt + k * 30));
+      setTimeout(() => { if (g === gen) next(); }, flipAt + todo.length * 30 + 20);
     }
     function next() {
       clearTimeout(timer);

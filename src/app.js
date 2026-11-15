@@ -13,7 +13,7 @@
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
-    lampOn: ["dusk", "night"].includes(dayPhase()), lampTouched: false, pinHot: null, noteSent: false, printing: false, contactOpen: false,
+    room: 0, liftCard: null, lampOn: ["dusk", "night"].includes(dayPhase()), lampTouched: false, pinHot: null, noteSent: false, printing: false, contactOpen: false,
   };
   let topZ = 40, board = null;
 
@@ -168,8 +168,7 @@
     const p = state.profile, qs = state.interview.map((q, i) => [q, i]).filter((x) => x[0].q && x[0].a);
     return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline" id="skyline" data-phase="' + dayPhase() + '">' + SPR.scene(PX, dayPhase()) + "</span>" +
       SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="blink" id="blink" aria-hidden="true"><i></i><i></i></span><span class="ledge" aria-hidden="true"></span>' +
-      '<div class="intercom" id="intercom">' + SPR.art("intercom", SC) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div>' +
-      '<div class="shutter" id="shutter"><span>Booth closed. Scroll to open.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
+      '<div class="shutter" id="shutter"><span>Booth closed.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
       '<div class="board" id="board" aria-hidden="true"></div><p class="sr-only">Departure board: ' + esc(p.board.join(", ")) + "</p></div>" +
       '<div class="booth-main"><div class="booth-links"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
       '<button class="btn-quiet" data-act="passport">View passport</button><span class="owner" id="owner">' + ownerBar() + "</span></div>" +
@@ -178,9 +177,10 @@
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
         '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") + "</div>" +
       '<div class="booth-side"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
-      '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '" aria-label="Sound" title="Sound">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + "</button>" +
+      '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '"><span class="sb-icon" aria-hidden="true">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + '</span><span class="sb-label">' + (FX.soundOn ? "Sound on" : "Sound off") + "</span></button>" +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
       '</div><p class="aside" id="aside" aria-live="polite" hidden></p>' +
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", SC) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div>' +
       '<div class="pinboard" aria-label="Pinboard">' + SPR.art("pinboard", SC) + '<span class="pb-map">' + SPR.art("map-manila", SC, "", "A scrap of a map of Manila") + '<span class="pb-pin" aria-hidden="true"></span></span>' +
       '<p class="pb-scrap">' + esc(pinNote()) + "</p></div></header>";
   }
@@ -219,10 +219,13 @@
       '<p class="vsent" id="vsent"' + (ui.noteSent ? "" : " hidden") + '><span class="vs-text" id="vs-text"></span><span class="vs-tag">Sent</span></p>' + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
       '<div class="lamp" id="lamp">' + SPR.art("lamp", SC) + '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div>' +
       '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.art("envelope", SC) + '<span class="env-stamp">Applicant<br>file</span></div>' +
-      '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">Scroll down and the applicant file unpacks itself.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
+      '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">The applicant file is still sealed.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
       '<div class="desk-edge" aria-hidden="true"></div>' + drawerHTML("skills", "Skills") + drawerHTML("personal", "Personal") +
       '<p class="pnote" id="pnote" hidden></p></section>';
+  }
+  function deskBelowHTML() {
+    return bigDrawerHTML();
   }
 
   // ----- entry record -----
@@ -238,10 +241,10 @@
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
       (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>";
-    return '<section class="record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
+    return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
       "<p>The 60-second version, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
-      '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk.</p>') +
+      '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk, or print it from here.</p>') +
       receipt + (ui.slipTorn ? slip : "") + "</div></div></section>";
   }
 
@@ -270,17 +273,19 @@
   const stageH = () => Math.max(window.innerHeight, 600);
   const unpackEnd = () => BOOT + ORDER().length * UNIT;
   const docTop = (el) => rectOf(el).top + window.scrollY;
+  const FLOOR = 28;
   function sizeScene() {
     const sc = $("#scene"), stage = $("#stage");
     if (!sc) return;
-    if (isPhone()) { sc.style.height = ""; stage.style.height = ""; return; }
-    stage.style.height = stageH() + "px";
-    sc.style.height = stageH() + unpackEnd() + DWELL + "px";
+    sc.style.height = "";
+    if (isPhone()) { stage.style.height = ""; return; }
+    stage.style.height = window.innerHeight - FLOOR + "px";
   }
+  const deskScroll = (top, how) => { if (isPhone()) window.scrollTo({ top: top, behavior: how || "auto" }); };
   function sceneNow() {
     const n = ORDER().length;
     if (isPhone()) return { shut: 4, counter: 3, lamp: true, board: true, out: n };
-    const px = Math.max(0, -rectOf($("#scene")).top), bf = ui.boothForced || ui.forced;
+    const px = 0, bf = ui.boothForced || ui.forced;
     let out = ui.forced ? n : clamp(Math.floor((px - BOOT) / UNIT) + 1, 0, n);
     if (ui.handled) out = Math.max(out, ui.maxOut);
     return {
@@ -340,11 +345,12 @@
     $("#unpack-hint").style.left = Math.round(u.w * 0.3) + env.offsetWidth + 24 + "px";
   }
   function computeFit() {
+    const dk = $("#desk"); if (dk) dk.classList.toggle("short", !isPhone() && window.innerHeight < 760);
     if (isPhone()) { ui.fit = 1; return; }
     const u = usable(), avail = u.bottom - u.top, el = (id) => paperEl(id);
     const mids = ["id", "diploma", "honours"].map(el), midH = Math.max.apply(null, mids.map((e, k) => e.offsetHeight + [8, 16, 0][k]));
     const left = boxRect().w + 30, minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
-    ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.72, 1);
+    ui.fit = 1;
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
   function landing(id, el) {
@@ -352,10 +358,11 @@
     if (i >= 0) return slotPos(i);
     const widths = ["id", "diploma", "honours"].map((k) => { const e = paperEl(k); return (e ? e.offsetWidth : 300) * s; });
     const left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] * 0.85 + widths[1] * 0.85 + widths[2];
-    const extra = Math.max(0, avail - min) / 3;
-    const gap0 = widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 60), gap1 = widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 60);
+    const extra = Math.max(0, avail - min) / 3, q = min > avail ? Math.max(0.5, (avail - widths[2]) / (min - widths[2])) : 1;
+    const gap0 = (widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 60)) * q, gap1 = (widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 60)) * q;
     const x0 = left + Math.min(extra, 40), k = { id: 0, diploma: 1, honours: 2 }[id], x = [x0, x0 + gap0, x0 + gap0 + gap1][k];
-    return [Math.round(x), Math.round(u.top + [8, 16, 0][k] * s)];
+    const h = el ? el.offsetHeight : 0;
+    return [Math.round(x), Math.round(Math.max(u.top, Math.min(u.top + [8, 16, 0][k], u.bottom - h)))];
   }
   function envCenter() { const e = $("#envelope"); return [e.offsetLeft + e.offsetWidth / 2, e.offsetTop + e.offsetHeight / 2]; }
   function setPos(el, x, y) { el.style.left = x + "px"; el.style.top = y + "px"; }
@@ -376,13 +383,23 @@
   }
   // the note pad sits on the desk's right side, under the mug; the sent note sticks to the desk edge
   function placeNotepad() {
-    const pad = $("#notepad"), mug = $('.sticker[data-sticker="mug"]'), u = usable();
+    const pad = $("#notepad"), u = usable();
     if (!pad || isPhone()) return;
-    const x = clamp(mug.offsetLeft + mug.offsetWidth / 2 - pad.offsetWidth / 2, 0, u.w - pad.offsetWidth - 8);
-    let y = mug.offsetTop + mug.offsetHeight + 12;
-    if (y + pad.offsetHeight > u.bottom) y = mug.offsetTop - 12 - pad.offsetHeight;
-    pad.hidden = ui.noteSent || y < u.top || (y + pad.offsetHeight > u.bottom);
-    setPos(pad, x, y);
+    if (ui.noteSent) { pad.hidden = true; return; }
+    pad.hidden = false;
+    const w = pad.offsetWidth || 99, h = pad.offsetHeight || 99, box = boxRect();
+    const rect = (q) => { const e = $(q); return e && !e.hidden ? { x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight } : null; };
+    const taken = [box, rect("#lamp"), rect("#printer"), rect('.sticker[data-sticker="mug"]'), rect('.sticker[data-sticker="plant"]')].filter(Boolean)
+      .concat(paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open) return null; const at = st.x != null ? [st.x, st.y] : landing(id, e); return { x: at[0], y: at[1], w: e.offsetWidth, h: e.offsetHeight }; }).filter(Boolean));
+    const free = (x, y) => y >= u.top && y + h <= u.bottom && x >= 0 && x + w <= u.w && !taken.some((r) => x < r.x + r.w + 4 && r.x < x + w + 4 && y < r.y + r.h + 4 && r.y < y + h + 4);
+    const tries = [];
+    for (let y = u.bottom - h; y >= u.top; y -= 12) for (let x = u.w - w - 12; x >= 0; x -= 12) tries.push([x, y]);
+    const spot = tries.find((t) => free(t[0], t[1]));
+    const home = spot ? $("#desk") : $("#record");
+    // on a desk too short for it, the pad waits in the Records room, left of the record
+    if (pad.parentElement !== home) { home.appendChild(pad); home.appendChild($("#vnote")); }
+    pad.classList.toggle("in-records", !spot);
+    if (spot) setPos(pad, spot[0], spot[1]); else setPos(pad, 24, 64);
   }
   function placeStickers() {
     const u = usable(), w = u.w, pr = $("#printer"), box = boxRect(), mugEl = $('.sticker[data-sticker="mug"]');
@@ -610,39 +627,111 @@
     return '<span class="pobj p-' + id + (o.rot ? " rot" : "") + '" data-p="' + id + '" data-drag role="button" tabindex="0" aria-label="' + esc(o.label + ". " + o.hint + " Press M to move it between the drawer and the desk.") +
       '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") + "</span>";
   }
+  const FS = 4; // closed fronts on the desk edge are drawn at 4x so the plate fits its label
+  const floorHTML = (id) => '<div class="dw-floor dw-floor-' + id + '" id="' + (id === "skills" ? "drawer-box" : "dw-things") + '">' +
+    (id === "skills" ? (isPhone() ? skillsHTML() : cardsHTML()) : Object.keys(POBJ).map(pobjHTML).join("")) + "</div>";
   function drawerHTML(id, label) {
     const a = ART.drawer, floorId = id === "skills" ? "drawer-box" : "dw-things";
-    const inner = id === "skills" ? skillsHTML() : Object.keys(POBJ).map(pobjHTML).join("");
-    return '<div class="dw dw-' + id + '" id="dw-' + id + '" data-dw="' + id + '" style="--dw-w:' + a.w * SC + "px;--dw-h:" + a.h * SC + 'px">' + SPR.art("drawer", SC, "dw-art") +
-      '<div class="dw-floor" id="' + floorId + '">' + inner + "</div>" +
+    return '<div class="dw dw-' + id + '" id="dw-' + id + '" data-dw="' + id + '" style="--dw-w:' + a.w * FS + "px;--dw-h:" + a.h * FS + 'px">' + SPR.art("drawer", FS, "dw-art") +
+      (isPhone() ? floorHTML(id) : "") +
       '<button class="dw-front" data-act="dw" data-dw="' + id + '" aria-expanded="false" aria-controls="' + floorId + '"><span class="dw-plate">' + label + "</span></button></div>";
+  }
+  // the open drawer, pulled out toward the visitor: one big drawer whose floor shows the chosen drawer's contents
+  function bigDrawerHTML() {
+    if (isPhone()) return "";
+    return '<div class="dw-big" id="dw-big" role="region" aria-label="Open drawer"><img class="dw-big-art" id="dw-big-art" alt="" aria-hidden="true">' + floorHTML("skills") + floorHTML("personal") + "</div>";
+  }
+  // Skills as an index-card file: one card per group, standing back to front, tabs staggered
+  function cardsHTML() {
+    const p = frontCase();
+    return '<div class="cardfile">' + state.skills.map((g, i) => {
+      const used = p && g.items.some((s) => uses(p.stack, s)), hot = ui.hot && g.items.includes(ui.hot);
+      return '<div class="icard ic-' + ["left", "mid", "right"][i % 3] + (ui.liftCard === i ? " lifted" : "") + '" style="--i:' + i + '"><button class="ic-tab' + (used ? " used" : "") + (hot ? " hot" : "") +
+        '" data-act="card" data-i="' + i + '" aria-expanded="' + (ui.liftCard === i) + '">' + esc(g.group) + "</button></div>";
+    }).join("") + "</div>";
+  }
+  function liftHTML(i) {
+    const g = state.skills[i], p = frontCase();
+    return '<div class="sk-lift-card" role="dialog" aria-label="' + esc(g.group) + ' skills"><p class="sl-tab">' + esc(g.group) + '</p><div class="sl-chips">' +
+      g.items.map((s) => '<button class="sk' + (ui.hot === s ? " hot" : "") + (p && uses(p.stack, s) ? " used" : "") + '" data-act="skill" data-s="' + esc(s) + '" aria-pressed="' + (ui.hot === s) + '">' + esc(s) + "</button>").join("") +
+      '</div><p class="sl-note">Pick a skill to mark the case files that used it.</p><button class="btn-quiet sl-back" data-act="card-back">Back in the drawer</button></div>';
+  }
+  function liftCard(i) {
+    let ov = $("#sk-lift");
+    if (!ov) { ov = document.createElement("div"); ov.id = "sk-lift"; ov.className = "sk-lift"; fixedRoot.appendChild(ov); }
+    if (i == null) { ov.hidden = true; ov.innerHTML = ""; const was = ui.liftCard; ui.liftCard = null; refreshSkills(); const t = $('.ic-tab[data-i="' + was + '"]'); if (t) t.focus({ preventScroll: true }); return; }
+    ui.liftCard = i; FX.play("flip");
+    ov.innerHTML = liftHTML(i); ov.hidden = false;
+    refreshSkills();
+    const first = $(".sk", ov) || $(".sl-back", ov); if (first) first.focus({ preventScroll: true });
   }
   // Closed fronts sit side by side in the bottom strip, left of the pill nav. When there is not room for a whole
   // front, the drawer shows a centred slice of it. An open drawer shows the whole sprite, kept inside the desk.
+  // the drawer art stretched sideways by repeating plain columns either side of the handle, never by fractional scaling
+  const DWIMG = new Image(); DWIMG.src = ART.drawer.src;
+  const dwCache = {};
+  function stretchedDrawer(cols) {
+    if (dwCache[cols]) return dwCache[cols];
+    const a = ART.drawer, c = document.createElement("canvas"), g = c.getContext("2d"), extra = cols - a.w, eL = Math.floor(extra / 2), eR = extra - eL;
+    c.width = cols; c.height = a.h;
+    let dx = 0;
+    const col = (sx) => { g.drawImage(DWIMG, sx, 0, 1, a.h, dx, 0, 1, a.h); dx++; };
+    for (let x = 0; x < 80; x++) col(x);
+    for (let k = 0; k < eL; k++) col(40 + (k % 40));
+    for (let x = 80; x < 130; x++) col(x);
+    for (let k = 0; k < eR; k++) col(130 + (k % 40));
+    for (let x = 130; x < a.w; x++) col(x);
+    return (dwCache[cols] = c.toDataURL());
+  }
+  function dwGeom() {
+    const vw = window.innerWidth, vh = window.innerHeight, a = ART.drawer;
+    let sc = 2;
+    for (let k = 8; k >= 2; k--) if (a.h * k <= vh - 200 && a.w * k <= Math.min(vw * 0.8, 1100)) { sc = k; break; }
+    const cols = Math.max(a.w, Math.floor(Math.min(vw * 0.75, 1100) / sc)), extra = cols - a.w;
+    const mapX = (x) => (x < 80 ? x : x < 130 ? x + Math.floor(extra / 2) : x + extra);
+    return { sc: sc, cols: cols, extra: extra, mapX: mapX, w: cols * sc, h: a.h * sc };
+  }
   function layoutDrawer(animate) {
     const desk = $("#desk"), dws = desk ? $$(".dw", desk) : [];
     if (!dws.length) return;
     dws.forEach((el) => {
       const open = ui.dwOpen === el.dataset.dw;
-      el.classList.toggle("open", open);
-      const fl = $(".dw-floor", el); fl.inert = !open && !isPhone();
+      el.classList.toggle("pulled", open && !isPhone());
       $(".dw-front", el).setAttribute("aria-expanded", String(open || isPhone()));
     });
     if (isPhone()) return;
-    const W = ART.drawer.w * SC, H = ART.drawer.h * SC, F = DW_FRONT * SC, dr = rectOf(desk), pills = $("#pills");
+    // closed fronts: side by side on the desk edge, left of the pills, as wide a slice of the front as fits
+    const W = ART.drawer.w * FS, H = ART.drawer.h * FS, F = DW_FRONT * FS, dr = rectOf(desk), pills = $("#pills");
     let right = desk.clientWidth / 2 - 200;
     if (pills && !pills.classList.contains("solo") && getComputedStyle(pills).display !== "none") right = rectOf(pills).left - dr.left - 16;
-    const gap = 12, crop = clamp(Math.floor((right - 16 - gap) / 2 / SC) * SC, 40 * SC, W);
+    const gap = 12, crop = clamp(Math.floor((right - 16 - gap) / 2 / FS) * FS, 40 * FS, W);
     dws.forEach((el, k) => {
-      const base = Math.round(16 + crop / 2 + k * (crop + gap) - W / 2), open = el.classList.contains("open");
-      const shift = open ? clamp(base, 8, desk.clientWidth - W - 8) - base : 0;
-      el.classList.toggle("sliding", !!animate);
-      el.style.left = base + "px";
+      el.style.left = Math.round(16 + crop / 2 + k * (crop + gap) - W / 2) + "px";
       el.style.top = desk.clientHeight - Math.round((BOTTOM - F) / 2) - H + "px";
       el.style.setProperty("--crop", (W - crop) / 2 + "px");
-      el.style.setProperty("--shift", shift + "px");
       el.style.setProperty("--hide", H - F + "px");
     });
+    // the open drawer slides down from under the desk edge, and the room pans up to show all of it above the pills
+    const big = $("#dw-big"), pan = $("#room-pan"), stage = $("#stage");
+    if (!big || !pan) return;
+    const gm = dwGeom(), apply = () => {
+      const art = $("#dw-big-art");
+      art.src = stretchedDrawer(gm.cols); art.width = gm.w; art.height = gm.h;
+      big.style.width = gm.w + "px"; big.style.height = gm.h + "px";
+      big.style.left = Math.round((window.innerWidth - gm.w) / 2) + "px";
+      big.style.setProperty("--ps", gm.sc);
+      big.style.setProperty("--fl-x", 14 * gm.sc + "px"); big.style.setProperty("--fl-y", 14 * gm.sc + "px");
+      big.style.setProperty("--fl-w", (182 + gm.extra) * gm.sc + "px"); big.style.setProperty("--fl-h", 90 * gm.sc + "px");
+      $$(".pobj", $("#dw-things")).forEach(placePobj);
+    };
+    if (DWIMG.complete) apply(); else DWIMG.onload = apply;
+    const open = !!ui.dwOpen;
+    big.classList.toggle("sliding", !!animate);
+    big.classList.toggle("open", open);
+    big.dataset.dw = ui.dwOpen || "";
+    $$(".dw-floor", big).forEach((f) => { const on = open && f.classList.contains("dw-floor-" + ui.dwOpen); f.hidden = !on; f.inert = !on; });
+    pan.classList.toggle("sliding", !!animate);
+    pan.style.setProperty("--pan", open ? Math.max(0, stage.offsetHeight + gm.h + 84 - window.innerHeight) + "px" : "0px");
   }
   function setDrawer(id) {
     const was = ui.dwOpen;
@@ -651,9 +740,12 @@
     if (id) { markHandled(); say(id === "skills" ? "drawer" : "personal"); }
     FX.play("dwslide");
     layoutDrawer(true);
-    if (!id) hideNote();
+    if (!id) { hideNote(); if (ui.liftCard != null) liftCard(null); }
   }
-  function refreshSkills() { const b = $("#drawer-box"); if (b) b.innerHTML = skillsHTML(); }
+  function refreshSkills() {
+    const b = $("#drawer-box"); if (b) b.innerHTML = isPhone() ? skillsHTML() : cardsHTML();
+    const ov = $("#sk-lift"); if (ov && !ov.hidden && ui.liftCard != null) { const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.s; ov.innerHTML = liftHTML(ui.liftCard); if (f) { const k = $('.sk[data-s="' + CSS.escape(f) + '"]', ov); if (k) k.focus({ preventScroll: true }); } }
+  }
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
   function showNote(el) {
@@ -750,7 +842,9 @@
   }
   function placePobj(el) {
     const o = POBJ[el.dataset.p];
-    el.style.left = (o.x - DW_FLOOR.x) * SC + "px"; el.style.top = (o.y - DW_FLOOR.y) * SC + "px";
+    if (isPhone()) return;
+    const gm = dwGeom();
+    el.style.left = (gm.mapX(o.x) - DW_FLOOR.x) * gm.sc + "px"; el.style.top = (o.y - DW_FLOOR.y) * gm.sc + "px";
   }
   function movePobj(el) {
     if (isPhone()) return;
@@ -840,6 +934,7 @@
     const box = intro ? $("#intro .visa .stamp-box") : (ui.printed && receiptEl() && !receiptEl().hidden ? $(".stamp-box", receiptEl()) : null);
     if (!box || !onScreen(box)) return;
     const top = trayTopOpen(), b = rectOf(box), by = b.bottom - top + 24;
+    if (!intro && !isPhone()) return;
     if (b.bottom > top - 16) (intro || window).scrollBy({ top: by, behavior: behavior() });
   }
   function toggleTray(force) {
@@ -962,7 +1057,7 @@
     if (ui.printing) return;
     const pr = $("#printer"), feed = $("#feed");
     say("record");
-    if (isPhone() || reduced() || !pr || !feed) { FX.play("print"); landRecord(false); scrollToRecord("auto"); return; }
+    if (isPhone() || reduced() || !pr || !feed) { FX.play("print"); landRecord(false); if (isPhone()) scrollToRecord("auto"); else goRoom(1); return; }
     ui.printing = true;
     pr.classList.add("busy");
     FX.play("print");
@@ -973,9 +1068,9 @@
       pr.classList.remove("busy");
       FX.play("lift");
       feed.classList.add("torn");
-      scrollToRecord("smooth");
-      setTimeout(() => { landRecord(true); setTimeout(() => { scrollToRecord("smooth"); updateBar(); }, 380); }, 520);
-      setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 900);
+      setTimeout(() => goRoom(1, true), 380);
+      setTimeout(() => { landRecord(true); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, 860);
+      setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 1300);
     }, steps * 110 + 120);
   }
   function scrollToRecord(how) {
@@ -1166,23 +1261,34 @@
   }
 
   // ----- pill nav -----
-  const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"]];
+  const AREAS = [["desk", "Desk"], ["record", "Records"]];
   function currentArea() {
     if (ui.view !== "desk" || !$("#scene")) return 0;
-    if (rectOf($("#record")).top < window.innerHeight * 0.55) return 2;
-    if (isPhone()) return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0;
-    return -rectOf($("#scene")).top >= BOOT - 10 ? 1 : 0;
+    if (!isPhone()) return ui.room;
+    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 1 : 0;
+  }
+  // The camera pans sideways between the rooms; with reduced motion they swap with a quick fade.
+  function goRoom(i, quiet) {
+    i = clamp(i, 0, AREAS.length - 1);
+    if (isPhone()) { deskScroll(i ? docTop($("#record")) : docTop($("#scene")), behavior()); return; }
+    if (i === ui.room) return;
+    const rooms = $("#rooms");
+    if (i !== 0 && ui.dwOpen) setDrawer(null);
+    ui.room = i;
+    if (reduced()) { rooms.classList.remove("fading"); void rooms.offsetWidth; rooms.classList.add("fading"); }
+    rooms.style.setProperty("--room", i);
+    $$(".room").forEach((r, k) => { r.inert = k !== i; });
+    updatePill();
+    setTimeout(() => { updateBar(); if (!quiet) { const t = i ? (receiptEl() && !receiptEl().hidden ? receiptEl() : $("#record-h")) : $("#hello"); if (t) t.focus({ preventScroll: true }); } }, reduced() ? 0 : 460);
   }
   function goArea(i) {
-    const id = AREAS[i][0], sc = $("#scene");
-    if (id === "booth") window.scrollTo({ top: isPhone() ? 0 : docTop(sc), behavior: behavior() });
-    else if (id === "desk") window.scrollTo({ top: isPhone() ? docTop($("#desk")) - 8 : docTop(sc) + unpackEnd(), behavior: behavior() });
-    else {
-      // the desk has to be in view for the printer to print, so bring it up first
-      if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
-      if (!isPhone()) window.scrollTo({ top: docTop(sc) + unpackEnd(), behavior: "auto" });
-      printRecord();
-    }
+    const id = AREAS[i][0];
+    if (id === "desk") { goRoom(0); return; }
+    // the record room: print first if nothing is printed yet, otherwise just go there
+    if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
+    if (ui.printed) { goRoom(1); return; }
+    if (ui.room !== 0 && !isPhone()) goRoom(0, true);
+    printRecord();
   }
   function updatePill() { const n = $("#area-name"); if (n) n.textContent = AREAS[currentArea()][1]; }
 
@@ -1303,8 +1409,8 @@
   }
 
   function renderDesk() {
-    app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage' + (ui.lampOn ? "" : " lamp-off") + '" id="stage">' + boothHTML() + deskHTML() +
-      "</div></section>" + recordHTML() + "</main>";
+    app.innerHTML = '<main class="site"><div class="rooms" id="rooms" style="--room:' + (isPhone() ? 0 : ui.room) + '"><section class="room room-desk scene" id="scene" aria-label="Desk"><div class="room-pan" id="room-pan"><div class="stage' + (ui.lampOn ? "" : " lamp-off") + '" id="stage">' + boothHTML() + deskHTML() +
+      '</div><div class="floor" aria-hidden="true"></div><div class="dw-pull" id="dw-pull">' + deskBelowHTML() + '</div></div></section>' + recordHTML() + "</div></main>";
     board = FX.board($("#board"), state.profile.board, 20);
     sizeScene();
     if (!isPhone()) placeFurniture();
@@ -1318,6 +1424,7 @@
     applyScene(true);
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     updatePill(); updateBar();
+    $$(".room").forEach((r, k) => { r.inert = !isPhone() && k !== ui.room; });
   }
   function render() {
     const desk = !editing && ui.view === "desk";
@@ -1417,17 +1524,15 @@
       document.removeEventListener("pointerdown", finish, true); document.removeEventListener("keydown", finish, true);
       ui.boothForced = true; ui.forced = true; ui.stagger = 0; applyScene(true);
       $$(".arriving").forEach((e) => e.classList.remove("arriving"));
-      window.scrollTo({ top: docTop($("#scene")) + unpackEnd(), behavior: "auto" });
     };
     if (reduced()) { firstRun = { timers: [] }; finish(); return; }
     firstRun = { timers: [] };
     const at = (ms, fn) => firstRun.timers.push(setTimeout(fn, ms));
     document.addEventListener("pointerdown", finish, true); document.addEventListener("keydown", finish, true);
-    window.scrollTo({ top: docTop($("#scene")), behavior: "auto" });
     $$("#filebox, #filebox-front, .dw").forEach((e) => e.classList.add("arriving", "hold"));
     at(60, () => { ui.boothForced = true; applyScene(); });
     at(520, () => { if (ui.lampOn) FX.play("lamp"); });
-    at(700, () => { ui.forced = true; ui.stagger = 60; window.scrollTo({ top: docTop($("#scene")) + unpackEnd(), behavior: "auto" }); applyScene(); ui.stagger = 0; });
+    at(700, () => { ui.forced = true; ui.stagger = 60; applyScene(); ui.stagger = 0; });
     at(1500, () => { $$(".arriving").forEach((e) => e.classList.remove("hold")); FX.play("dwslide"); });
     at(2000, () => { $$(".arriving").forEach((e) => e.classList.remove("arriving")); firstRun.timers = []; finish(); });
   }
@@ -1518,7 +1623,7 @@
     },
     intercom() {
       FX.play("chime");
-      const area = AREAS[currentArea()][0], trigger = area === "booth" ? "arrive" : area === "desk" ? "unpacked" : "record";
+      const trigger = AREAS[currentArea()][0] === "desk" ? "unpacked" : "record";
       setTimeout(() => { if (!sayNow("intercom")) sayNow(trigger); }, reduced() ? 0 : 450);
     },
     note() {
@@ -1528,7 +1633,8 @@
       f.hidden = false;
       if (!isPhone()) {
         const w = f.offsetWidth, h = f.offsetHeight;
-        setPos(f, clamp(pad.offsetLeft + pad.offsetWidth - w, 8, desk.clientWidth - w - 8), clamp(pad.offsetTop - h + pad.offsetHeight, TOP, usable().bottom - h));
+        if (pad.classList.contains("in-records")) setPos(f, pad.offsetLeft, pad.offsetTop + pad.offsetHeight + 8);
+        else setPos(f, clamp(pad.offsetLeft + pad.offsetWidth - w, 8, desk.clientWidth - w - 8), clamp(pad.offsetTop - h + pad.offsetHeight, TOP, usable().bottom - h));
       }
       raise(f);
       if (!reduced()) { f.classList.remove("peeling"); void f.offsetWidth; f.classList.add("peeling"); }
@@ -1542,14 +1648,13 @@
     lamp() { toggleLamp(); },
     view(b) { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
-    step(b) { goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
+    step(b) { goRoom(currentArea() + +b.dataset.dir); },
     "open-booth"() { ui.boothForced = true; applyScene(); $("#hello").focus({ preventScroll: true }); },
     "open-file"() {
       ui.forced = true; ui.boothForced = true; applyScene();
-      if (!isPhone()) window.scrollTo({ top: docTop($("#scene")) + unpackEnd(), behavior: "auto" });
       const first = paperEl("id"); if (first) first.focus({ preventScroll: true });
     },
-    sound(b) { const on = FX.toggle(); b.setAttribute("aria-pressed", String(on)); if (on) FX.play("tick"); },
+    sound(b) { const on = FX.toggle(); b.setAttribute("aria-pressed", String(on)); $(".sb-label", b).textContent = on ? "Sound on" : "Sound off"; if (on) FX.play("tick"); },
     radio(b) { ui.radioOn = !ui.radioOn; b.textContent = ui.radioOn ? "Mute radio" : "Unmute radio"; b.setAttribute("aria-pressed", String(ui.radioOn)); if (!ui.radioOn) $("#aside").hidden = true; },
     ask(b) { ui.asked = +b.dataset.q; const el = $("#bubble"); el.hidden = false; el.textContent = state.interview[ui.asked].a; },
     "close-case"(b) { closeCase(b.dataset.id); },
@@ -1557,6 +1662,8 @@
     return(b) { returnPaper(b.dataset.id); },
     dw(b) { if (drawerDrag && drawerDrag.moved) return; setDrawer(ui.dwOpen === b.dataset.dw ? null : b.dataset.dw); },
     "sk-turn"(b) { sketchSpread = Math.max(0, sketchSpread + +b.dataset.dir); FX.play("flip"); openSketchbook(); },
+    card(b) { const i = +b.dataset.i; if (ui.liftCard === i) liftCard(null); else liftCard(i); },
+    "card-back"() { liftCard(null); },
     "sk-close"() { const ov = $("#sketchbook-view"); if (ov) ov.hidden = true; },
     skill(b) {
       ui.hot = ui.hot === b.dataset.s ? null : b.dataset.s;
@@ -1566,7 +1673,7 @@
         el.classList.toggle("hot", !!ui.hot && uses(state.projects[i].stack, ui.hot));
         const s = $(".stack-items", el); if (s) s.innerHTML = stackHTML(state.projects[i]);
       });
-      const again = $('.sk[data-s="' + CSS.escape(b.dataset.s) + '"]'); if (again) again.focus({ preventScroll: true });
+      const again = $('#sk-lift .sk[data-s="' + CSS.escape(b.dataset.s) + '"]') || $('.sk[data-s="' + CSS.escape(b.dataset.s) + '"]'); if (again) again.focus({ preventScroll: true });
     },
     demo(b) { const box = b.parentNode.querySelector(".demo-box"); box.hidden = false; b.hidden = true; DEMOS[state.projects[+b.dataset.i].demo](box); },
     tear() { if (perfMoved) return; tearAll(); },
@@ -1592,7 +1699,7 @@
     const po = ev.target.closest(".pobj");
     if (po) { if (!justDragged) usePobj(po); return; }
     if (ev.target.closest('.sticker[data-sticker="mug"]') && !justDragged) { mugEgg(); return; }
-    if (ui.dwOpen && !isPhone() && !ev.target.closest(".dw, #pills, #fixed-root")) setDrawer(null);
+    if (ui.dwOpen && !isPhone() && !ev.target.closest(".dw, .dw-big, #pills, #fixed-root")) setDrawer(null);
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
@@ -1768,7 +1875,7 @@
     if (ct) ct.classList.remove("show-hint");
     if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
     if (d.el.classList.contains("pobj")) {
-      const home = $("#dw-personal.open .dw-floor");
+      const home = $('#dw-big.open[data-dw="personal"] .dw-floor-personal');
       if (home && inside(rectOf(home), ev.clientX, ev.clientY)) { pobjHome(d.el); FX.play("tap"); return; }
     }
     checkLamp();
@@ -1786,6 +1893,10 @@
   document.addEventListener("keydown", (ev) => {
     if (!ui.contactOpen && !editing && ui.view === "desk" && !$("#intro") && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable], .f"))) hireEgg(ev);
     const po = ev.target.closest && ev.target.closest(".pobj");
+    if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !isPhone() && ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
+      !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
+      ev.preventDefault(); goRoom(ui.room + (ev.key === "ArrowRight" ? 1 : -1)); return;
+    }
     if (po && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); usePobj(po); return; }
     if (po && (ev.key === "m" || ev.key === "M")) { ev.preventDefault(); movePobj(po); return; }
     if (ui.contactOpen) {
@@ -1836,6 +1947,7 @@
       if ($("#intro")) { closeIntro(); return; }
       if (slow) { setSlow(false); return; }
       const sv = $("#sketchbook-view"); if (sv && !sv.hidden) { sv.hidden = true; return; }
+      if (ui.liftCard != null) { liftCard(null); return; }
       if (ui.dwOpen && !isPhone()) { const f = $("#dw-" + ui.dwOpen + " .dw-front"); setDrawer(null); if (f) f.focus({ preventScroll: true }); return; }
       const open = paperIds().filter((id) => pst(id).open);
       const which = open.includes(ui.front) ? ui.front : open[open.length - 1];
@@ -1868,6 +1980,16 @@
     touched(); setOwner();
   });
 
+  let swipe = null;
+  document.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType !== "touch" || isPhone() || ui.view !== "desk" || $("#intro") || ev.target.closest("[data-drag], button, a, input, textarea, .stamp-btn, .pobj, .dw, .cm-device")) { swipe = null; return; }
+    swipe = { x: ev.clientX, y: ev.clientY, id: ev.pointerId };
+  });
+  document.addEventListener("pointerup", (ev) => {
+    if (!swipe || ev.pointerId !== swipe.id) return;
+    const dx = ev.clientX - swipe.x, dy = ev.clientY - swipe.y; swipe = null;
+    if (Math.abs(dx) > 60 && Math.abs(dy) < 50) goRoom(ui.room + (dx < 0 ? 1 : -1));
+  });
   let ticking = false;
   window.addEventListener("scroll", () => {
     if (ticking) return;
