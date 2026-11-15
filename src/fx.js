@@ -38,6 +38,8 @@ window.FX = (function () {
     if (c && name === "tin") { tinRattle(c); return; }
     if (c && name === "talk") { talkBlip(c); return; }
     if (c && name === "scan") { scanSound(c); return; }
+    if (c && name === "spkon") { speakerOn(c); return; }
+    if (c && name === "snooze") { tick(c, 0.012, 1900, 0.4); tick(c, 0.03, 700, 0.35, c.currentTime + 0.012); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
@@ -161,6 +163,16 @@ window.FX = (function () {
       g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.12, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.28);
       o.connect(g); g.connect(lp); o.start(at); o.stop(at + 0.3);
     });
+  }
+  // the speaker waking up: a soft switch click, then a short low hum (under 300ms)
+  function speakerOn(c) {
+    const t0 = c.currentTime;
+    tick(c, 0.01, 2600, 0.35);
+    const o = c.createOscillator(), o2 = c.createOscillator(), lp = c.createBiquadFilter(), g = c.createGain(), at = t0 + 0.03, len = 0.24;
+    o.type = "triangle"; o.frequency.value = 98; o2.type = "sine"; o2.frequency.value = 196;
+    lp.type = "lowpass"; lp.frequency.value = 600;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.22, at + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o2.start(at); o.stop(at + len + 0.02); o2.stop(at + len + 0.02);
   }
   function toggle() {
     snd.on = !snd.on;

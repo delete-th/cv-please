@@ -192,13 +192,56 @@
       '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="area" data-to="record">Summary</button><button class="btn-quiet" data-act="view" data-v="list">Simplify</button>' +
       '<button class="btn-quiet" data-act="passport">Inspect passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
       '<div class="booth-side">' + pinboardHTML() + "</div>" +
-      '<div class="booth-meta"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
+      '<div class="booth-meta">' +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
-      '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '"><span class="sb-icon" aria-hidden="true">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + '</span><span class="sb-label">' + (FX.soundOn ? "Sound on" : "Sound off") + "</span></button></div>" +
+      speakerHTML() + "</div>" +
       '<p class="aside" id="aside" aria-live="polite" hidden></p>' +
       '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
+  // The alarm clock: the visitor's local time in amber seven-segment digits on its blank display, drawn on a canvas
+  // the size of the sprite (1 canvas pixel = 1 art pixel) so the digits sit on the sprite's pixel grid.
+  function alarmHTML() {
+    return '<button class="aclock" id="aclock" data-act="snooze" aria-label="Alarm clock, snooze" data-tag="5 more minutes">' + SPR.art("alarm-clock", 3, "ac-up") + SPR.art("alarm-clock-snooze", 3, "ac-down") +
+      '<canvas class="ac-led" width="58" height="32" aria-hidden="true"></canvas><span class="sr-only ac-time" id="ac-time"></span></button>';
+  }
+  // segments of a 5x9 digit: a top, b upper right, c lower right, d bottom, e lower left, f upper left, g middle
+  const SEG = { a: [[1, 0], [2, 0], [3, 0]], b: [[4, 1], [4, 2], [4, 3]], c: [[4, 5], [4, 6], [4, 7]], d: [[1, 8], [2, 8], [3, 8]], e: [[0, 5], [0, 6], [0, 7]], f: [[0, 1], [0, 2], [0, 3]], g: [[1, 4], [2, 4], [3, 4]] };
+  const DIGIT = ["abcdef", "bc", "abged", "abgcd", "fgbc", "afgcd", "afgedc", "abc", "abcdefg", "abcdfg"];
+  const LED_ON = "#e8a33a", LED_OFF = "#2f3a2b";
+  let acColon = true, acMinute = "";
+  function drawAlarm() {
+    const cv = $(".ac-led");
+    if (!cv) return;
+    const g = cv.getContext("2d"), now = new Date(), hh = String(now.getHours()).padStart(2, "0"), mm = String(now.getMinutes()).padStart(2, "0");
+    g.clearRect(0, 0, 58, 32);
+    // HH:MM is 25 art pixels wide and 9 tall, centred in the display (x 6 to 46, y 12 to 23)
+    const x0 = 6 + Math.floor((41 - 25) / 2), y0 = 12 + Math.floor((12 - 9) / 2);
+    const digit = (n, x) => Object.keys(SEG).forEach((k) => { g.fillStyle = DIGIT[n].includes(k) ? LED_ON : LED_OFF; SEG[k].forEach((q) => g.fillRect(x + q[0], y0 + q[1], 1, 1)); });
+    digit(+hh[0], x0); digit(+hh[1], x0 + 6); digit(+mm[0], x0 + 14); digit(+mm[1], x0 + 20);
+    g.fillStyle = acColon || reduced() ? LED_ON : LED_OFF; g.fillRect(x0 + 12, y0 + 2, 1, 1); g.fillRect(x0 + 12, y0 + 6, 1, 1);
+    // the glass glare stays on top of the digits
+    (ART["alarm-clock"].glare || []).forEach((q) => { g.fillStyle = q[2]; g.fillRect(q[0], q[1], 1, 1); });
+    const t = hh + ":" + mm;
+    if (t !== acMinute) { acMinute = t; const sr = $("#ac-time"); if (sr) sr.textContent = "Local time " + t; }
+  }
+  function alarmTick() {
+    acColon = !acColon; drawAlarm();
+    // the colon blinks once a second, slower while the watch has slowed time
+    setTimeout(alarmTick, slow ? 1500 : 500);
+  }
+  setTimeout(alarmTick, 0);
+  function snooze(el) {
+    el.classList.add("down"); FX.play("snooze");
+    setTimeout(() => el.classList.remove("down"), 150);
+    showTag(el, true); clearTimeout(snooze.t); snooze.t = setTimeout(() => { if (tagFor === el) hideTag(); }, 3000);
+  }
+  // the portable speaker is the sound switch: light off when the site is quiet, amber light on when it makes sounds
+  function speakerHTML() {
+    const on = FX.soundOn;
+    return '<button class="spk' + (on ? " on" : "") + '" data-act="sound" aria-pressed="' + on + '" aria-label="Sound" data-tag="' + (on ? "Sound on" : "Sound off") + '">' +
+      SPR.art("speaker-off", 2, "spk-off") + SPR.art("speaker-on", 2, "spk-on") + '<span class="spk-light" aria-hidden="true"></span></button>';
+  }
   // The pinboard: the prize voucher, an index card with the roles Thea is open to, and an optional "Currently" note.
   // (The awards themselves live on the Commendations paper.)
   function pinboardHTML() {
@@ -275,7 +318,7 @@
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
       (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>";
-    return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><span class="rec-plant" aria-hidden="true">' + SPR.art("plant", SC) + '</span><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
+    return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><span class="rec-plant" aria-hidden="true">' + SPR.art("plant", SC) + '</span>' + alarmHTML() + '<div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
       "<p>The summary, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
       '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
@@ -2012,7 +2055,7 @@
 
   // ----- name tags: objects first, names when pointed at -----
   let tagTimer = null, tagFor = null;
-  function tagTarget(el) { return el && el.closest && (el.closest(".pbi") || el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
+  function tagTarget(el) { return el && el.closest && (el.closest(".spk") || el.closest(".pbi") || el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
   function showTag(el, now) {
     clearTimeout(tagTimer);
     const go = () => {
@@ -2027,6 +2070,12 @@
         t.classList.toggle("flip", !right);
         t.style.left = Math.round(right ? r.right + 14 : r.left - 14 - t.offsetWidth) + "px";
         t.style.top = Math.round(clamp(r.top + 24, 8, window.innerHeight - t.offsetHeight - 8)) + "px";
+      } else if (el.classList.contains("spk") || el.classList.contains("aclock")) {
+        t.innerHTML = '<span class="tg-word">' + esc(el.dataset.tag) + "</span>";
+        const side = el.classList.contains("aclock");
+        t.className = "tag " + (side ? "side" : "above") + " pop"; t.hidden = false;
+        if (side) { t.style.left = Math.round(r.right + 14) + "px"; t.style.top = Math.round(r.top + r.height / 2 - t.offsetHeight / 2) + "px"; }
+        else { t.style.left = Math.round(clamp(r.left + r.width / 2 - t.offsetWidth / 2, 8, window.innerWidth - t.offsetWidth - 8)) + "px"; t.style.top = Math.round(r.top - t.offsetHeight - 10) + "px"; }
       } else if (el.classList.contains("pbi")) {
         t.innerHTML = '<span class="tg-sub">' + esc(el.dataset.tag) + "</span>";
         t.className = "tag below pop"; t.hidden = false;
@@ -2136,7 +2185,14 @@
       ui.forced = true; ui.boothForced = true; applyScene();
       const first = paperEl("id"); if (first) first.focus({ preventScroll: true });
     },
-    sound(b) { const on = FX.toggle(); b.setAttribute("aria-pressed", String(on)); $(".sb-label", b).textContent = on ? "Sound on" : "Sound off"; if (on) FX.play("tick"); },
+    snooze(b) { snooze(b); },
+    sound(b) {
+      const on = FX.toggle();
+      b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); b.dataset.tag = on ? "Sound on" : "Sound off";
+      if (tagFor === b) showTag(b, true);
+      b.classList.remove("press"); void b.offsetWidth; b.classList.add("press"); setTimeout(() => b.classList.remove("press"), 80);
+      if (on) FX.play("spkon");
+    },
     radio(b) { ui.radioOn = !ui.radioOn; b.textContent = ui.radioOn ? "Mute radio" : "Unmute radio"; b.setAttribute("aria-pressed", String(ui.radioOn)); if (!ui.radioOn) $("#aside").hidden = true; },
     ask(b) { ui.asked = +b.dataset.q; const el = $("#bubble"); el.hidden = false; el.textContent = state.interview[ui.asked].a; },
     "close-case"(b) { closeCase(b.dataset.id); },
@@ -2514,7 +2570,7 @@
   let rz = null;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(onResize, 120); });
   narrow.addEventListener("change", () => { if (ui.view === "desk" && !editing) render(); });
-  setInterval(() => { const c = $("#clock"); if (c) c.textContent = clock(); }, 20000);
+
 
   // ----- saving: the whole page, rebuilt from its own source and the current data -----
   function buildDoc() {
