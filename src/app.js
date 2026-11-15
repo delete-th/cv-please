@@ -297,7 +297,7 @@
       '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
       '<div class="pills" id="pills"><div class="stamp-dock" id="stampdock"><div class="stampbar" id="stampbar" role="group" aria-label="Stamp tray">' +
       '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("approved") + slot("denied") +
-      '<p class="bar-note"><span class="point">Drag a stamp onto the paper, or tap one, then the paper.</span><span class="touch">Tap a stamp, then tap the paper.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
+      '<p class="bar-note"><span class="point">Drag a stamp onto the paper, or tap one, then the paper.</span><span class="touch">Tap a stamp, then tap the paper.</span><span class="side-note">Drag to stamp, or tap, then tap.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
       '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></div>' +
       '<button class="stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("pillstamp", 2) + "<span>Stamps</span>" +
       '<span class="caret" aria-hidden="true">' + SPR.draw("caretup", 2) + SPR.draw("caretdown", 2) + "</span></button></div>" +
@@ -484,6 +484,7 @@
     });
   }
   function onResize() {
+    if ($("#passport")) placePassport(+$("#passport").dataset.frame);
     placeTray();
     if (!$("#desk")) return;
     sizeScene();
@@ -534,7 +535,8 @@
       const w = e.offsetWidth * ui.fit;
       if (st.x + w <= r.x || st.x >= r.x + r.w) return;
       if (!st.aside) st.aside = [st.x, st.y];
-      st.x = Math.round(Math.min(u.w - 60, r.x + r.w - 40 + k * 18)); st.y = u.top + k * 36;
+      const h = e.offsetHeight * ui.fit;
+      st.x = Math.round(Math.max(0, u.w - w - 8 - (2 - k) * 14)); st.y = Math.round(clamp(u.top + k * 36, u.top, u.bottom - h));
       e.classList.add("moving"); setPos(e, st.x, st.y);
     });
   }
@@ -998,13 +1000,13 @@
   function placeTray() {
     const dock = $("#stampdock"), bar = $("#stampbar");
     if (!dock || !bar) return;
-    const side = false;
+    const side = !!$("#intro") && !isPhone() && !!ui.ppVis;
     bar.classList.toggle("side", side);
     if (side) {
-      const d = rectOf(dock), pp = $("#passport"), pr = pp ? rectOf(pp) : null, w = bar.offsetWidth, h = bar.offsetHeight;
-      const left = pr ? Math.min(window.innerWidth - w - 16, pr.right + 24) : window.innerWidth - w - 24;
-      bar.style.left = Math.round(left - d.left + (parseFloat(getComputedStyle(dock).translate) || 0)) + "px";
-      bar.style.bottom = Math.round(d.bottom - (window.innerHeight / 2 + h / 2)) + "px";
+      const d = rectOf(dock), v = ui.ppVis, w = bar.offsetWidth, h = bar.offsetHeight;
+      const left = Math.min(window.innerWidth - w - 16, v.right + 24), mid = (v.top + v.bottom) / 2;
+      bar.style.left = Math.round(left - d.left) + "px";
+      bar.style.bottom = Math.round(d.bottom - clamp(mid + h / 2, h + 8, window.innerHeight - 80)) + "px";
       return;
     }
     bar.style.left = ""; bar.style.bottom = "";
@@ -1146,6 +1148,7 @@
     ui.introDone = true; ui.admitted = kind;
     $("#say").textContent = kind === "approved" ? "Entry granted. Come on through to the booth." : deniedLine();
     $$("#intro .intro-actions button").forEach((b) => { b.disabled = true; });
+    const itr = $("#intro"); if (itr) itr.classList.add("stamped");
     const n = $("#denied-note"); if (n) n.hidden = kind !== "denied";
     // hold so the ink is seen, fade the words, slide the passport away, and only then show the booth
     const r = reduced();
@@ -1592,7 +1595,7 @@
     ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
     // the passport canvas is 104x128 art pixels; the open page sits at (15, 2) on it
     const S = passScale(), px = (v) => v * S + "px", X = (v) => px(15 + v), Y = (v) => px(2 + v);
-    const base = String(p.basedIn || "").replace(/,?\s*relocating to\s*/i, " to ");
+    const pv = p.passport || {}, base = pv.base || String(p.basedIn || "").replace(/,?\s*relocating to\s*/i, " to ");
     const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
     const L = passLayout(S);
     introRoot.innerHTML =
@@ -1605,10 +1608,11 @@
       '<p class="pp-visa-title" style="left:' + px(14) + ";top:" + px(48) + ";width:" + px(46) + ";height:" + px(5) + '">Entry visa</p><div class="marks" data-marks="visa"></div></div>' +
       '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(23) + ";height:" + px(29) + '">' + SPR.applicant("thea", Math.ceil(Math.max(23 * S / 55, 29 * S / 59)), portraitAlt) + "</div>" +
       '<div class="pp-data" style="left:' + X(4) + ";top:" + Y(63) + ";width:" + px(37) + ";height:" + px(35) + '"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + "</p>" +
-      '<dl class="pp-rows">' + row("NAT", p.nationality) + row("OCC", p.occupation) + row("BASE", base) + (S >= 4 ? row("GRAD", e.graduated) : "") + "</dl></div>" + (S < 4 ? '<dl class="pp-rows pp-grad" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + '">' + row("GRAD", e.graduated) + "</dl>" : "") +
+      '<dl class="pp-rows">' + row("NAT", pv.nat || p.nationality) + row("OCC", pv.occ || p.occupation) + row("BASE", base) + row("GRAD", pv.grad || e.graduated) + "</dl></div>" + 
       '<p class="pp-code" aria-hidden="true" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + ";height:" + px(8) + '">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 30) + "</p></div></div>" +
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
+    placePassport(0);
     document.documentElement.classList.add("locked");
     const g = $("#pills"); if (g) g.classList.add("solo");
     $("#intro-btn").focus({ preventScroll: true });
@@ -1616,7 +1620,22 @@
   }
   // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
   // 4x where the open page clears the tray (beside it on short screens), else 3x
-  function passScale() { return isPhone() ? 3 : (passLayout(4).ok ? 4 : 3); }
+  function passScale() { return isPhone() ? 3 : clamp(Math.floor((window.innerHeight - 300) / 113), 4, 6); }
+  // the visible part of each frame on the 104x128 canvas, so the book itself is what gets centred
+  const PP_BOX = [[25, 50, 80, 124], [11, 43, 94, 128], [8, 46, 97, 128], [15, 60, 89, 115], [15, 60, 89, 115], [15, 60, 89, 115], [15, 28, 89, 115], [15, 2, 89, 115]];
+  function placePassport(f) {
+    const pp = $("#passport"), it = $("#intro");
+    if (!pp || !it || isPhone()) return;
+    const S = +pp.style.getPropertyValue("--pp") || 4, bx = PP_BOX[f || 0], vw = window.innerWidth, vh = window.innerHeight;
+    const W = (bx[2] - bx[0]) * S, H = (bx[3] - bx[1]) * S, above = (f || 0) === 0 ? 108 : 64, avail = vh - 72 - 16;
+    const top = Math.max(8, (avail - above - H) / 2) + above, left = (vw - (W + 164)) / 2;
+    pp.style.left = Math.round(left - bx[0] * S) + "px"; pp.style.top = Math.round(top - bx[1] * S) + "px";
+    it.style.setProperty("--act-top", Math.round(top - 64) + "px");
+    it.style.setProperty("--say-top", Math.round(top - above) + "px");
+    it.style.setProperty("--vis-cx", Math.round(left + W / 2) + "px");
+    ui.ppVis = { left: left, top: top, right: left + W, bottom: top + H };
+    placeTray();
+  }
   // where the canvas goes: the closed book (art rows 50-124) centred with its words above it, but never so low
   // that the open page (rows 2-115) would reach the open tray
   function passLayout(S) {
@@ -1633,6 +1652,7 @@
   function setFrame(f) {
     const pp = $("#passport"), fr = $("#pp-frames"); if (!pp || !fr) return;
     pp.dataset.frame = f; fr.style.backgroundPosition = -104 * f * (+pp.style.getPropertyValue("--pp") || 4) + "px 0";
+    placePassport(f);
   }
   function playPassport(dir) {
     const pp = $("#passport"); if (!pp) return;

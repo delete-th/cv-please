@@ -25,7 +25,13 @@
       "BUILDS WITH AI",
       "CS GRADUATE",
       "RELOCATING TO MANILA"
-    ]
+    ],
+    "passport": {
+      "nat": "Filipino",
+      "occ": "Software engineer",
+      "base": "SG → Manila",
+      "grad": "Sep 2026"
+    }
   },
   "education": {
     "school": "University of Wollongong (Singapore Institute of Management)",

@@ -1500,3 +1500,20 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .p-diploma .dip-sign b { white-space: nowrap; letter-spacing: 0.04em; }
 .p-diploma .dip-conf { white-space: nowrap; }
 .p-diploma .dip-foot { gap: 8px; }
+
+/* ---------- passport screen: bigger book, the tray beside it, the visible book centred ---------- */
+.side-note { display: none; }
+@media (min-width: 821px) {
+  .intro .passport { left: 0; top: 0; translate: var(--dx, 0px) var(--dy, 0px); }
+  .intro .intro-actions, .intro.opened .intro-actions { position: absolute; left: 0; right: auto; width: calc(var(--vis-cx) * 2); top: var(--act-top); justify-content: center; }
+  .intro .intro-say, .intro.opened .intro-say { position: absolute; left: 0; right: auto; width: calc(var(--vis-cx) * 2); top: var(--say-top); text-align: center; }
+  .intro.opened:not(.stamped) .intro-say { visibility: hidden; }
+  .intro.stamped .intro-actions { visibility: hidden; }
+  .stampbar.side { width: 140px; }
+  .stampbar.side .bar-rail { flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 8px; padding: 10px 8px; }
+  .stampbar.side .bar-note { max-width: 120px; white-space: normal; text-align: center; font-size: var(--t-label); }
+  .stampbar.side .bar-note .point, .stampbar.side .bar-note .touch { display: none; }
+  .stampbar.side .side-note { display: inline; }
+  .stamp-dock .stampbar.side { transform: translateX(-48px); }
+  .stamp-dock .stampbar.side.out { transform: none; }
+}
