@@ -1867,3 +1867,6 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   background-repeat: no-repeat, repeat; background-position: 0 0, 0 52px;
   filter: drop-shadow(1px 0 0 var(--ink-soft)) drop-shadow(-1px 0 0 var(--ink-soft)) drop-shadow(0 -1px 0 var(--ink-soft)) drop-shadow(0 1px 0 var(--ink-soft)) var(--lift-shadow); }
 .sl-tab { top: -29px; padding: 6px 22px 4px; border: 0; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--field) 92%, var(--folder-tan)); font: 700 15px/1.2 var(--typed); -webkit-font-smoothing: auto; clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 100%, 0 100%); }
+/* a drawer thing being carried rides above the desk and the drawer */
+.pobj.carried { position: fixed; z-index: 95; translate: none; }
+.pobj.carried .art { filter: var(--lift-shadow); }

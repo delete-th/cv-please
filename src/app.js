@@ -1043,6 +1043,38 @@
     if (down) { if (!el.classList.contains("pressed")) FX.play("keyclack"); el.classList.add("pressed"); }
     else el.classList.remove("pressed");
   }
+  const pobjFloor = () => $('#dw-big.open[data-dw="personal"] .dw-floor-personal');
+  function carryScale(overDrawer) { return overDrawer ? dwGeom().sc : SC; }
+  function carryStart(d, ev) {
+    const el = d.el, r = rectOf(el), s0 = parseFloat(getComputedStyle(el).getPropertyValue("--sprite-scale")) || SC;
+    d.carry = { grab: [(ev.clientX - r.left) / s0, (ev.clientY - r.top) / s0], s: s0 };
+    hideNote();
+    el.classList.add("carried");
+    el.style.setProperty("--sprite-scale", s0);
+    fixedRoot.appendChild(el);
+    carryMove(d, ev);
+  }
+  function carryMove(d, ev) {
+    const el = d.el, fl = pobjFloor(), over = !!(fl && inside(rectOf(fl), ev.clientX, ev.clientY)), s = carryScale(over);
+    if (s !== d.carry.s) { d.carry.s = s; el.style.setProperty("--sprite-scale", s); }
+    // the watch lies sideways in the drawer and upright on the desk
+    if (el.dataset.p === "watch") el.classList.toggle("rot", over);
+    el.style.left = Math.round(ev.clientX - d.carry.grab[0] * s) + "px";
+    el.style.top = Math.round(ev.clientY - d.carry.grab[1] * s) + "px";
+  }
+  function carryDrop(d, ev) {
+    const el = d.el, fl = pobjFloor(), r = rectOf(el);
+    el.classList.remove("carried"); el.style.removeProperty("--sprite-scale");
+    if (fl && inside(rectOf(fl), ev.clientX, ev.clientY)) {
+      const hr = rectOf(fl), sc = dwGeom().sc;
+      pobjHome(el);
+      (ui.pobjAt = ui.pobjAt || {})[el.dataset.p] = [(r.left - hr.left) / sc, (r.top - hr.top) / sc];
+      placePobj(el); FX.play("tap"); return;
+    }
+    const dk = rectOf($("#desk"));
+    pobjToDesk(el, r.left - dk.left, r.top - dk.top);
+    FX.play("tap");
+  }
   function pobjToDesk(el, x, y) {
     const desk = $("#desk");
     el.classList.remove("rot"); el.classList.add("sticker", "on-desk");
@@ -2273,7 +2305,7 @@
       if (Math.hypot(dx, dy) < 5) return;
       drag.moved = true;
       hideTag();
-      if (drag.el.classList.contains("pobj") && !drag.el.classList.contains("on-desk")) { hideNote(); drag.inDrawer = true; drag.el.style.zIndex = 30; }
+      if (drag.el.classList.contains("pobj") && !isPhone()) carryStart(drag, ev);
       if (drag.el.classList.contains("filed")) { const id = drag.el.dataset.id; pst(id).inBox = false; drag.el.classList.remove("filed"); }
       drag.el.classList.remove("moving", "nudge"); drag.el.classList.add("held");
       try { drag.el.setPointerCapture(ev.pointerId); } catch (err) { /* capture is optional */ }
@@ -2281,8 +2313,8 @@
       if (drag.el.dataset.p === "watch") say("watch");
       if (drag.el.classList.contains("paper")) markHandled();
     }
-    if (drag.inDrawer) setPos(drag.el, drag.ox + dx, drag.oy + dy);
-    else moveTo(drag.el, drag.ox + dx, drag.oy + dy);
+    if (drag.carry) { carryMove(drag, ev); return; }
+    moveTo(drag.el, drag.ox + dx, drag.oy + dy);
     if (drag.el.classList.contains("paper")) checkLamp();
     const ct = $("#counter"), isCase = drag.el.classList.contains("p-case"), fb = $("#filebox");
     if (ct && drag.el.classList.contains("paper") && !isCase && !drag.el.classList.contains("p-record")) {
@@ -2329,6 +2361,7 @@
     const ct = $("#counter"), fb = $("#filebox");
     if (ct) ct.classList.remove("show-hint");
     if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
+    if (d.carry) { carryDrop(d, ev); return; }
     if (d.el.classList.contains("pobj")) {
       const home = $('#dw-big.open[data-dw="personal"] .dw-floor-personal');
       if (home && inside(rectOf(home), ev.clientX, ev.clientY)) {
