@@ -1759,3 +1759,6 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .rec .r-title { text-align: center; letter-spacing: 0.04em; }
 .rec .r-title + p { text-align: center; padding-bottom: 8px; border-bottom: 1px dashed var(--rule); }
 .receipt .slip, .slip.loose { background: var(--rcpt, color-mix(in srgb, var(--field) 88%, var(--paper))); }
+/* booth shortcuts in the booth's own display face */
+.booth-links .btn-quiet, .booth-links .btn-main { font: 400 20px/1 var(--display); letter-spacing: 0.02em; text-decoration: underline 2px; text-underline-offset: 5px; -webkit-font-smoothing: none; }
+.booth-links { gap: 8px 24px; }

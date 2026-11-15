@@ -189,8 +189,8 @@
       '<p class="denied-note" id="denied-note"' + (ui.admitted === "denied" ? "" : " hidden") + ">" + esc(deniedLine()) + "</p>" +
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
         '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") +
-      '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
-      '<button class="btn-quiet" data-act="passport">View passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
+      '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="area" data-to="record">Summary</button><button class="btn-quiet" data-act="view" data-v="list">Simplify</button>' +
+      '<button class="btn-quiet" data-act="passport">Inspect passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
       '<div class="booth-side">' + pinboardHTML() + "</div>" +
       '<div class="booth-meta"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
@@ -276,7 +276,7 @@
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
       (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>";
     return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
-      "<p>The 60-second version, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
+      "<p>The summary, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
       '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer-off", 4) + "</button></div>" +
       '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk, or print it from here.</p>') +
@@ -1544,7 +1544,7 @@
       : (safeUrl(l.url) ? '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>" : "")).join("");
     const answered = state.interview.filter((q) => q.q && q.a);
     app.innerHTML = '<div class="wrap list"><header class="top"><span class="who">' + esc(p.name) + '</span><nav aria-label="Page">' +
-      (editing ? "" : '<button class="btn-quiet" data-act="view" data-v="desk">Desk view</button><button class="btn-quiet" data-act="passport">View passport</button>') +
+      (editing ? "" : '<button class="btn-quiet" data-act="view" data-v="desk">Desk view</button><button class="btn-quiet" data-act="passport">Inspect passport</button>') +
       '<span class="owner" id="owner">' + ownerBar() + "</span></nav></header>" +
       '<section class="hero">' + (ui.admitted === "approved" && !editing ? '<span class="ink green entry">Approved<small>' + today + "</small></span>" : "") +
       f("profile.greeting", "Greeting", "", "h1").replace("<h1", '<h1 tabindex="-1" id="hello"') + f("profile.tagline", "One-line tagline", "tagline " + blk(), "p") +
@@ -2150,10 +2150,7 @@
       if (Math.hypot(dx, dy) < 5) return;
       drag.moved = true;
       hideTag();
-      if (drag.el.classList.contains("pobj") && !drag.el.classList.contains("on-desk")) {
-        const r = rectOf(drag.el), d = rectOf($("#desk")), x = r.left - d.left, y = r.top - d.top;
-        hideNote(); pobjToDesk(drag.el, x, y); drag.ox = x; drag.oy = y;
-      }
+      if (drag.el.classList.contains("pobj") && !drag.el.classList.contains("on-desk")) { hideNote(); drag.inDrawer = true; drag.el.style.zIndex = 30; }
       if (drag.el.classList.contains("filed")) { const id = drag.el.dataset.id; pst(id).inBox = false; drag.el.classList.remove("filed"); }
       drag.el.classList.remove("moving", "nudge"); drag.el.classList.add("held");
       try { drag.el.setPointerCapture(ev.pointerId); } catch (err) { /* capture is optional */ }
@@ -2161,7 +2158,8 @@
       if (drag.el.dataset.p === "watch") say("watch");
       if (drag.el.classList.contains("paper")) markHandled();
     }
-    moveTo(drag.el, drag.ox + dx, drag.oy + dy);
+    if (drag.inDrawer) setPos(drag.el, drag.ox + dx, drag.oy + dy);
+    else moveTo(drag.el, drag.ox + dx, drag.oy + dy);
     if (drag.el.classList.contains("paper")) checkLamp();
     const ct = $("#counter"), isCase = drag.el.classList.contains("p-case"), fb = $("#filebox");
     if (ct && drag.el.classList.contains("paper") && !isCase && !drag.el.classList.contains("p-record")) {
@@ -2211,6 +2209,8 @@
     if (d.el.classList.contains("pobj")) {
       const home = $('#dw-big.open[data-dw="personal"] .dw-floor-personal');
       if (home && inside(rectOf(home), ev.clientX, ev.clientY)) { pobjHome(d.el); FX.play("tap"); return; }
+      // carried out of the drawer: it lands on the desk where it was let go
+      if (d.inDrawer) { const r = rectOf(d.el), dk = rectOf($("#desk")); pobjToDesk(d.el, r.left - dk.left, r.top - dk.top); }
     }
     checkLamp();
     if (d.el.classList.contains("paper")) {
