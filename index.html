@@ -1874,6 +1874,12 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 /* a drawer thing being carried rides above the desk and the drawer */
 .pobj.carried { position: fixed; z-index: 95; translate: none; }
 .pobj.carried .art { filter: var(--lift-shadow); }
+/* the clock and sound toggle sit under the pinboard again */
+@media (min-width: 1100px) {
+  .booth { grid-template-columns: 294px minmax(0, 1fr) auto; grid-template-rows: auto auto; grid-template-areas: "win main side" "win main meta"; row-gap: 8px; }
+  .booth-meta { grid-area: meta; align-self: end; justify-self: stretch; }
+  .booth-side { align-self: start; }
+}
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
