@@ -1733,3 +1733,7 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .pb2 .pbi-card { left: 14px; top: 26px; width: 172px; }
 .pb2 .pbi-ticket { left: 196px; top: 92px; }
 .pb2 .pbi-note { left: 206px; top: 14px; }
+/* the counter strip's hint (and any put-away chips) start right of the intercom and the file box, lined up with the name block above */
+@media (min-width: 821px) { .counter { padding-left: 374px; } }
+.counter-hint { font: italic 400 14px/1 var(--sans); letter-spacing: 0.01em; color: var(--on-desk-muted); -webkit-font-smoothing: auto; }
+.counter.ready .counter-hint { color: var(--ink); }
