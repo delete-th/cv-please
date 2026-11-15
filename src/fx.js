@@ -141,16 +141,26 @@ window.FX = (function () {
     g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.07);
     o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.08);
   }
-  // a camera shutter, then the hum of a scanner head travelling down the glass
+  // a soft scan: a quiet shutter, a smooth light sweep rising as the bar travels, then a gentle two-note "done"
   function scanSound(c) {
-    const t0 = c.currentTime;
-    tick(c, 0.01, 5200, 0.55); tick(c, 0.025, 1300, 0.4, t0 + 0.035);
-    const o = c.createOscillator(), bp = c.createBiquadFilter(), g = c.createGain(), at = t0 + 0.09, len = 0.56;
-    o.type = "sawtooth"; o.frequency.setValueAtTime(92, at); o.frequency.linearRampToValueAtTime(104, at + len);
-    bp.type = "bandpass"; bp.Q.value = 3; bp.frequency.setValueAtTime(700, at); bp.frequency.exponentialRampToValueAtTime(1900, at + len);
-    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.09, at + 0.05); g.gain.setValueAtTime(0.09, at + len - 0.08); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
-    o.connect(bp); bp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + len + 0.02);
-    tick(c, 0.02, 2400, 0.3, at + len);
+    const t0 = c.currentTime, out = c.createGain(), lp = c.createBiquadFilter();
+    lp.type = "lowpass"; lp.frequency.value = 3200; out.gain.value = 0.6; lp.connect(out); out.connect(snd.gain);
+    tick(c, 0.008, 4200, 0.25);
+    // the sweep: two soft sines a fifth apart gliding up, with a light shimmer
+    [[1, 0.07], [1.5, 0.035]].forEach((h) => {
+      const o = c.createOscillator(), g = c.createGain(), at = t0 + 0.06, len = 0.6;
+      o.type = "sine"; o.frequency.setValueAtTime(330 * h[0], at); o.frequency.exponentialRampToValueAtTime(660 * h[0], at + len);
+      const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 14; lg.gain.value = h[1] * 0.35; lfo.connect(lg); lg.connect(g.gain);
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(h[1], at + 0.08); g.gain.setValueAtTime(h[1], at + len - 0.1); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+      o.connect(g); g.connect(lp); o.start(at); o.stop(at + len + 0.02); lfo.start(at); lfo.stop(at + len + 0.02);
+    });
+    // done: two round notes
+    [[784, 0.68], [1175, 0.8]].forEach((n) => {
+      const o = c.createOscillator(), g = c.createGain(), at = t0 + n[1];
+      o.type = "triangle"; o.frequency.value = n[0];
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.12, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.28);
+      o.connect(g); g.connect(lp); o.start(at); o.stop(at + 0.3);
+    });
   }
   function toggle() {
     snd.on = !snd.on;
