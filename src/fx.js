@@ -54,7 +54,6 @@ window.FX = (function () {
   }
   function toggle() { snd.on = !snd.on; if (snd.on) ctx(); return snd.on; }
 
-  const CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   function board(el, phrases, n) {
     el.innerHTML = Array.from({ length: n }, () => '<span class="tile">&nbsp;</span>').join("");
     const tiles = Array.from(el.children), cur = Array(n).fill(" ");
@@ -69,14 +68,13 @@ window.FX = (function () {
       for (let i = 0; i < n; i++) {
         if (cur[i] === text[i]) continue;
         busy++;
-        const flips = 2 + Math.floor(Math.random() * 3);
-        let k = 0;
-        const step = () => {
+        // each tile drops to blank and then lands on its own letter, so no stray letters are ever shown
+        const step = (k) => {
           if (g !== gen) return;
-          if (k < flips) { set(i, CH[Math.floor(Math.random() * CH.length)]); play("tick"); k++; setTimeout(step, 55); }
-          else { set(i, text[i]); if (--busy === 0) next(); }
+          if (k === 0 && cur[i] !== " ") { set(i, " "); play("tick"); setTimeout(() => step(1), 60); }
+          else { set(i, text[i]); if (text[i] !== " ") play("tick"); if (--busy === 0) next(); }
         };
-        setTimeout(step, i * 24);
+        setTimeout(() => step(0), text[i] === " " ? 0 : 60 + i * 26);
       }
       if (busy === 0) next();
     }
