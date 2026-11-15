@@ -1,58 +1,48 @@
 // Sounds (off until the visitor turns them on) and the split-flap board in the booth window.
 window.FX = (function () {
   const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const snd = { on: false, ctx: null, last: {}, buf: null };
+  const VOLUME = { tick: 0.12, print: 0.3 };
+  const snd = { on: false, ctx: null, last: {}, bufs: {}, gain: null };
+  try { snd.on = sessionStorage.getItem("cvp-sound") === "on"; } catch (err) { /* storage can be blocked */ }
 
   function ctx() {
     if (!snd.ctx) {
       const C = window.AudioContext || window.webkitAudioContext;
       if (!C) return null;
       snd.ctx = new C();
-      const len = snd.ctx.sampleRate;
-      snd.buf = snd.ctx.createBuffer(1, len, len);
-      const data = snd.buf.getChannelData(0);
-      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      snd.gain = snd.ctx.createGain(); snd.gain.gain.value = 0.35; snd.gain.connect(snd.ctx.destination);
+      // decode the embedded files once
+      Object.keys(window.SOUNDS || {}).forEach((name) => {
+        const b64 = window.SOUNDS[name].split(",")[1], bin = atob(b64), bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        snd.ctx.decodeAudioData(bytes.buffer, (buf) => { snd.bufs[name] = buf; }, () => {});
+      });
     }
     if (snd.ctx.state === "suspended") snd.ctx.resume();
     return snd.ctx;
   }
-  function env(c, t, peak, dur) {
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(peak, t + 0.006);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    g.connect(c.destination);
-    return g;
-  }
-  function noise(c, t, dur, type, freq, peak, sweepTo) {
-    const src = c.createBufferSource(), f = c.createBiquadFilter();
-    src.buffer = snd.buf;
-    f.type = type; f.frequency.setValueAtTime(freq, t);
-    if (sweepTo) f.frequency.linearRampToValueAtTime(sweepTo, t + dur);
-    src.connect(f); f.connect(env(c, t, peak, dur));
-    src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
-  }
-  function tone(c, t, type, from, to, peak, dur) {
-    const o = c.createOscillator();
-    o.type = type; o.frequency.setValueAtTime(from, t);
-    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
-    o.connect(env(c, t, peak, dur)); o.start(t); o.stop(t + dur + 0.02);
-  }
+  const ALIAS = { rustle: "lift" };
   function play(name) {
     if (!snd.on) return;
-    const now = performance.now(), gap = name === "tick" ? 40 : 70;
+    name = ALIAS[name] || name;
+    const now = performance.now(), gap = name === "tick" ? 40 : 60;
     if (snd.last[name] && now - snd.last[name] < gap) return;
     snd.last[name] = now;
     const c = ctx();
-    if (!c) return;
-    const t = c.currentTime;
-    if (name === "thud") { tone(c, t, "sine", 120, 42, 0.6, 0.2); noise(c, t, 0.05, "lowpass", 900, 0.35); }
-    else if (name === "rustle") noise(c, t, 0.16, "bandpass", 2600, 0.12);
-    else if (name === "drawer") noise(c, t, 0.34, "lowpass", 260, 0.2, 900);
-    else if (name === "print") { for (let i = 0; i < 6; i++) noise(c, t + i * 0.09, 0.06, "bandpass", 1400, 0.08); }
-    else if (name === "tick") tone(c, t, "square", 1700, 0, 0.025, 0.014);
+    if (!c || !snd.bufs[name]) return;
+    const src = c.createBufferSource(), g = c.createGain();
+    src.buffer = snd.bufs[name];
+    src.playbackRate.value = 0.95 + Math.random() * 0.1; // a little pitch variation so repeats do not sound mechanical
+    g.gain.value = VOLUME[name] || 1;
+    src.connect(g); g.connect(snd.gain);
+    src.start();
   }
-  function toggle() { snd.on = !snd.on; if (snd.on) ctx(); return snd.on; }
+  function toggle() {
+    snd.on = !snd.on;
+    if (snd.on) ctx();
+    try { sessionStorage.setItem("cvp-sound", snd.on ? "on" : "off"); } catch (err) { /* storage can be blocked */ }
+    return snd.on;
+  }
 
   function board(el, phrases, n) {
     el.innerHTML = Array.from({ length: n }, () => '<span class="tile">&nbsp;</span>').join("");

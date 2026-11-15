@@ -13,6 +13,7 @@
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
+    lampOn: true, recordView: false, recPos: null, printing: false,
   };
   let topZ = 40, board = null;
 
@@ -46,7 +47,7 @@
   const paperIds = ORDER;
   const caseIndex = (id) => (/^case-\d+$/.test(id) ? +id.slice(5) : -1);
   const paperLabel = (id) => (id === "id" ? "ID card" : id === "diploma" ? "Diploma" : id === "honours" ? "Commendations" : shortName(state.projects[caseIndex(id)]));
-  const pst = (id) => ui.papers[id] || (ui.papers[id] = { x: null, y: null, tilt: +(rnd(id, "tilt") * 3 - 1.5).toFixed(1), open: false, page: 0, pages: null, away: false, prev: null, nudged: null });
+  const pst = (id) => ui.papers[id] || (ui.papers[id] = { x: null, y: null, tilt: +(rnd(id, "tilt") * 3 - 1.5).toFixed(1), open: false, page: 0, pages: null, away: false, prev: null, inBox: caseIndex(id) >= 0, outPos: null });
   const paperEl = (id) => $('#desk .paper[data-id="' + id + '"]');
   const portraitAlt = "Pixel portrait of Thea: short dark hair, light shirt with an open collar";
 
@@ -108,10 +109,13 @@
     return pages.filter(Boolean);
   }
   function caseInner(i) {
-    const p = state.projects[i], st = pst("case-" + i), pages = st.pages || [""], n = pages.length, page = Math.min(st.page, n - 1);
-    return '<header class="paper-head"><h2>' + esc(shortName(p)) + "</h2>" + (n > 1 ? '<span class="pg">Page ' + (page + 1) + " of " + n + "</span>" : "") +
-      '<button class="close" data-act="close-case" data-id="case-' + i + '">Close file</button></header><div class="paper-body">' + pages[page] + "</div>" +
-      (n > 1 ? '<button class="corner" data-act="flip" data-id="case-' + i + '" aria-label="Turn to page ' + ((page + 1) % n + 1) + '">' + SPR.draw("corner", PX) + "</button>" : "");
+    const p = state.projects[i], st = pst("case-" + i), pages = st.pages || [""], n = pages.length, page = Math.min(st.page, n - 1), id = "case-" + i;
+    const nav = n > 1 ? '<span class="pg-nav"><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Previous page"' + (page === 0 ? " disabled" : "") + ">" + SPR.draw("left", 2) +
+      '</button><span class="pg">Page ' + (page + 1) + " of " + n + '</span><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="1" aria-label="Next page"' + (page === n - 1 ? " disabled" : "") + ">" + SPR.draw("right", 2) + "</button></span>" : "";
+    return '<header class="paper-head"><h2>' + esc(shortName(p)) + "</h2>" + nav +
+      '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></header>' +
+      '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" +
+      (n > 1 && page < n - 1 ? '<button class="corner" data-act="flip" data-id="' + id + '" aria-label="Turn to page ' + (page + 2) + '">' + SPR.draw("corner", PX) + "</button>" : "");
   }
   function paperInner(id) {
     if (id === "id") return idInner();
@@ -122,7 +126,7 @@
   }
   function paperHTML(id) {
     const st = pst(id), i = caseIndex(id), kind = i >= 0 ? "case" : id;
-    const cls = "paper p-" + kind + (st.open ? " open" : "") + (st.away ? " away" : "") + (isPhone() ? "" : " packed") +
+    const cls = "paper p-" + kind + (st.open ? " open" : "") + (st.away ? " away" : "") + (i >= 0 && st.inBox && !st.open && !isPhone() ? " filed" : "") + (isPhone() ? "" : " packed") +
       (i >= 0 && ui.hot && uses(state.projects[i].stack, ui.hot) ? " hot" : "");
     const label = i >= 0 ? "Case file: " + state.projects[i].name : paperLabel(id);
     return '<article class="' + cls + '" data-id="' + id + '" data-drag tabindex="0" aria-label="' + esc(label) + '"' +
@@ -148,7 +152,7 @@
   function boothHTML() {
     const p = state.profile, qs = state.interview.map((q, i) => [q, i]).filter((x) => x[0].q && x[0].a);
     return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline">' + SPR.scene(PX) + "</span>" +
-      SPR.applicant(p.applicant || "thea", PX, portraitAlt + ", standing at the booth window", "applicant") + '<span class="ledge" aria-hidden="true"></span>' +
+      SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="ledge" aria-hidden="true"></span>' +
       '<div class="shutter" id="shutter"><span>Booth closed. Scroll to open.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
       '<div class="board" id="board" aria-hidden="true"></div><p class="sr-only">Departure board: ' + esc(p.board.join(", ")) + "</p></div>" +
       '<div class="booth-main"><div class="booth-links"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
@@ -167,10 +171,12 @@
     const sticker = (id) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.draw(id, PX) + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
-      '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop a paper on the counter to put it away</span></div>' +
-      '<div class="lamp" aria-hidden="true"><span class="off">' + SPR.lamp(false, PX) + '</span><span class="on">' + SPR.lamp(true, PX) + "</span></div>" +
+      '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
+      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.draw("filebox", PX) + '</span><button class="box-all" data-act="all-back">Put all back</button></div>' +
+      '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.draw("printer", PX) + '<span class="led" aria-hidden="true"></span></button></div>' +
+      '<div class="record-view" id="record-view" hidden><div class="rv-bar"><span class="rv-title">Entry record</span><button class="btn-quiet" data-act="record-down">Put it on the desk</button></div><div class="rv-scroll" id="rv-scroll"></div></div>' +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + '</span><span class="ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
-      sticker("cup") + sticker("plant") + sticker("laptop") +
+      sticker("cup") + sticker("plant") + sticker("laptop") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
       '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.draw("envelope", PX) + '<span class="ink red env-stamp">Applicant file</span></div>' +
       '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">Scroll down and the applicant file unpacks itself.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
@@ -181,22 +187,17 @@
   // ----- entry record -----
   function recordHTML() {
     const p = state.profile, e = state.education, feat = state.projects.filter((x) => x.featured);
-    const slip = '<div class="slip' + (ui.slipTorn && !isPhone() ? " loose" : "") + '" id="slip" tabindex="-1"' + (ui.slipTorn ? " data-drag" : "") + '><p class="s-title">Contact slip</p>' +
+    const slip = '<div class="slip" id="slip" tabindex="-1"><p class="s-title">Contact slip</p>' +
       '<span class="email">' + esc(p.email) + '</span><div class="row"><button class="btn-quiet" data-act="copy">Copy address</button>' +
       p.links.map((l) => (safeUrl(l.url) ? '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>" : "")).join("") + "</div></div>";
-    return '<section class="record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
-      "<p>The 60-second version, printed at the booth. Stamp it if you want to leave a verdict.</p></div>" +
-      '<div class="printer-area' + (ui.printed ? " printed" : "") + '" id="printer-area"><div class="printer" id="printer">' +
-      (ui.printed ? "" : '<button class="btn-quiet" data-act="print">Print record</button>') + '<span class="led" aria-hidden="true"></span></div>' +
-      '<div class="receipt' + (ui.slipTorn ? " torn" : "") + '" id="receipt" data-stamp-root tabindex="0" aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
+    return '<article class="receipt" id="receipt" data-stamp-root data-rec tabindex="0" aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
       '<div class="rec stampable" data-stamp="record"><p class="r-title">Entry record</p><p>Desk 04 · ' + today + "</p>" +
       "<dl><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Seeking</dt><dd>" + esc(p.seeking) + "</dd><dt>Based in</dt><dd>" + esc(p.basedIn) + "</dd><dt>Education</dt><dd>" +
       esc(e.degree) + ", " + esc(e.graduated) + '</dd></dl><p class="r-h">Strengths</p><ul>' + state.strengths.filter(Boolean).map((s) => "<li>" + esc(s) + "</li>").join("") +
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
-      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</div>" +
-      (ui.slipTorn ? slip : "") + "</div></div>" +
-      '<footer class="foot">' + esc(p.name) + " · " + esc(p.basedIn) + "</footer></section>";
+      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>" +
+      (ui.slipTorn ? slip.replace('class="slip"', 'class="slip loose" data-drag') : "");
   }
 
   // ----- fixed controls: the stamp bar and the pill nav -----
@@ -246,9 +247,9 @@
     if (!$("#scene")) return;
     const s = sceneNow(), prev = force ? {} : ui.scene || {}, n = ORDER().length;
     const sh = $("#shutter"), ct = $("#counter"), desk = $("#desk");
-    if (s.shut !== prev.shut) { sh.style.transform = "translateY(" + -s.shut * 25 + "%)"; sh.classList.toggle("up", s.shut === 4); if (!force) FX.play("tick"); }
+    if (s.shut !== prev.shut) { sh.style.transform = "translateY(" + -s.shut * 25 + "%)"; sh.classList.toggle("up", s.shut === 4); if (!force) FX.play("shutter"); }
     if (s.counter !== prev.counter) ct.style.transform = "translateX(" + -(3 - s.counter) * 34 + "%)";
-    if (s.lamp !== prev.lamp) { desk.classList.toggle("lamp-on", s.lamp); if (!force && s.lamp) FX.play("tick"); }
+    if (s.lamp !== prev.lamp) { setLampVisible(s.lamp); if (!force && s.lamp) FX.play("lamp"); }
     if (s.board !== prev.board) { if (s.board) board.start(); else board.blank(); }
     ORDER().forEach((id, i) => {
       const want = i < s.out, had = prev.out != null && i < prev.out;
@@ -268,26 +269,32 @@
   // the ID card, diploma and commendations across the middle overlapping only by their margins,
   // a clear lane on the right, and the bottom strip kept for the drawer front and the pill nav.
   // On short screens the whole layout shrinks a little so every paper starts on the desk.
-  const LANE = 170, MID_X = 286, TOP = 50, BOTTOM = 68, STACK_STEP = 28;
+  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 23;
   const usable = () => { const d = $("#desk"); return { w: d.clientWidth, h: d.clientHeight, top: TOP, bottom: d.clientHeight - BOTTOM - 6 }; };
+  // the file box sits in the bottom-left corner; each folder has its own slot in it
+  function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
+  function slotPos(i) { const b = boxRect(); return [b.x + 12 + (i % 2) * 3, b.y + 34 + i * SLOT]; }
+  function placeFurniture() {
+    const u = usable(), box = $("#filebox"), pr = $("#printer");
+    box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
+    pr.style.left = u.w - LANE + 8 + "px"; pr.style.top = u.top + 96 + "px";
+  }
   function computeFit() {
     if (isPhone()) { ui.fit = 1; return; }
     const u = usable(), avail = u.bottom - u.top, el = (id) => paperEl(id);
-    const folders = caseIds().map(el).filter(Boolean), last = folders[folders.length - 1];
-    const stackH = 24 + (folders.length - 1) * STACK_STEP + (last ? last.offsetHeight : 120);
     const mids = ["id", "diploma", "honours"].map(el), midH = Math.max.apply(null, mids.map((e, k) => e.offsetHeight + [8, 16, 0][k]));
-    const minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
-    ui.fit = clamp(Math.min(avail / stackH, avail / midH, (u.w - LANE - MID_X) / minW), 0.72, 1);
+    const left = boxRect().w + 30, minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
+    ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.72, 1);
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
   function landing(id, el) {
     const u = usable(), i = caseIndex(id), s = ui.fit;
-    if (i >= 0) return [20 + (i % 2) * 6, Math.round(u.top + 24 * s + i * STACK_STEP * s)];
+    if (i >= 0) return slotPos(i);
     const widths = ["id", "diploma", "honours"].map((k) => { const e = paperEl(k); return (e ? e.offsetWidth : 300) * s; });
-    const midX = MID_X * Math.min(1, s + 0.1), avail = u.w - LANE - midX, min = widths[0] * 0.85 + widths[1] * 0.85 + widths[2];
-    const extra = Math.max(0, avail - min) / 2;
-    const gap0 = widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 40), gap1 = widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 40);
-    const k = { id: 0, diploma: 1, honours: 2 }[id], x = [midX, midX + gap0, midX + gap0 + gap1][k];
+    const left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] * 0.85 + widths[1] * 0.85 + widths[2];
+    const extra = Math.max(0, avail - min) / 3;
+    const gap0 = widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 60), gap1 = widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 60);
+    const x0 = left + Math.min(extra, 40), k = { id: 0, diploma: 1, honours: 2 }[id], x = [x0, x0 + gap0, x0 + gap0 + gap1][k];
     return [Math.round(x), Math.round(u.top + [8, 16, 0][k] * s)];
   }
   function envCenter() { const e = $("#envelope"); return [e.offsetLeft + e.offsetWidth / 2, e.offsetTop + e.offsetHeight / 2]; }
@@ -298,7 +305,7 @@
     if (!el || st.away) return;
     if (st.x == null) { const p = landing(id, el); st.x = p[0]; st.y = p[1]; }
     if (isPhone()) { el.classList.remove("packed"); return; }
-    const go = () => { el.classList.remove("packed"); setPos(el, st.x, st.y); el.style.zIndex = 10 + (order || 0); };
+    const go = () => { el.classList.remove("packed"); setPos(el, st.x, st.y); el.style.zIndex = st.inBox ? 20 + caseIndex(id) : 10 + (order || 0); };
     if (instant) still(el, go); else { el.classList.add("moving"); go(); FX.play("rustle"); }
   }
   function pack(id, instant) {
@@ -309,20 +316,24 @@
   }
   function placeStickers() {
     const u = usable(), w = u.w;
-    const spots = { cup: [w - 150, u.bottom - 60], plant: [w - 110, u.top + 150], laptop: [MID_X + 10, u.bottom - 50] };
+    const spots = { cup: [w - LANE + 40, u.bottom - 70], plant: [w - LANE + 70, u.top + 230], laptop: [boxRect().w + 170, u.bottom - 52] };
     $$(".sticker", $("#desk")).forEach((el) => {
       const id = el.dataset.sticker, p = ui.stickers[id] || spots[id];
       setPos(el, clamp(p[0], 0, w - 50), clamp(p[1], u.top, u.bottom - 48));
       el.style.rotate = (rnd(id, "t") * 16 - 8).toFixed(0) + "deg";
     });
+    const cup = ui.stickers.cup || spots.cup, ring = $(".cup-ring");
+    if (ring) setPos(ring, clamp(cup[0] - 40, 0, w - 50), clamp(cup[1] + 6, u.top, u.bottom - 40));
   }
   function relayout() {
     if (isPhone() || !$("#desk")) return;
+    placeFurniture();
     computeFit();
     paperIds().forEach((id) => {
       const el = paperEl(id), st = pst(id);
       if (!el || st.open || st.away) return;
-      if (!ui.handled || st.x == null) { const p = landing(id, el); st.x = p[0]; st.y = p[1]; }
+      if (st.inBox) { const p = slotPos(caseIndex(id)); st.x = p[0]; st.y = p[1]; }
+      else if (!ui.handled || st.x == null) { const p = landing(id, el); st.x = p[0]; st.y = p[1]; }
       if (!el.classList.contains("packed")) still(el, () => setPos(el, st.x, st.y));
     });
   }
@@ -332,8 +343,8 @@
     updateBar();
     if (isPhone()) return;
     relayout();
-    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el, false); });
-    placeStickers();
+    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
+    placeStickers(); placeLamp(); placeReceipt();
     layoutDrawer(false);
     applyScene(true);
   }
@@ -349,76 +360,111 @@
     if (el.classList.contains("paper")) { ui.front = el.dataset.id; refreshSkills(); }
   }
   function markHandled() { if (!ui.handled) { ui.handled = true; ui.maxOut = Math.max(ui.maxOut, (ui.scene && ui.scene.out) || 0); } }
-  const boxOf = (el) => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth * (el.classList.contains("open") ? 1 : ui.fit), h: el.offsetHeight * (el.classList.contains("open") ? 1 : ui.fit) });
-  const hits = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-  // Open files take the space right of the folder stack, as tall as the desk allows,
-  // and the papers they would cover slide aside until the file is closed again.
-  function placeOpen(el, nudge) {
+  // An open file takes the left side of the desk, over the box and the ID card, as tall as the desk allows.
+  // The diploma and commendations stay where they are and stay readable.
+  function placeOpen(el) {
     if (isPhone()) return;
-    const u = usable(), st = pst(el.dataset.id), i = caseIndex(el.dataset.id);
-    const w = Math.min(700, Math.max(380, Math.round((u.w - LANE - MID_X) * 0.78)));
-    el.style.width = w + "px"; el.style.height = u.bottom - u.top + "px";
-    st.x = MID_X; st.y = u.top;
+    const u = usable(), st = pst(el.dataset.id), i = caseIndex(el.dataset.id), dip = paperEl("diploma");
+    const limit = dip && !pst("diploma").away ? dip.offsetLeft - 14 : u.w * 0.55;
+    const w = Math.round(clamp(limit - 16, 440, 760));
+    el.style.width = w + "px"; el.style.height = u.bottom - 4 + "px";
+    st.x = 16; st.y = 4;
     setPos(el, st.x, st.y);
     st.pages = paginate(i, el); st.page = Math.min(st.page, st.pages.length - 1);
     el.innerHTML = caseInner(i);
-    if (!nudge) return;
-    const file = { x: st.x, y: st.y, w: w, h: u.bottom - u.top };
-    let k = 0;
-    paperIds().forEach((id) => {
-      const o = paperEl(id), ost = pst(id);
-      if (!o || o === el || ost.open || ost.away || o.classList.contains("packed")) return;
-      const b = boxOf(o);
-      if (!hits(file, b)) return;
-      if (!ost.nudged) ost.nudged = [ost.x, ost.y];
-      ost.x = clamp(file.x + file.w + 14 + k * 26, 0, u.w - Math.round(b.w * 0.45)); ost.y = clamp(ost.y + k * 14, u.top, u.bottom - 40); k++;
-      o.classList.add("moving", "nudge"); setPos(o, ost.x, ost.y);
-    });
-  }
-  function unnudge() {
-    if (paperIds().some((id) => pst(id).open)) return;
-    paperIds().forEach((id) => {
-      const o = paperEl(id), ost = pst(id);
-      if (!o || !ost.nudged) return;
-      ost.x = ost.nudged[0]; ost.y = ost.nudged[1]; ost.nudged = null;
-      o.classList.add("moving", "nudge"); setPos(o, ost.x, ost.y);
-    });
   }
   function openCase(id) {
     const el = paperEl(id), st = pst(id), i = caseIndex(id);
     if (!el || st.open) return;
     markHandled();
+    if (st.inBox) takeOut(id, true);
     st.open = true; st.page = 0; st.home = [st.x, st.y];
     el.classList.add("open"); el.setAttribute("aria-expanded", "true");
     el.innerHTML = caseInner(i);
     if (isPhone()) { st.pages = paginate(i, el); el.innerHTML = caseInner(i); }
-    else placeOpen(el, true);
-    raise(el); FX.play("rustle");
+    else placeOpen(el);
+    raise(el); FX.play("lift");
     el.focus({ preventScroll: true });
     say("case:" + i);
   }
-  function closeCase(id) {
+  function closeCase(id, quiet) {
     const el = paperEl(id), st = pst(id);
     if (!el || !st.open) return;
     st.open = false; st.page = 0; st.pages = null;
     el.classList.remove("open"); el.setAttribute("aria-expanded", "false"); el.style.width = ""; el.style.height = "";
     el.innerHTML = folderInner(caseIndex(id));
-    if (!isPhone() && st.home) { st.x = st.home[0]; st.y = st.home[1]; el.classList.add("moving"); setPos(el, st.x, st.y); }
-    unnudge();
-    FX.play("rustle");
-    el.focus({ preventScroll: true });
+    if (!isPhone() && st.home && !st.inBox) { st.x = st.home[0]; st.y = st.home[1]; el.classList.add("moving"); setPos(el, st.x, st.y); }
+    if (!quiet) { FX.play("settle"); el.focus({ preventScroll: true }); }
   }
   function turn(part, swap) {
     if (reduced() || !part) { swap(); return; }
     part.classList.add("flip-out");
     setTimeout(() => { swap(); if (part.isConnected) part.classList.remove("flip-out"); }, 95);
   }
-  function flipCase(id) {
-    const el = paperEl(id), st = pst(id), i = caseIndex(id);
-    turn($(".paper-body", el), () => { st.page = (st.page + 1) % (st.pages || [1]).length; el.innerHTML = caseInner(i); const c = $(".corner", el); if (c) c.focus({ preventScroll: true }); });
-    FX.play("rustle");
+  // A sheet turning over inside the folder: the current page lifts from its right edge and turns over its
+  // left edge in four steps, with the next page already visible underneath. Going back reverses it.
+  function startSheet(id, dir) {
+    const el = paperEl(id), st = pst(id), to = st.page + dir, sheets = $(".sheets", el), body = $(".paper-body", el);
+    const sheet = document.createElement("div");
+    sheet.className = "sheet " + (dir > 0 ? "fwd" : "back");
+    sheet.innerHTML = '<div class="sheet-face sheet-front"><div class="paper-body">' + (dir > 0 ? st.pages[st.page] : st.pages[to]) + '</div></div><div class="sheet-face sheet-back"></div>';
+    if (dir > 0) body.innerHTML = st.pages[to];
+    sheets.appendChild(sheet);
+    el.classList.add("turning");
+    return sheet;
   }
+  function finishSheet(id, sheet, dir, complete) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id), to = st.page + dir;
+    sheet.style.transform = "";
+    if (complete) sheet.classList.add("go");
+    setTimeout(() => {
+      if (complete) st.page = to;
+      el.classList.remove("turning");
+      el.innerHTML = caseInner(i);
+      focusPageControl(el, dir);
+    }, 320);
+  }
+  function flipCase(id, dir) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id), n = (st.pages || [1]).length;
+    dir = dir || 1;
+    const to = st.page + dir;
+    if (to < 0 || to >= n) return;
+    FX.play("flip");
+    if (reduced() || isPhone() || !$(".sheets", el)) { st.page = to; el.innerHTML = caseInner(i); focusPageControl(el, dir); return; }
+    const sheet = startSheet(id, dir);
+    void sheet.offsetWidth;
+    finishSheet(id, sheet, dir, true);
+  }
+  function focusPageControl(el, dir) {
+    const b = $('.pg-btn[data-dir="' + dir + '"]:not([disabled])', el) || $(".pg-btn:not([disabled])", el) || $(".corner", el);
+    if (b) b.focus({ preventScroll: true });
+  }
+  function takeOut(id, instant) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id);
+    if (!st.inBox) return;
+    st.inBox = false;
+    el.classList.remove("filed");
+    const u = usable(), out = st.outPos || [boxRect().x + 8 + (i % 3) * 18, Math.max(u.top + 4, boxRect().y - 150 + (i % 3) * 14)];
+    st.x = out[0]; st.y = out[1];
+    if (instant) still(el, () => setPos(el, st.x, st.y)); else { el.classList.add("moving"); setPos(el, st.x, st.y); FX.play("lift"); }
+    raise(el);
+  }
+  function fileBack(id, quiet) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id);
+    if (!el || i < 0) return;
+    if (st.open) closeCase(id, true);
+    if (!st.inBox) st.outPos = [st.x, st.y];
+    st.inBox = true;
+    el.classList.add("filed", "moving");
+    const p = slotPos(i); st.x = p[0]; st.y = p[1];
+    setPos(el, st.x, st.y);
+    el.style.setProperty("--tilt", "0deg");
+    el.style.zIndex = 20 + i;
+    if (!quiet) FX.play("filebox");
+  }
+  function putAllBack() { caseIds().forEach((id) => fileBack(id, true)); FX.play("filebox"); }
   function putAway(id, prev) {
+    if (caseIndex(id) >= 0) { fileBack(id); return; }
     const el = paperEl(id), st = pst(id);
     if (st.open) closeCase(id);
     st.away = true; st.prev = prev;
@@ -480,11 +526,12 @@
   function stampableAt(x, y) { return stampables().find((s) => inside(rectOf(s), x, y)) || null; }
   function stampableShown() {
     if ($("#intro")) return ui.introStep >= 1 && !ui.introDone;
-    if (ui.view !== "desk" || editing || !ui.printed) return false;
-    const r = $("#receipt");
-    if (!r) return false;
+    if (ui.view !== "desk" || editing) return false;
+    if (ui.recordView) return true;
+    const r = receiptEl();
+    if (!r || !ui.printed || ui.printing) return false;
     const b = rectOf(r);
-    return b.bottom > 120 && b.top < window.innerHeight - 120;
+    return b.bottom > 120 && b.top < window.innerHeight - 120 && b.right > 0 && b.left < window.innerWidth;
   }
   function updateBar() {
     const bar = $("#stampbar");
@@ -558,7 +605,7 @@
     if (!held) return;
     const h = held; held = null;
     $("#ink-preview").hidden = true;
-    const art = rectOf($(".stamp-art", h.btn)), done = () => { h.el.remove(); h.btn.classList.remove("empty"); updateBar(); };
+    const art = rectOf($(".stamp-art", h.btn)), done = () => { h.el.remove(); h.btn.classList.remove("empty"); updateBar(); if (!now) FX.play("clack"); };
     if (now || reduced()) { done(); return; }
     h.el.classList.remove("lifted", "p1", "p2"); h.el.classList.add("glide");
     h.el.style.left = art.left + "px"; h.el.style.top = art.top + "px";
@@ -601,45 +648,95 @@
     }, 400 + (kind === "approved" ? 1200 : 2400));
   }
 
-  // ----- the entry record printer and the tear-off slip -----
-  function printNow() {
-    ui.printed = true;
-    const a = $("#printer-area"), r = $("#receipt");
-    if (!a) return;
-    a.classList.add("printed"); if (r) r.style.maxHeight = "";
-    const b = $('[data-act="print"]'); if (b) b.remove();
-    updateBar();
+  // ----- the printer on the desk and the entry record it prints -----
+  function receiptEl() { return $("#receipt"); }
+  function recordFits() {
+    const r = receiptEl(), u = usable();
+    return r && r.offsetHeight + 12 <= u.bottom - u.top;
   }
-  function printSlowly() {
-    if (ui.printed) return;
-    ui.printed = true;
-    const r = $("#receipt"), full = r.scrollHeight, steps = 12;
-    const b = $('[data-act="print"]'); if (b) b.remove();
+  function placeReceipt() {
+    const r = receiptEl();
+    if (!r || ui.recordView || isPhone() || r.parentElement !== $("#desk")) return;
+    const u = usable(), s = Math.min(1, (u.bottom - u.top) / r.offsetHeight);
+    r.style.setProperty("--rfit", s.toFixed(3));
+    const pos = ui.recPos || [u.w - LANE - 372, u.top + 4];
+    ui.recPos = [clamp(pos[0], 0, u.w - r.offsetWidth * s), clamp(pos[1], 0, Math.max(0, u.bottom - r.offsetHeight * s))];
+    setPos(r, ui.recPos[0], ui.recPos[1]);
+  }
+  function makeReceipt() {
+    if (receiptEl()) return receiptEl();
+    $("#desk").insertAdjacentHTML("beforeend", recordHTML());
+    const r = receiptEl();
+    r.classList.add("paper", "p-record");
+    r.dataset.drag = "";
+    renderMarks("record");
+    const slip = $("#slip.loose");
+    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.slipPos || [MID_X, TOP + 40])[0], (ui.slipPos || [MID_X, TOP + 40])[1]); }
+    return r;
+  }
+  function openRecordView() {
+    const r = makeReceipt(), view = $("#record-view");
+    ui.recordView = true;
+    r.style.left = ""; r.style.top = ""; r.style.removeProperty("--rfit");
+    $("#rv-scroll").appendChild(r);
+    view.hidden = false;
+    view.style.zIndex = 880;
+    r.focus({ preventScroll: true });
+    updateBar(); updatePill();
+  }
+  function closeRecordView() {
+    const r = receiptEl(), view = $("#record-view");
+    if (!ui.recordView || !r) return;
+    ui.recordView = false;
+    view.hidden = true;
+    $("#desk").appendChild(r);
+    const slip = $("#rv-scroll .slip.loose");
+    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.recPos || [MID_X, TOP])[0] - 40, TOP + 30); }
+    placeReceipt(); raise(r); FX.play("settle");
+    r.focus({ preventScroll: true });
+    updateBar(); updatePill();
+  }
+  // Click the printer: the light blinks, the record feeds out of the slot line by line, then it is a paper.
+  function printRecord() {
+    if (ui.printed) { if (!isPhone()) openRecordView(); else receiptEl().scrollIntoView({ behavior: behavior(), block: "start" }); return; }
+    if (ui.printing) return;
+    ui.printing = true;
+    const pr = $("#printer"), r = makeReceipt();
+    pr.classList.add("busy");
     say("record");
-    if (reduced()) { printNow(); return; }
+    if (isPhone()) { pr.after(r); }
+    const full = r.offsetHeight, u = usable();
+    const finish = () => {
+      ui.printing = false; ui.printed = true; pr.classList.remove("busy"); r.classList.remove("feeding"); r.style.clipPath = "";
+      if (isPhone()) { r.scrollIntoView({ behavior: behavior(), block: "start" }); return; }
+      if (recordFits()) { ui.recPos = [r.offsetLeft, r.offsetTop]; placeReceipt(); raise(r); updateBar(); }
+      else openRecordView();
+    };
+    if (isPhone() || reduced()) { FX.play("print"); finish(); return; }
+    // feed from the printer's slot: start hidden above the slot and reveal one line at a time
+    const slotX = pr.offsetLeft + pr.offsetWidth / 2, slotY = pr.offsetTop + pr.offsetHeight - 14;
+    r.classList.add("feeding");
+    setPos(r, Math.round(clamp(slotX - r.offsetWidth / 2, 0, u.w - r.offsetWidth)), Math.round(slotY));
+    raise(r);
     FX.play("print");
-    for (let k = 1; k <= steps; k++) setTimeout(() => { r.style.maxHeight = Math.round(30 + (full - 30) * k / steps) + "px"; if (k === steps) printNow(); }, k * 95);
+    const steps = 16;
+    for (let k = 0; k <= steps; k++) setTimeout(() => {
+      const shown = Math.round(full * k / steps);
+      r.style.clipPath = "inset(0 0 " + (full - shown) + "px 0)";
+      if (k === steps) setTimeout(finish, 120);
+    }, k * 100);
   }
-  function watchPrinter() {
-    const p = $("#printer");
-    if (!p || ui.printed) return;
-    if (!("IntersectionObserver" in window)) { printNow(); return; }
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); printSlowly(); } }, { threshold: 0.3 });
-    io.observe(p);
-  }
-  function setTear(v) { ui.torn = v; const r = $("#receipt"); if (r) r.style.setProperty("--tear", v); }
+  function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }
   function tearOff() {
     if (ui.slipTorn) return;
-    const slip = $("#slip"), area = $("#printer-area"), sr = rectOf(slip), ar = rectOf(area);
-    ui.slipTorn = true; FX.play("rustle");
-    $("#receipt").classList.add("torn"); $("#perf").remove();
-    area.appendChild(slip);
+    const slip = $("#slip"), r = receiptEl();
+    ui.slipTorn = true; FX.play("lift");
+    r.classList.add("torn"); $("#perf").remove();
+    slip.classList.add("loose");
     slip.dataset.drag = "";
-    if (!isPhone()) {
-      slip.classList.add("loose");
-      ui.slipPos = [Math.round(sr.left - ar.left + 12), Math.round(sr.top - ar.top + 18)];
-      moveTo(slip, ui.slipPos[0], ui.slipPos[1]);
-    }
+    if (ui.recordView) $("#rv-scroll").appendChild(slip);
+    else if (isPhone()) r.after(slip);
+    else { $("#desk").appendChild(slip); moveTo(slip, r.offsetLeft - 60, r.offsetTop + 40); raise(slip); }
     setTear(0);
     slip.focus({ preventScroll: true });
   }
@@ -648,22 +745,35 @@
     [0.35, 0.7, 1].forEach((v, i) => setTimeout(() => { setTear(v); if (v === 1) tearOff(); }, i * 60));
   }
 
+  // ----- the lamp: its base on the desk, its arm and shade reaching up over the counter and the booth -----
+  function placeLamp() {
+    const lamp = $("#lamp"), desk = $("#desk");
+    if (!lamp || !desk || isPhone()) return;
+    lamp.style.left = desk.offsetLeft + desk.clientWidth - 236 + "px";
+    lamp.style.top = desk.offsetTop - 104 + "px";
+  }
+  function setLampVisible(on) { const st = $("#stage"); if (st) st.classList.toggle("lamp-ready", on); }
+  function toggleLamp() { ui.lampOn = !ui.lampOn; $("#stage").classList.toggle("lamp-off", !ui.lampOn); FX.play("lamp"); $("#lamp-switch").setAttribute("aria-pressed", String(ui.lampOn)); }
+
   // ----- pill nav -----
-  const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"], ["contact", "Contact"]];
+  const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"]];
   function currentArea() {
     if (ui.view !== "desk" || !$("#scene")) return 0;
-    const vh = window.innerHeight, rec = rectOf($("#record")), slip = $("#slip");
-    if (slip && ui.printed && rectOf(slip).top < vh * 0.7) return 3;
-    if (rec.top < vh * 0.55) return 2;
-    if (isPhone()) return rectOf($("#desk")).top < vh * 0.5 ? 1 : 0;
+    if (ui.recordView) return 2;
+    if (isPhone()) { const r = receiptEl(); if (r && rectOf(r).top < window.innerHeight * 0.5) return 2; return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0; }
     return -rectOf($("#scene")).top >= BOOT - 10 ? 1 : 0;
   }
   function goArea(i) {
     const id = AREAS[i][0], sc = $("#scene");
+    if (id !== "record" && ui.recordView) closeRecordView();
     if (id === "booth") window.scrollTo({ top: isPhone() ? 0 : docTop(sc), behavior: behavior() });
     else if (id === "desk") window.scrollTo({ top: isPhone() ? docTop($("#desk")) - 8 : docTop(sc) + unpackEnd(), behavior: behavior() });
-    else if (id === "record") window.scrollTo({ top: docTop($("#record")), behavior: behavior() });
-    else { printNow(); $("#slip").scrollIntoView({ behavior: behavior(), block: "center" }); }
+    else {
+      // bring the desk into view, then let the printer print (or show the record if it already has)
+      if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
+      window.scrollTo({ top: isPhone() ? docTop($("#printer")) - 8 : docTop(sc) + unpackEnd(), behavior: "auto" });
+      printRecord();
+    }
   }
   function updatePill() { const n = $("#area-name"); if (n) n.textContent = AREAS[currentArea()][1]; }
 
@@ -745,7 +855,7 @@
         '</p><p class="meta">Graduated ' + f("education.graduated", "When") + " · Coursework: " + f("education.coursework", "Coursework") + "</p>") +
       sec("contact", "Contact", "Email is the fastest way to reach me.", '<div class="row">' + f("profile.email", "Email address", "email") +
         (editing ? "" : '<button class="btn-quiet" data-act="copy">Copy address</button>') + '</div><div class="' + (editing ? "" : "row ") + 'links">' + links + "</div>" + add("profile.links", "link", "link")) +
-      '<footer class="foot">' + esc(p.name) + " · " + esc(p.basedIn) + "</footer></div>";
+      "</div>";
     $$(".f", app).forEach((el) => {
       try { el.contentEditable = "plaintext-only"; } catch (err) { el.contentEditable = "true"; }
       if (el.contentEditable !== "plaintext-only") el.contentEditable = "true";
@@ -753,19 +863,19 @@
   }
 
   function renderDesk() {
-    app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage" id="stage">' + boothHTML() + deskHTML() + "</div></section>" + recordHTML() + "</main>";
+    app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage' + (ui.lampOn ? "" : " lamp-off") + '" id="stage">' + boothHTML() + deskHTML() +
+      '<div class="lamp" id="lamp"><span class="lamp-art" aria-hidden="true"><span class="off">' + SPR.lamp(false, PX) + '</span><span class="on">' + SPR.lamp(true, PX) + "</span></span>" +
+      '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div></div></section></main>';
     board = FX.board($("#board"), state.profile.board, 20);
     sizeScene();
+    if (!isPhone()) placeFurniture();
     computeFit();
-    placeStickers();
+    placeStickers(); placeLamp();
     renderPutAway();
-    renderMarks("record");
-    if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
-    if (ui.printed) printNow();
     layoutDrawer(false);
     applyScene(true);
-    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el, false); });
-    watchPrinter();
+    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
+    if (ui.printed) { const r = makeReceipt(); if (isPhone()) $("#printer").after(r); else if (ui.recordView) { ui.recordView = false; openRecordView(); } else placeReceipt(); }
     updatePill(); updateBar();
   }
   function render() {
@@ -862,7 +972,12 @@
     passport: renderIntro,
     "flip-pass": flipPass,
     bar() { const open = $("#stampbar").classList.contains("out"); ui.barPinned = !open; updateBar(); },
-    print() { printSlowly(); },
+    print() { printRecord(); },
+    "record-down"() { closeRecordView(); },
+    "all-back"() { putAllBack(); },
+    "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
+    page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
+    lamp() { toggleLamp(); },
     view(b) { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
     step(b) { goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
@@ -876,7 +991,7 @@
     radio(b) { ui.radioOn = !ui.radioOn; b.textContent = ui.radioOn ? "Mute radio" : "Unmute radio"; b.setAttribute("aria-pressed", String(ui.radioOn)); if (!ui.radioOn) $("#aside").hidden = true; },
     ask(b) { ui.asked = +b.dataset.q; const el = $("#bubble"); el.hidden = false; el.textContent = state.interview[ui.asked].a; },
     "close-case"(b) { closeCase(b.dataset.id); },
-    flip(b) { flipCase(b.dataset.id); },
+    flip(b) { flipCase(b.dataset.id, 1); },
     return(b) { returnPaper(b.dataset.id); },
     drawer() { if (drawerDrag && drawerDrag.moved) return; setDrawer(ui.drawer > 0.5 ? 0 : 1); },
     skill(b) {
@@ -909,11 +1024,13 @@
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
-    if (folder && !justDragged) openCase(folder.dataset.id);
+    if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) takeOut(folder.dataset.id); else openCase(folder.dataset.id); return; }
+    const rec = ev.target.closest("#desk > .receipt");
+    if (rec && !justDragged && !ui.printing && !isPhone() && !ev.target.closest("button, a, .perf")) openRecordView();
   }, true);
 
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
-  let drag = null, pageDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
+  let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
   document.addEventListener("pointerdown", (ev) => {
     if (ev.button !== 0) return;
@@ -931,6 +1048,13 @@
       if (held) springBack(true);
       pending = { kind: sbtn.dataset.kind, sx: ev.clientX, sy: ev.clientY, id: ev.pointerId };
       try { sbtn.setPointerCapture(ev.pointerId); } catch (err) { /* optional */ }
+      return;
+    }
+    const cc = ev.target.closest('.corner[data-act="flip"]');
+    if (cc && !isPhone() && !reduced()) {
+      const el = cc.closest(".paper");
+      sheetDrag = { id: el.dataset.id, sx: ev.clientX, w: $(".sheets", el).offsetWidth, moved: false, p: 0, sheet: null };
+      try { cc.setPointerCapture(ev.pointerId); } catch (err) { /* optional */ }
       return;
     }
     const pc = ev.target.closest('.corner[data-act="flip-pass"]');
@@ -957,6 +1081,14 @@
       held.grab = [p.sx - held.fx, p.sy - held.fy];
     }
     if (held && held.mode === "drag" && !held.busy) { placeHeld(ev.clientX - held.grab[0], ev.clientY - held.grab[1]); return; }
+    if (sheetDrag) {
+      const dx = sheetDrag.sx - ev.clientX;
+      if (dx > 6 && !sheetDrag.moved) { sheetDrag.moved = true; sheetDrag.sheet = startSheet(sheetDrag.id, 1); sheetDrag.sheet.classList.add("held-page"); FX.play("flip"); }
+      if (!sheetDrag.moved) return;
+      sheetDrag.p = clamp(dx / sheetDrag.w, 0, 1);
+      sheetDrag.sheet.style.transform = "rotateY(" + -Math.round(sheetDrag.p * 8) * 22.5 + "deg)";
+      return;
+    }
     if (pageDrag) {
       const dx = ev.clientX - pageDrag.sx;
       if (Math.abs(dx) > 6 && !pageDrag.moved) { pageDrag.moved = true; pageDrag.leaf.classList.add("held-page"); $("#passport").classList.add("turning"); }
@@ -984,14 +1116,18 @@
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 5) return;
       drag.moved = true;
+      if (drag.el.classList.contains("filed")) { const id = drag.el.dataset.id; pst(id).inBox = false; drag.el.classList.remove("filed"); }
       drag.el.classList.remove("moving", "nudge"); drag.el.classList.add("held");
       try { drag.el.setPointerCapture(ev.pointerId); } catch (err) { /* capture is optional */ }
-      FX.play("rustle");
+      FX.play("lift");
       if (drag.el.classList.contains("paper")) markHandled();
     }
     moveTo(drag.el, drag.ox + dx, drag.oy + dy);
-    const ct = $("#counter");
-    if (ct && drag.el.classList.contains("paper")) { const r = rectOf(ct); ct.classList.toggle("ready", ev.clientY < r.bottom && ev.clientY > r.top - 40); }
+    const ct = $("#counter"), isCase = drag.el.classList.contains("p-case"), fb = $("#filebox");
+    if (ct && drag.el.classList.contains("paper") && !isCase && !drag.el.classList.contains("p-record")) {
+      const r = rectOf(ct); ct.classList.add("show-hint"); ct.classList.toggle("ready", ev.clientY < r.bottom && ev.clientY > r.top - 40);
+    }
+    if (fb && isCase) fb.classList.toggle("hot", inside(rectOf(fb), ev.clientX, ev.clientY));
   });
   function endDrag(ev) {
     if (pending && (!ev || ev.pointerId === pending.id)) {
@@ -1001,6 +1137,14 @@
       return;
     }
     if (held && held.mode === "drag" && !held.busy) { if (held.over) stampDown(); else springBack(); return; }
+    if (sheetDrag) {
+      const d = sheetDrag; sheetDrag = null;
+      if (!d.moved) return;
+      swallowClick = true;
+      d.sheet.classList.remove("held-page");
+      finishSheet(d.id, d.sheet, 1, d.p > 0.5);
+      return;
+    }
     if (pageDrag) {
       const d = pageDrag; pageDrag = null;
       if (!d.moved) return;
@@ -1021,13 +1165,16 @@
     d.el.classList.remove("held");
     const tilt = +(Math.random() * 6 - 3).toFixed(1);
     d.el.style.setProperty("--tilt", tilt + "deg");
-    const ct = $("#counter");
+    const ct = $("#counter"), fb = $("#filebox");
+    if (ct) ct.classList.remove("show-hint");
+    if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
+    if (d.el.classList.contains("p-record")) { ui.recPos = [d.el.offsetLeft, d.el.offsetTop]; FX.play("settle"); return; }
     if (d.el.classList.contains("paper")) {
       pst(d.el.dataset.id).tilt = tilt;
       if (ct && ct.classList.contains("ready")) { ct.classList.remove("ready"); putAway(d.el.dataset.id, { x: d.ox, y: Math.max(d.oy, TOP) }); return; }
     }
     if (ct) ct.classList.remove("ready");
-    FX.play("rustle");
+    FX.play("settle");
   }
   document.addEventListener("pointerup", endDrag);
   document.addEventListener("pointercancel", endDrag);
@@ -1061,6 +1208,7 @@
     }
     if (ev.key === "Escape") {
       if (held) { springBack(); return; }
+      if (ui.recordView) { closeRecordView(); return; }
       if ($("#intro")) { closeIntro(); return; }
       if (ui.drawer > 0.5) { setDrawer(0); $("#handle").focus(); return; }
       const open = paperIds().filter((id) => pst(id).open);
@@ -1077,7 +1225,8 @@
     }
     const el = t.closest && t.closest("[data-drag]");
     if (!el || el !== t || isPhone()) return;
-    if ((ev.key === "Enter" || ev.key === " ") && el.matches(".p-case:not(.open)")) { ev.preventDefault(); openCase(el.dataset.id); return; }
+    if ((ev.key === "Enter" || ev.key === " ") && el.matches(".p-case:not(.open)")) { ev.preventDefault(); if (pst(el.dataset.id).inBox) takeOut(el.dataset.id); else openCase(el.dataset.id); return; }
+    if ((ev.key === "b" || ev.key === "B") && el.matches(".p-case")) { ev.preventDefault(); fileBack(el.dataset.id); return; }
     const step = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[ev.key];
     if (step) { ev.preventDefault(); markHandled(); raise(el); moveTo(el, el.offsetLeft + step[0], el.offsetTop + step[1]); }
   });
@@ -1115,7 +1264,7 @@
       "<title>CV Please</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n" +
       '<link rel="stylesheet" href="' + $("#fonts").getAttribute("href") + '" id="fonts">\n' +
       "<style id=\"page-style\">" + $("#page-style").textContent + "</style>\n<div id=\"app\"></div>\n<div id=\"intro-root\"></div>\n<div id=\"fixed-root\"></div>\n" +
-      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("sprites") + block("fx") + block("demos") + block("main") + "</body></html>";
+      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("sprites") + block("sounds") + block("fx") + block("demos") + block("main") + "</body></html>";
   }
   async function save() {
     if (!artifact || busy || !dirty) return;

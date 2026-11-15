@@ -22,7 +22,8 @@ All content lives in `src/data.json`. The page is assembled from:
 | `src/app.js` | The desk, scroll scenes, stamp, paper handling, list view and amend mode |
 | `src/sprites.js` | Pixel art, drawn as SVG rects, plus the embedded portrait |
 | `assets/thea-portrait.png` | The 55x59 portrait. `src/sprites.js` carries a base64 copy, so update both if it changes |
-| `src/fx.js` | Sounds and the split-flap board |
+| `src/fx.js` | The sound player and the split-flap board |
+| `src/sounds.js` | The desk sound pack, embedded as small MP3s. Original sounds synthesized for this site, so there is no licence to credit |
 | `src/demos.js` | In-browser case file demos (no network calls) |
 | `src/styles.css` | Styles and colour tokens |
 

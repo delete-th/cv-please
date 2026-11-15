@@ -501,6 +501,76 @@ html::-webkit-scrollbar-button { display: none; }
 .passport.turning .pp-under::before, .passport.turning .pp-back::before { opacity: 0.45; }
 .pp-under .visa-lines { grid-template-columns: 84px minmax(0, 1fr); }
 
+
+/* ---------- part 6: file box, printer, record view, lamp, sheet turns ---------- */
+.window .applicant { top: auto; bottom: 3px; }
+.counter-hint { display: none; }
+.counter.show-hint .counter-hint { display: inline; }
+.desk .lamp { display: none; }
+
+.filebox { position: absolute; z-index: 2; width: 261px; height: 201px; }
+.filebox .box-art { position: absolute; inset: 0; }
+.filebox.hot .box-art::after { content: ""; position: absolute; inset: -2px; border: 1px solid var(--cover-ink); pointer-events: none; }
+.box-all { position: absolute; left: calc(100% + 6px); bottom: 4px; z-index: 40; padding: 2px 6px; border: 0; background: none; color: var(--on-desk); white-space: nowrap; font: 400 20px/1 var(--pixel); text-decoration: underline; text-underline-offset: 3px; -webkit-font-smoothing: none; }
+.p-case.filed { width: 236px; height: 26px; padding: 0; rotate: 0deg; scale: 1; border-width: 2px; cursor: pointer; }
+.p-case.filed .folder-face, .p-case.filed .mini-stamp, .p-case.filed .clip, .p-case.filed .peek { display: none; }
+.p-case.filed .folder-tab { max-width: 168px; }
+.p-case.filed:hover .folder-tab, .p-case.filed:focus-visible .folder-tab { translate: 0 -3px; }
+
+.printer { position: absolute; z-index: 4; width: 150px; height: 102px; }
+.printer-btn { position: relative; display: block; padding: 0; border: 0; background: none; }
+.printer .led { position: absolute; left: 117px; top: 78px; width: 9px; height: 6px; background: var(--rule); }
+.printer.busy .led { animation: blink 0.3s steps(1) infinite; }
+@keyframes blink { 50% { background: var(--green-light); } }
+.stage:has(.receipt) .printer .led { background: var(--green-light); }
+
+.receipt { max-height: none; margin: 0; overflow: visible; }
+.paper.p-record { width: 360px; max-width: none; background: var(--field); scale: var(--rfit, 1); rotate: 0deg; }
+.paper.p-record.held { scale: calc(var(--rfit, 1) * 1.02); }
+.receipt.feeding { box-shadow: none; transition: none; }
+.slip.loose { position: absolute; }
+
+.record-view { position: absolute; inset: 0; background: rgba(20, 15, 10, 0.72); }
+.rv-bar { position: absolute; left: 0; right: 0; top: 0; display: flex; gap: 18px; align-items: center; justify-content: space-between; height: 46px; padding: 0 calc(var(--bar-w) + 24px) 0 var(--gut-l); background: var(--wood-3); border-bottom: var(--px) solid var(--ink); color: var(--on-desk); }
+.rv-title { font: 400 30px/1 var(--display); -webkit-font-smoothing: none; }
+.rv-scroll { position: absolute; left: 0; right: 0; top: 46px; bottom: 72px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; justify-content: center; overflow: auto; padding: 18px calc(var(--bar-w) + 24px) 24px var(--gut-l); }
+.rv-scroll .receipt, .rv-scroll .slip.loose { position: relative; left: auto !important; top: auto !important; scale: 1; rotate: 0deg; box-shadow: var(--px) var(--px) 0 var(--shade); cursor: default; }
+.rv-scroll .slip.loose { width: 360px; align-self: flex-end; }
+.rv-scroll { scrollbar-width: thin; scrollbar-color: var(--wood-4) var(--wood-1); }
+.rv-scroll::-webkit-scrollbar { width: 8px; background: var(--wood-1); }
+.rv-scroll::-webkit-scrollbar-thumb { background: var(--wood-4); border-radius: 0; }
+.rv-scroll::-webkit-scrollbar-button { display: none; }
+
+.stage > .lamp { position: absolute; z-index: 30; display: block; pointer-events: none; }
+.stage > .lamp .on { display: none; }
+.stage.lamp-ready:not(.lamp-off) > .lamp .on { display: block; }
+.stage.lamp-ready:not(.lamp-off) > .lamp .off { display: none; }
+.lamp-switch { position: absolute; left: 144px; top: 183px; width: 24px; height: 18px; padding: 0; border: 0; background: none; pointer-events: auto; cursor: pointer; }
+.desk .pool { display: none; }
+.stage.lamp-ready:not(.lamp-off) .desk .pool { display: block; }
+.cup-ring { right: auto; bottom: auto; z-index: 1; }
+
+/* case files: pages filled to the paper's height, and sheets turning over the left edge */
+.p-case.open .paper-body { font: 400 15px/1.45 var(--sans); padding: 12px 18px 26px; }
+.p-case.open .points li + li { margin-top: 4px; }
+.p-case.open .line { font-size: 16px; }
+.sheets { position: relative; display: flex; flex: 1; min-height: 0; perspective: 1400px; }
+.sheets > .paper-body { flex: 1; }
+.sheet { position: absolute; inset: 0; z-index: 2; transform-origin: 0 50%; transform-style: preserve-3d; transition: transform 0.3s steps(4, end); }
+.sheet.fwd { transform: rotateY(0deg); }
+.sheet.fwd.go { transform: rotateY(-180deg); }
+.sheet.back { transform: rotateY(-180deg); }
+.sheet.back.go { transform: rotateY(0deg); }
+.sheet.held-page { transition: none; }
+.sheet-face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; background: var(--paper); }
+.sheet-back { transform: rotateY(180deg); background: var(--paper-deep); }
+.sheet-face::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 18px; background: var(--shade); opacity: 0.3; pointer-events: none; }
+.p-case.turning .sheets > .paper-body { box-shadow: inset 1px 0 0 var(--ink); }
+.pg-nav { display: inline-flex; gap: 6px; align-items: center; }
+.pg-btn { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 2px solid var(--ink); background: var(--field); }
+.pg-btn:disabled { opacity: 0.35; cursor: default; }
+.pg-btn .spr { filter: brightness(0.25); }
+
 /* ---------- phones and small tablets ---------- */
 .phone-hint { display: none; }
 @media (max-width: 820px) {
@@ -596,6 +666,20 @@ html::-webkit-scrollbar-button { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .pp-leaf { transition: none !important; }
 }
+@media (max-width: 820px) {
+  .filebox, .stage > .lamp, .record-view { display: none !important; }
+  .printer { position: relative; left: auto !important; top: auto !important; flex: 0 0 auto; align-self: center; }
+  .paper.p-record { position: relative; left: auto !important; top: auto !important; scale: 1; flex: 0 0 min(86%, 420px); }
+  .slip.loose { position: relative; left: auto !important; top: auto !important; flex: 0 0 min(86%, 420px); }
+  .window .applicant { bottom: 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .printer.busy .led { transition: none !important; animation: none !important; }
+}
+
+/* the desk and stage never scroll inside themselves, even when something in them takes focus */
+.stage, .desk { overflow: clip; }
+@media (max-width: 820px) { .desk { overflow-x: auto; overflow-y: visible; } .stage { overflow: visible; } }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -1081,6 +1165,105 @@ window.SPR = (function () {
     return g;
   })();
 
+
+  // ----- desk furniture, all seen from above with light from the top left -----
+  function grid(w, h) { return Array.from({ length: h }, () => Array(w).fill(".")); }
+  function rows(g) { return g.map((r) => r.join("")); }
+  function disc(g, cx, cy, rx, ry, ch) {
+    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[0].length; x++) {
+      const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2;
+      if (d <= 1) g[y][x] = typeof ch === "function" ? ch(x, y, d) : ch;
+    }
+  }
+  function rect(g, x0, y0, w, h, ch) { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (g[y] && g[y][x] !== undefined) g[y][x] = ch; }
+  function thick(g, x0, y0, x1, y1, ch, r) {
+    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); rect(g, x - r, y - r, r * 2 + 1, r * 2 + 1, ch); }
+  }
+
+  // The file box: an open wooden tray. Inner walls on the top and left are in shadow, the front lip is thick.
+  S.filebox = (function () {
+    const W = 87, H = 67, g = grid(W, H);
+    rect(g, 0, 0, W, H, "k");
+    rect(g, 1, 1, W - 2, H - 2, "W");
+    rect(g, 1, 1, W - 2, 1, "s"); rect(g, 1, 1, 1, H - 2, "s");
+    rect(g, 4, 4, W - 8, H - 13, "k");
+    rect(g, 5, 5, W - 10, H - 15, "w");
+    rect(g, 5, 5, W - 10, 3, "d"); rect(g, 5, 5, 3, H - 15, "d");
+    for (let y = 12; y < H - 12; y += 6) rect(g, 9, y, W - 16, 1, "d");
+    rect(g, 1, H - 9, W - 2, 1, "k");
+    rect(g, 1, H - 8, W - 2, 1, "s");
+    return rows(g);
+  })();
+
+  // The printer: a squat box with a paper tray at the back and the output slot at the front.
+  S.printer = (function () {
+    const W = 50, H = 34, g = grid(W, H);
+    rect(g, 10, 0, 30, 7, "k"); rect(g, 11, 1, 28, 6, "f");
+    rect(g, 0, 5, W, H - 5, "k");
+    rect(g, 1, 6, W - 2, H - 7, "b");
+    rect(g, 1, 6, W - 2, 2, "B"); rect(g, 1, 6, 2, H - 7, "B");
+    rect(g, 4, 11, W - 8, 13, "o");
+    rect(g, 5, 12, W - 10, 11, "b");
+    rect(g, 6, 13, 10, 1, "B");
+    rect(g, 7, H - 6, W - 14, 2, "k");
+    rect(g, 42, 26, 3, 2, "o"); rect(g, 37, 26, 3, 2, "o");
+    return rows(g);
+  })();
+
+  // The desk lamp: a heavy round base on the desk, a jointed arm, and a shade reaching up and over the counter.
+  S.biglamp = (function () {
+    const W = 72, H = 80, g = grid(W, H);
+    disc(g, 54, 68, 14, 9.5, "k");
+    disc(g, 54, 68, 13, 8.5, (x, y) => (x + y < 54 + 68 - 6 ? "B" : x + y > 54 + 68 + 6 ? "o" : "b"));
+    disc(g, 52, 64, 4, 3, "k"); disc(g, 52, 64, 3, 2, "B");
+    thick(g, 52, 63, 40, 36, "k", 2); thick(g, 40, 36, 24, 18, "k", 2);
+    thick(g, 52, 63, 40, 36, "B", 1); thick(g, 40, 36, 24, 18, "B", 1);
+    disc(g, 40, 36, 3.5, 3.5, "k"); disc(g, 40, 36, 2, 2, "b");
+    disc(g, 18, 14, 17, 12, "k");
+    disc(g, 18, 14, 16, 11, (x, y) => (x + y < 18 + 14 - 8 ? "G" : x + y > 18 + 14 + 8 ? "C" : "c"));
+    disc(g, 13, 19, 9, 5.5, "k");
+    disc(g, 13, 19, 8, 4.5, "L");
+    disc(g, 11, 18, 3, 1.6, "Z");
+    return rows(g);
+  })();
+
+  // A mug seen from above: rim, coffee with a highlight, and the handle as a small loop.
+  S.cup = (function () {
+    const W = 22, H = 18, g = grid(W, H);
+    rect(g, 15, 6, 6, 6, "k"); rect(g, 16, 7, 4, 4, "f"); rect(g, 17, 8, 2, 2, ".");
+    disc(g, 9, 9, 8.5, 8.5, "k");
+    disc(g, 9, 9, 7.5, 7.5, (x, y) => (x + y < 14 ? "f" : "P"));
+    disc(g, 9, 9, 5.5, 5.5, "k");
+    disc(g, 9, 9, 4.8, 4.8, (x, y) => (x + y > 20 ? "d" : "w"));
+    rect(g, 6, 6, 2, 1, "s"); rect(g, 6, 7, 1, 1, "s");
+    return rows(g);
+  })();
+
+  // A potted plant from above: round pot and soil, leaves spreading out over the rim.
+  S.plant = (function () {
+    const W = 26, H = 26, g = grid(W, H), cx = 13, cy = 13;
+    disc(g, cx, cy, 8, 8, "k"); disc(g, cx, cy, 7, 7, "r"); disc(g, cx, cy, 5.5, 5.5, "R"); disc(g, cx, cy, 4.5, 4.5, "d");
+    [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
+      const a = i * (Math.PI * 2 / 7) + 0.3, ex = cx + Math.cos(a) * 9.5, ey = cy + Math.sin(a) * 9.5;
+      const mx = cx + Math.cos(a) * 5.5, my = cy + Math.sin(a) * 5.5;
+      disc(g, mx, my, 3.6, 3.6, "k"); disc(g, ex, ey, 2.8, 2.8, "k");
+      disc(g, mx, my, 2.6, 2.6, i % 2 ? "g" : "G"); disc(g, ex, ey, 1.8, 1.8, i % 2 ? "g" : "G");
+    });
+    disc(g, cx, cy, 2, 2, "G");
+    return rows(g);
+  })();
+
+  // A small laptop from above: the open lid is a thin dark strip, the keyboard below it.
+  S.laptop = (function () {
+    const W = 24, H = 18, g = grid(W, H);
+    rect(g, 0, 0, W, 4, "k"); rect(g, 1, 1, W - 2, 2, "o");
+    rect(g, 0, 4, W, H - 4, "k"); rect(g, 1, 5, W - 2, H - 6, "b"); rect(g, 1, 5, W - 2, 1, "B");
+    for (let y = 7; y < 12; y += 2) for (let x = 3; x < W - 3; x += 2) g[y][x] = "B";
+    rect(g, 8, 13, 8, 3, "B"); rect(g, 9, 14, 6, 1, "o");
+    return rows(g);
+  })();
+
   function rects(rows, map) {
     let out = "";
     rows.forEach((row, y) => {
@@ -1142,7 +1325,7 @@ window.SPR = (function () {
     const a = APPLICANTS[id] || APPLICANTS.thea;
     return '<img class="spr ' + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ">";
   }
-  function lamp(on, scale) { return draw("lamp", scale, "", { L: on ? "cover-ink" : "rule" }); }
+  function lamp(on, scale) { return draw("biglamp", scale, "", { L: on ? "cover-ink" : "rule", Z: on ? "field" : "rule" }); }
 
   // The warm pool the desk lamp throws on the wood: stepped rings, with a dithered outer edge.
   function pool(scale) {
@@ -1229,61 +1412,66 @@ window.SPR = (function () {
   return { draw: draw, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, lamp: lamp, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
 })();
 </script>
+<script id="sounds">// The desk sound pack, synthesized for this page from filtered noise and damped partials (original, no licence to credit).
+window.SOUNDS = {
+"lift": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAABwAABP8AQ0NDQ0NDQ0NDQ0NDQ0NjY2NjY2NjY2NjY2NjY4KCgoKCgoKCgoKCgoKCoaGhoaGhoaGhoaGhoaGhwcHBwcHBwcHBwcHBwcHg4ODg4ODg4ODg4ODg4P//////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQEBwAAAAAAAAT/C1KJlgAAAAAAAAAAAAAAAAD/82DEABuD/qXhQhgAsRAyEJzkbkJOACGr1RPd30AwMDfRET67u5oBgbu7u+5xCruf/u77u7u///////uhf83ABBO7n7//6O7/ELTd30Qvru/o7uf/8RE3OAbxEKvueiIX+7u/o7/Xd4HFuf/+58QtERET//4hUAEIcif8v6fNqTOXWGVvMyFVKKwDk2nYDOTQARlcf1prDfK9jMz/82LEISWqpw8dj1gAWQgCQGmo24SD2N5OD6XFCKiABBobmg7BsD4jdlCnFJrtecWPJDuNDYjRTKf7mS6LmoZKCzWWyb5ut1NrdfEb9ktj5ZxWz6YefUUqxsS+XTV226mb2s6//2XsjuqONNEBMDM857r12Xp9xuHCM+obtCLyqdFsgrVjUpaui6k5OwLmoiQi8otK4kjcOjnHlSio//NixBofk1bmwcYYAdDEhcS60adEqqlKSqp7InkTjqqE6kW5ijQfAt04Z0tWzMyU4ZkYKk4zD5eSr+pfOcU2YmYytpRoHIjPj6eFLdeeJamN9igj2NmJiIqjM/wkXMHclvUVjUzPScqqw4yk9inEUC7qhlUzuRFysAiyKGkQktEpZE1lQlotHRLHz8RPbdMpOUSK5VWCoPwUCMkcQP/zYsQrICuK1sgZhj0/fO4I1R0bVkImeUSS5zVPy0pxVGI2zZVmN6l5wcMfSQ4jONEJiUSpZ3jw7VI/Crax/kpr7EhTQyrGexwmjSNuuZHVZrdqqurMJ/hULfVfdSxXj/+E1XhlIpQhzuuYAiYGeiKuUWLqVr3EeBLcLQEj4rnV0YdzgMYGgZYCC9I1qMbVgIxijZ4ag42TXHjKU1P/82DEOiCzgsLJRhgBM5bJnGsciNEFlZ1flqYg4bexnFxX3zBFTLdsgTNwzQs5cMKMjVTZeD4k5ORDR+iUM4cJjyVHVVyqCmG1Eu4qLhkozIgfLdcFWUOKEIZN4mQbS14IUJqyWDpExCQ0TLgTUHgAaX4nomwXIKl/nxJwV4egbzmKKl/CLDnA3CYjGC/jB2SScxMf4O0il0pAQgr/82LERiyjcoVhjWgAAUwhBLkHok4yTZX/EpAAqAN4IqIEP4cIJMNQ6lgSUEhSJqKjvV0v/4uheiaA7RGhijMMYRoOcsLsPoXUugQxijWv1rZKiZf/+C2lQwR8wE+C6iGBXjcbQWovkoNJUC1BdioTUElSArWYu6KAVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NixCMAAANIAcAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==",
+"settle": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAACAAABZwAPDw8PDw8PDw8PDw8WFhYWFhYWFhYWFhYdHR0dHR0dHR0dHR0dJCQkJCQkJCQkJCQkKysrKysrKysrKysrKzIyMjIyMjIyMjIyMjk5OTk5OTk5OTk5OTk////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQDsQAAAAAAAAWcz4cmNAAAAAAAAAAAAAAAAAD/82DEAB3rkqgBRhgB/u73xBMnd3fYgAyabGECEOAACdc9Hd+IiaE7vESgAhEREJwAAQv4jv6IhaIibu8AxZxE+OeiIVDgAAld3d0T67noiIhfufoiJ/8RCcAEE7u/Hdz/456J/HfiInURE/dwAQhf/////13eAYs8BHn+7wMfgAAB/wBCBWltjTaKiJhKAOvA28EJg1BARLgHRkT/82LEFyR56vZbiUgBKEgCM4eJx49pCeoqQuOg2ZRCmXNMNOVM20THYKKyRryxmeUmbTRtrZ/1mHrRrFlqxypyeyjsJwq7nCV1m5n3yTz7UYbkP725MKp4sXIsEUflcW74plGz12HcOEFbe57NrVsJk8gYp/aFjLern0od2Wg1Zi+pm2O5Z9W7SBERq2hAUJVR0pHFY02os0N7FhU///NixBUdIRraoc8wAcxtbnrYiiFNmZMFG/SOzXKupzykU1W1U2y/+Z0aajGnkGE0IrfhLom3DoXAitTj7zS+MrsnviyU/EW7uXyPlizQjnd38zDe/WpQFZTWlA2Ptx37653/u3e7mv/2fdDptYQBIYOEGBSRdaRKDlnLQ1kyJhyzlkYaM5ppQk8K5UkrkGoKsymKjn0Kro/SwZHWYv/zYsQwH4NixqAxhhwwzVYq1RlEnAhv5qQO6BcqpXWMWskHY/4mAm0IwsFCmO0gHpMf50bJ1zkvlw1b5PJ6e3nCOVelLaRa3jTIuqGc0+lQcct9RU+EpGQsKiH6UpkCaDiFGuSoTHArby8TetO4qKKoV58KMDQGJZljGgcSDDKCxTM2rKJ6W3OwyJ6AmGJAyhQgtEXHC4rcSAqgqhT/82DEQhvxRr4oSIbgWGnnLaedUIiQ+TVKlW5QiNiI8ZUpr2M49csjelx5g1LxxuZcReFKZkVoFDqGIZ4hZgTAxkAUAwQJhYkWOjiRNUIQozniKLR7SdbDEIrOBASTjjkXROzMzRAYUg1wdTU5CCGamGUzzpKa5h4aGd23q7ZrT2MzxVq0K7U+/w7fo0Oup4KpRaZSlRublNBX4e7/82LEYR2KDqlhQxgBTL3Zwsu/z/teZCjVuTIL/vqneH3FKgGNMAAIAM6Iy8UYQHJoTbg1oEUiUSrjBAzIR2JMOSG//XMroQBdFnLOf/2JpQJFK27rX8v//edzE4k7GL1bMRf12f//9U7WkVZDKobY5VlsSx5qt////7VGfOVATX3WbPRvvLqbUql0pf1/av/////6xOs5iapMm7ya//NixHo5O8JxiZLAAMr2bA4uXMpVTQ1VlMZ+ls1sv////////a61pnTlMOp5RNyCIrCyzHToOL/1pVMy2l3jjWpoaq4Q1//////////8EQzDEFTjvQHIZLdkbL2OxZv4ZrQ1KHgi/6rb+rvGlrS6mrWpTWtVtU1NTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zYsQlAAADSAHAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=",
+"flip": "data:audio/mpeg;base64,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",
+"thud": "data:audio/mpeg;base64,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",
+"clack": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAABgAABGIATU1NTU1NTU1NTU1NTU1NTXBwcHBwcHBwcHBwcHBwcHBwlJSUlJSUlJSUlJSUlJSUlLi4uLi4uLi4uLi4uLi4uLi43Nzc3Nzc3Nzc3Nzc3Nzc3Nz/////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQCowAAAAAAAARiF9DuugAAAAAAAAAAAAAAAAD/82DEABoCKrwFQVAAAYYxjGMY2AAAAABZjGMY/MMMMb1PPP/MMZRBgUwAAAAAAAUAqBeDxv//2Pc88fj8RYixbFgeEhnU8wz////zDDDDB4IsRY/HAgCAPg+D4Pg4CAIAgCAPg/gR3f/g+H9H/7gfB8H6FBhQhAdAaDMVgJ2zOVywCjMSHfoUBcV0H84BNHqt/UGjIixAuJ0KJEz/82LEJykKXv7/j5ACxLpM88QMrmRNECJn+5dFIiTCDSdk8CCR2qEEB5AKQNLjlDNEGWogQ5P60EGE+Bl8T+F1ZDQxQJRIqXUkklmAFaFSP/KA4xHxcQLjTRFupIoB3CeNlo/qJIPbPdb03TTJYRwfagaiIKhot///7VTpYShIGv/SQEBSNefD5cgqpUEAP+HAwUSp5k2q15mZ/8zM//NixBIi0jLFXcZ4A+dq1rWvxaFWtfZ8xK59pFAFx2lxUL3VtNzT62fK5PK17X1YU7mv9WEvpmIVGza1rW+aq19bf/zX//Na11/Wta//Fava6tZ8+rX2hPnyujKY81TiEFYhQU8FBjsQUV0FBXQQUVwKBXQgo7gUFfCCn9BhvxQX8QU3wUFqR+////XN9xpn1EYKKwaYeBphcJGJx//zYsQWIRIyNAgHKPhGPGqbKpZxgvBECCCqheX8YO6hi05GyTAOAVeDD6j/3LGe8878fj0Ra6vYSAJhkFGWn2e2o5kgWGGQGCgAoAsO4jJpuaY2MCgziRAgCCwKbWNUWXP/6v///6FCaEuGNSdFngbBuAMZIEWRVh//+mpI/S1/b18m9ek3GtJrBShnYKCF3n+bi/DrLBCEObqqcQr/82DEISPKMjCiHqEwoTnLgWtH1zKXKGo+xXm6ku+UzvauFrGavZ4uyOhDMmCgU3sPYZy3XcoCXdBcWmrfO483jtToqWjW9JbUa0qnRrRqdq0TE85HB8Q0lF4GnqeeS1N7HkZIdCs6lSFuY5pWVY5utI9Is/2lpW6MvrTVMv/zIyIwO0X/JRREJYZGShGgNmRUISjD8uD0JY6msqv/82LEIBxJ3agACkb4JpJnDp0ojYNISIqcOLoG3NISIZGRgjJD7KJCssmpOF1aSToZGrWyyxQQMHAc13AIWFRVYqKCR/qCQuK4qLfqFhVmrWKi2LC4r+KijahYV/WKqkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+"shutter": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAAEAAACoIAICAgICAgLy8vLy8vPj4+Pj4+TExMTExMW1tbW1tbW2pqampqanl5eXl5eYiIiIiIiJeXl5eXl5empqampqa1tbW1tbXExMTExMTT09PT09PT4uLi4uLi8fHx8fHx////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQEUQAAAAAAAAqCkit7BgAAAAAAAAAAAAAAAAD/82DEABspyrClQ2AAQGtz/iIgt3d3P3d3d3d6UpSZu2vWGBgYGBgeQksCAEAOEw8q2vXrFjlKUmZmZve/zS687MzNf+UXr1973+ZmZmZmZmZyixZTWFixYsoCHBAEAfB/rB8+/wICBz5xPg+D4f/BA5/9P4f/BAEAwhpuGBJmpWKiG7NzbApoJSSXZjgVbWf7bBhO9MxcJ023sLL/82LEIiYxzszLj3gBuTyZ+r4kKo7RS8x7Cexqsq6Fp1WuUJc4MPCqkmng6y+MEznLGcUazh+q7w+b31LWz9eEX+Smr4+NMtXklNbc6vsZg2jNQrwZnn74I0OtHjBOLlhb9vIKOoU3zWutwVMKPnfD1/LfT9f/0/1uOY50/BybWA3S3jpWEfGsgLgOnA9qBPSElk5aCWhw8J5ZUpRJ//NixBkl2uLQS8xYATw4VmDJNMjZYkKkAbmhoSQHg/nBBAEAfIAqXQPN0F6mY7q7SPHWTahq2TqBiVD4vV6e25++W71oY6bmLYx5MK0YmlWPh80kdh7H7LZs2M5533TLunfEXxXFe+KrZDq+eot833pe48Ei/rhjc+O7Ql7QqxqTkKyTXn/r/lnq9NUhkNy0FBwwOohFUPxEP1h21v/zYsQRH/m+zAJj0SCbOHz1TWA/cgSO/ExSyhuJYl9Er0gLYZbS/iSlQleczVDVLpYzpbU8VODwCwXkEvBG12sRtf10kXF6nimC80eOEx0idSIR5sUa5IsLxAAxVxJQcanFC5pgVei9ph2xSygUYsj771EWvj2cGotcm5QSTylpD2EoJ4JgqgPIy6qoicoUSELcbghkgtvGXMPIo9T/82DEIR/ButFsSg1pw9mMAkPo2AoAQAAoQIMzYy9LBjlq1cvw7nhYP5d3Wdn/62deZhmZmYwQYnYflJaJyg6u2QB7lGTUK3F4kr5/7jviWnvPsfdOr/HUPeIif1DVj1T3/7Wff1//Z2u//AAhxa3FTnWch5o1gWVa1p27ChT9Fx4MBoe1bHGzdh+p7407u7iYkkjMSuc52RID2H7/82LEMSHp1sVKeNmgmSvw3ceJWbOKV9MQsWz4MHvsNhMDmjRp74paSJCo8Y2sPcnfgQgeRLuidiidcgFwudB5BUJLUGhUYHGF3kR5Bj8caaLvemz2115PQpTddzO9Ahx0XDdFACgABmmAYIAwyY8BqHWgOHg3AwgmBolG+dQRMeTDjGqoNnES0CKY4GAQfwuJBo2d1ys9zcb6LNiw//NixDkfCobNlDNRQHQKwhEVVqO6t90/riF9msWKEYFQAEHgiFiu47p2j++frXlb44hu/qZq55/vUbDrxNSytqDDQD7xqv9w5XsYKorW7wCqBoJnSik3I0MsHKIEQKCdCu0imjbSthaTVsSabXOwbHXJPO01x9FQuFEUiozatarXPh0t5qubndc8UkmPhedi55+aZNS37r/27pOjcP/zYsRMIDG+1jdJWADpNWHhKRDQwe4qewbuaRjlHVJrWdknmEvc9W50iMasaWedNIZaNFHgJzkani7JmeJqCrgORpr9l0gHawUSm42mwEAfDoOzsKGQPEwPCqJwfnyYUjqXlIyTXTqIqwMy+rJHiiPd4x1cXNOzDZAZDRVrCBhiUYX8rrapR0dLwnM/bOcRmiNT44lQ2Yvouoz0q9z/82DEWzRj5smfjHgB56RPClt2gwIUDTm5QI9sezCxDyta9PrJAZqX3alPfeqVuaKQmYmuM9fQmJr1FiyPsf0zC98VxamseNi9sYvvVIVp6xYF42YlaZxfWbU1n53rdN7x/969Pv/6/+sZ/3mkks9aZ+5JoXvWkDdtzY1n2xjEGPq3H7pIxJtPXQJQgQGApJpWH09VGBuYocQNN9H/82LEGCYyLtI/jHgAl9gIInqwmsy1e5dxVskz+JGjPoxfmIdU8BgcH6gegyTE1uDm2GSbebNiqziBim8qn63/hgcI/rBXRX1+txMf9Uq296f6+FHmvx8QkchVvfGqWxrMTVo96U+////GwpgKkTxdkfpoA4WqaTY5J0DGAA3aImi6SEhU1BpgD9dz095KZllYeVhDNkAQ/dhdNzts//NixA8h8irnH49AALcE7cmFyO8R1DmJlN94l3kJDVHHDIGjTnHh4YOIdCVg4gPMJV7G+Lh2I4LGFxpAxXH0OCAx9I1sAFO12NE0elB2Dc9P/8Dava69FT/0QX79KT+d2a5mU5rvFwccKBmL2rt3HCt5tCIeWQAJgP07H/Xnv9xQMP0lDqrsAQW4D8AAYURTvStb08dyy/fqJijLTP/zYsQXJHHSvZWPwADV2yueVqVTNre88IBf2Iz0vg+5cpJlgIYQHFvVBkkiz+LTysMIsVexbG1hf38zh3v0zCVtO9j/exFetj/7y5v96y3zuU0re7Wsu//5uDZ7rHvMtTW7WWrVY6sFXgNhIVtnwGenzJ02WYunuCNiqXPcwbsHyu9gp9a6yio0EeK8okgbxeVBEJ+jkmXBsVFVK3L/82DEFST7NqQBj1gBQ2lAlIVo7yiB5lYQRNPTI/nR1gqwyVbZsb90dJb0pt7FzR6LaPQu4hlpN1j9p3dPij6StHvhu42hyZ96s91LpOzam6nS6H8TzbXVXfHdTw2H7FfmuJ2VE3U39/HNz9fHLu5qKp3utl+3+P1LxvcXL11cqlP8037xz/P1/2JzsQAYAg4Q44Qw4gABPBpV1+r/82LEECPbXoo1j2gBkdhfje/H2iHad/HGJsHQmkqJ9xMSoYySRJcTkdSePYki0kfnyXEqEwGCRJEkTQvfLoxiExNMTPUpzFf8mJjiLyBqeJcvI10lJL/8+ZJJGKRoXjFjpImS0VtWp/X//cvF1AyOmSBLF0xHKZMXx2f////6SjJloqTOGx51LdZwJ4pMQU1FMy4xMDCqqqqqqqqq//NixBAAAANIAcAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv/zYsRvAAADSAAAAACqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo=",
+"drawer": "data:audio/mpeg;base64,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Mv4guKXEECCE4ZDKDgEpuiZEWHOKJOkz/5FyfJxbkwRQnCD/82DEgzebwlAxm5AA5fN0S+YkyZEWIEYo1l0ipkXv/5uRQihUJ95mTZXIoXDRzA0L1IvGJdIqZJJKLxNGJdLv//kXIubk40wLhoRcvm5ommXC4aE+m6lomReJpFFFZiXTIvF5dJEukzVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/82LEMwAAA0gBwAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NixG8AAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==",
+"filebox": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAADAAACA8AKSkpKSkpKSk9PT09PT09PVBQUFBQUFBQZGRkZGRkZGRkd3d3d3d3d3eLi4uLi4uLi56enp6enp6enrKysrKysrKyxcXFxcXFxcXZ2dnZ2dnZ2dns7Ozs7Ozs7P//////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQCWwAAAAAAAAgP4JtHfgAAAAAAAAAAAAAAAAD/82DEABkJcp3lQTAAqIAALHgBMAAAADGAAAAACcREd7/u7vxGHgAIhzyd77u///4j+//F32iI9wYhERj2QIHAffDGJwQWD7y/UD58QBgoCAY4Ph9QJg+oEDhDUCYP9YPvYUOVLBB38P/z8QOlwfeUDCqopmZTVo9JlwkkICSUVjeVUUQqGsHq9RJnWVCsYz7XY8sPxEDwRxYGgqD/82LEKipsDvb7j0AABBMHAaEQ8RYCAXGKA8WEexOgjmA4EbXnjB5yHXQdOIx/ZnmMeoftJMkwONouqlN0MlMbY+m3F0mGsbmx1BlXX/rEtPUl1DFRCRnQpp6m/88JFdp6dvu9qvcTT3fFU6qdPVbk1/p1ffx1cJdcGUjzKe7jknhGmf2ioKJ0d64iCkWTIiCQKbCk4IpIrtdGyyzF//NixBAfE6bqwckYATmiVSbUSRSbBJGWunAQCCDC2UltVbvFrhhZQEmDEQm4pkani430CHCiWalMj4S6exn6t5lXSHg/rLh29bCk/qqttqJ5Em8/sknYZ5wzzLcmOdkJY85ZWNs6X1b+ef+Web5UeTIF5V9c37ougxXMpJwWDD3EJ7PIrNRMDzZiYlA2rjXNOupIpmNpvEw6CuerAv/zYsQjIut62eAxhr1I8vupM109bIfizn10CLmoxLmEIx1YylUI7Nx5YFMKARwcQMORjjOkyJAdUQQFWBYtlFjxsBZjfMMtDRjF5NV3yNw1QjvfpERxFhNGqxMkYY4cmbSF1SBzlUONli9/RSEmXKOhP/EPVgKwBDLdZUqzTZMPOS1AxyQIwS66LI3VJIRJxz8vDgZpI2QbIrMQO1H/82DEJyDj/tYAMMV94kSlOxgWcjI+X4ktQY3WCYgKquo4WVwrZxjUGgEy1Uhku0iFWFqfu3mWypYb1JDJg1KtYRCsGR/0p0iEwVmcDNIRfDbmzci1nJZoaX86N93YuTHZ/O10yxdkFLja1sgxxa0BuOAR5Rh4PSHlITZo44xSHZpNmn1g3epS2W4Ka6qrJgY14w6HazjFNGVrrKz/82LEMh1xhtIAMZAFZq7MQchl/yOYsFxK2xyEGHbucVVd/jHCydCX5YLp7WJY2N/oN8J+2Yuvqv6wqCxvdk4vMw1bjIA/zd7u6Zpb/59Frir9xmRCQoATGoXR8Fhbh6JO28onCbB2Po5A1cTsDkoJmWk9Esbn/QtY4GZVv8CjBntJabTtzjHnWJkyekcYGUIuxJUpo/T7P+XvcmOP//NixEwcexLKKBGGGMLueral6/w0jd9s+Z5HI2Ta5mPIvIxCoXjXpGKOcXhtOHQYLYCZAEa6ATAQAcRBAEzjC5IpA8FTskk5KEp5KNrIXRJeWXVbM1Iwd12X1lW+YCgs2HvKXuXRMWmFTY1ZZreM2X6uL0ub1Jlk/FxPlOOV8uw+/+WhC324vv7vAH61/sfzfiv/5b/p6D8b7v/TP//zYsRqG2EKwiBJhon0n/6VyWJQkBRrnQRrS6Z8NWZ0G7hykhJh+VwLeMpcWQZzGHeel+YC01RFAcr02nGxpL7JHzX3NZ2nK2W2e8z5NyWliQOTI4fCrj07DsRQ67MrGGqm6bnB2NhUJXxZColnkIZdJHgV3x+FQqg0/Yx28c2kBLe9LYtwLrUA1gmyAoCKgiGGbCkpooHhAWXTDWL/82DEjB2hCrrI7kwoUj6PQqWhI2EiJg4AmwsidakjbVUmJqqXjez5RokBkiCwnBYkBQqJALxb4qAgmGToFZUSArAKmsChUMhJq0hICizUAUKB41ixIKgIJhl1TP4LEQWJPs+MJDpoeKkh/v1EgKRcBZy3b/8YAmQAmTkHVXFUSXkAjK0nouhFLCJFaEAhoGhKMOh0SjDxEqo8HSr/82LEpB342nmM1wwEo8GyqjwaEqjxIQjDzREo8dLKe3hoRZ2txItnue4dEz4dK9CzodR/Ev3/7VqeS6PrPUxBTUUzLjEwMFVVVVVVVQcuebZGa4BwFtkOhXYMwAagCAgIg2kskqlMm+KAEIUBChjC2jNFaI3NpDhuACCzD43KmaNOEgQsQLAwIsEHR0tlI1axlBAxUExQWEgeNOFh//NixLwXOEZQXtPSIGFhKKioJ/ULNxVn/qFxX6xVkWFhZn6xX1s9YqKin+sVFUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zYsTgHEENVMrBhuhVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=",
+"print": "data:audio/mpeg;base64,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7sp1aP/zYsRcNtQWybGYYABsLTn2js4o84pU0Qvu/A+u8zXxK021cXdW7DTbjXL22EqEtQnzqFxmkHWpREcOsIkJC/oaH76LEKE4ojUOrooufjtdlla1Vqx1GtW9S/xUlZRxzOtRaxv3y385ms2rFN/vlqT1Fx08tW9PWbutalddc3E333y9q2m/tNwUbvSH1QgIFoF9kCCtPW24j3U8iNb/82DEEB1JdtYLzxgBFn+JXmby6jybjAxJGE3tzAqlDSkTF2KXsasYzTI3z2XX7OLKvxtRNBA2lK2bMm0lpNlCtAs40beLxZsST2wsVWKiSQ/JZtk6ll3sce352V+EnjfOY9tTrv56rrvmx2i6b7f4uN0qgAD0gClAzgveqy2LpoOCNwoVeWOE0hjQ0pJo60GZjA3zFIcEIYfPVIH/82LEKRqhxslKekZQ1EiCbhFpZT/Tl5tJc2M50/qefKVIzPlexBOJR6LQfuSZKl1PPA0trheCKT7ZwaoKCQBUIpQ6Gbdtj2sO+vy2d3aqQqkb1TxYKTBiEgRBJk6JINhFEmJSjAlpXKcgiJ5AWqQ5lJNpizndDVxjTvp83Y2YfuYBRChwLMPFRUcAh5F88JzDnioCB0PFzhm9hE0m//NixE4b2QrEysJMLMiJ7SoxT0WvQlVzkI7nx5XcKsRqP2RzztD1UHZRZrsWsZUIUNO8OPhiKvLD8IiLktdfWEVqCSzOpVSSSXD7OBexqglQ6BcheBW2RZkkjbUIr0+PBrIrpMWYewKCFo6GAnZKKjkoerXMRKyOrTr1XqvP2Kgys9DKu93SZJrJ1+pqH62ulOrPRb6Po/dIItGtD//zYsRuHmM2tKLBhNBW4sof7g6ubrQqudWSDqSQ/QaROiDHzARJOlEpVaqbMS5Ol61tnhQ4bK9kasJMPZKG8kdaiTIvhLDiRLUyKKVa6O935qOVTt2Z47IsFQSWKPCghEl5asFQVOiIOFQUnRXjTIsLBwKJJCrSp1RYSrvvCR4mS1i7ozo1WeHegenrs7q1EEAM/Q7yNb/09no1W/3/82DEhB1hTqQLTzAARNOTuv8LyAzgJJTr5uJ8Pq2VzEcI4AnupXj1GSSgJ0MHV/jiNxwmQ7gWokvr/z5IrRQJEco1Ej//+OUxJIzHxAzHiZJuXib////j1pE10aRiJ6s1TSR/////6y6gZG5oXTIexkXjI4XhxGJdNUZxTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/82LEnR8zbmApmWgAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NixG8AAANIAcAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==",
+"tick": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAowAhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLC////////////////////////////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQDpAAAAAAAAAKM802EmAAAAAAAAAAAAAAAAAD/82DEAB4jnspBQRgASik1AQxjGO4BuMYxjr5L/7u7oiEX//u7u6IiIiIju7u56AYGBgYGBgYGBgAAAIieju7n+jn//UQvrn/7u7uiIiJ/7u7u/+iIn//oiO7u7u7oiIXXdEQv///d3REREREd3P9Ed3dw4GBiwAAAAAQgIYIAgGPEgIHJBcBaNx+HBKJQQEBAggFiQG54BIFa0sH/82LEFiXDbt5dkaACtEPqVlYDwQGFIAKQpsJt5NhikXItkuF0ROJLBjVJImjLwyyShRKoey5jS/LxNCEw5I5pQIb//iUSWQEBhtECMxlSN///IKPoUiLJKpMl01HJJwc5Sf///+QEyLxe3OjKksTJVMpdNf////9SyGkOIsQYsk6giTIypDhxFFJyGpsfTEFNRTMuMTAwVVVVVVVV//NixA8AAANIAcAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==",
+"lamp": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAABQAAA8UAWVlZWVlZWVlZWVlZWVlZWVlZWYODg4ODg4ODg4ODg4ODg4ODg4ODrKysrKysrKysrKysrKysrKysrKzW1tbW1tbW1tbW1tbW1tbW1tbW1v//////////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQC+QAAAAAAAAPFM750zAAAAAAAAAAAAAAAAAD/82DEABzj1sXgGEfgclaQviIXxPRETru7u7iERP66J6IiI7u7u56IiJ+6BAAAAABE9ERERCP/93REREQv/0REPiIiIh8AAZDG/+5ARD4iIiI7hwMW7/6Iie6IiIn+7u7u7oiIiIiP6J9dERERER///d3d3d3RPru7gAACAIeCAYWFMiLEFAQFVVVVmZmZmZVVVUtlUKAiVVVbjMz/82LEGxzBJsqpQxgBf/+zMfqqqqqzN1QoCAsFBR3/4KCgx3goKFBQV8YKO+KFBX//Dv+LwK6DBQU/4vAoKO+KCgoUN/4IK7///8GCngrv/+gwUFBQUCgv+EgoKCiugoKCkgoKCvp3OBZGFgPJMhJfMucLJ39CqU/c0fuLxUC5EQDV/EWcYXHhIPBWBuEWBMLYXJ//MkizNh6NRAkh//NixDgfvA7EAYJQATuawgf/57nnuTozboPCZTB8Mh0hUs6F///Yxb9rHufYeiqPC5zqcpYekg+QfL////eejW1lyBiRvUwuPjipxrKxMF0NxZUUDDU4D9m6qijVVUoyqqqqqSlLQyiIdNKUtDGmNKVA8AwqxhIPGiIdMpWqIgKAIs/UodDrqHQ6KlmMXMY0pXKUrUMblKX/9DGM9f/zYsRJH4PSgiHDKAEpZS0MY1DGlLMJFKX1K/UpSlepSsgkHi0MY3mM///L5Q6HTKUupQ66lL+UvKHQ6bEFcFG8CkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/82DEWwAAA0gAAAAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo="
+};
+</script>
 <script id="fx">// Sounds (off until the visitor turns them on) and the split-flap board in the booth window.
 window.FX = (function () {
   const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const snd = { on: false, ctx: null, last: {}, buf: null };
+  const VOLUME = { tick: 0.12, print: 0.3 };
+  const snd = { on: false, ctx: null, last: {}, bufs: {}, gain: null };
+  try { snd.on = sessionStorage.getItem("cvp-sound") === "on"; } catch (err) { /* storage can be blocked */ }
 
   function ctx() {
     if (!snd.ctx) {
       const C = window.AudioContext || window.webkitAudioContext;
       if (!C) return null;
       snd.ctx = new C();
-      const len = snd.ctx.sampleRate;
-      snd.buf = snd.ctx.createBuffer(1, len, len);
-      const data = snd.buf.getChannelData(0);
-      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      snd.gain = snd.ctx.createGain(); snd.gain.gain.value = 0.35; snd.gain.connect(snd.ctx.destination);
+      // decode the embedded files once
+      Object.keys(window.SOUNDS || {}).forEach((name) => {
+        const b64 = window.SOUNDS[name].split(",")[1], bin = atob(b64), bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        snd.ctx.decodeAudioData(bytes.buffer, (buf) => { snd.bufs[name] = buf; }, () => {});
+      });
     }
     if (snd.ctx.state === "suspended") snd.ctx.resume();
     return snd.ctx;
   }
-  function env(c, t, peak, dur) {
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(peak, t + 0.006);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    g.connect(c.destination);
-    return g;
-  }
-  function noise(c, t, dur, type, freq, peak, sweepTo) {
-    const src = c.createBufferSource(), f = c.createBiquadFilter();
-    src.buffer = snd.buf;
-    f.type = type; f.frequency.setValueAtTime(freq, t);
-    if (sweepTo) f.frequency.linearRampToValueAtTime(sweepTo, t + dur);
-    src.connect(f); f.connect(env(c, t, peak, dur));
-    src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
-  }
-  function tone(c, t, type, from, to, peak, dur) {
-    const o = c.createOscillator();
-    o.type = type; o.frequency.setValueAtTime(from, t);
-    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
-    o.connect(env(c, t, peak, dur)); o.start(t); o.stop(t + dur + 0.02);
-  }
+  const ALIAS = { rustle: "lift" };
   function play(name) {
     if (!snd.on) return;
-    const now = performance.now(), gap = name === "tick" ? 40 : 70;
+    name = ALIAS[name] || name;
+    const now = performance.now(), gap = name === "tick" ? 40 : 60;
     if (snd.last[name] && now - snd.last[name] < gap) return;
     snd.last[name] = now;
     const c = ctx();
-    if (!c) return;
-    const t = c.currentTime;
-    if (name === "thud") { tone(c, t, "sine", 120, 42, 0.6, 0.2); noise(c, t, 0.05, "lowpass", 900, 0.35); }
-    else if (name === "rustle") noise(c, t, 0.16, "bandpass", 2600, 0.12);
-    else if (name === "drawer") noise(c, t, 0.34, "lowpass", 260, 0.2, 900);
-    else if (name === "print") { for (let i = 0; i < 6; i++) noise(c, t + i * 0.09, 0.06, "bandpass", 1400, 0.08); }
-    else if (name === "tick") tone(c, t, "square", 1700, 0, 0.025, 0.014);
+    if (!c || !snd.bufs[name]) return;
+    const src = c.createBufferSource(), g = c.createGain();
+    src.buffer = snd.bufs[name];
+    src.playbackRate.value = 0.95 + Math.random() * 0.1; // a little pitch variation so repeats do not sound mechanical
+    g.gain.value = VOLUME[name] || 1;
+    src.connect(g); g.connect(snd.gain);
+    src.start();
   }
-  function toggle() { snd.on = !snd.on; if (snd.on) ctx(); return snd.on; }
+  function toggle() {
+    snd.on = !snd.on;
+    if (snd.on) ctx();
+    try { sessionStorage.setItem("cvp-sound", snd.on ? "on" : "off"); } catch (err) { /* storage can be blocked */ }
+    return snd.on;
+  }
 
   function board(el, phrases, n) {
     el.innerHTML = Array.from({ length: n }, () => '<span class="tile">&nbsp;</span>').join("");
@@ -1471,6 +1659,7 @@ window.DEMOS = (function () {
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
+    lampOn: true, recordView: false, recPos: null, printing: false,
   };
   let topZ = 40, board = null;
 
@@ -1504,7 +1693,7 @@ window.DEMOS = (function () {
   const paperIds = ORDER;
   const caseIndex = (id) => (/^case-\d+$/.test(id) ? +id.slice(5) : -1);
   const paperLabel = (id) => (id === "id" ? "ID card" : id === "diploma" ? "Diploma" : id === "honours" ? "Commendations" : shortName(state.projects[caseIndex(id)]));
-  const pst = (id) => ui.papers[id] || (ui.papers[id] = { x: null, y: null, tilt: +(rnd(id, "tilt") * 3 - 1.5).toFixed(1), open: false, page: 0, pages: null, away: false, prev: null, nudged: null });
+  const pst = (id) => ui.papers[id] || (ui.papers[id] = { x: null, y: null, tilt: +(rnd(id, "tilt") * 3 - 1.5).toFixed(1), open: false, page: 0, pages: null, away: false, prev: null, inBox: caseIndex(id) >= 0, outPos: null });
   const paperEl = (id) => $('#desk .paper[data-id="' + id + '"]');
   const portraitAlt = "Pixel portrait of Thea: short dark hair, light shirt with an open collar";
 
@@ -1566,10 +1755,13 @@ window.DEMOS = (function () {
     return pages.filter(Boolean);
   }
   function caseInner(i) {
-    const p = state.projects[i], st = pst("case-" + i), pages = st.pages || [""], n = pages.length, page = Math.min(st.page, n - 1);
-    return '<header class="paper-head"><h2>' + esc(shortName(p)) + "</h2>" + (n > 1 ? '<span class="pg">Page ' + (page + 1) + " of " + n + "</span>" : "") +
-      '<button class="close" data-act="close-case" data-id="case-' + i + '">Close file</button></header><div class="paper-body">' + pages[page] + "</div>" +
-      (n > 1 ? '<button class="corner" data-act="flip" data-id="case-' + i + '" aria-label="Turn to page ' + ((page + 1) % n + 1) + '">' + SPR.draw("corner", PX) + "</button>" : "");
+    const p = state.projects[i], st = pst("case-" + i), pages = st.pages || [""], n = pages.length, page = Math.min(st.page, n - 1), id = "case-" + i;
+    const nav = n > 1 ? '<span class="pg-nav"><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Previous page"' + (page === 0 ? " disabled" : "") + ">" + SPR.draw("left", 2) +
+      '</button><span class="pg">Page ' + (page + 1) + " of " + n + '</span><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="1" aria-label="Next page"' + (page === n - 1 ? " disabled" : "") + ">" + SPR.draw("right", 2) + "</button></span>" : "";
+    return '<header class="paper-head"><h2>' + esc(shortName(p)) + "</h2>" + nav +
+      '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></header>' +
+      '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" +
+      (n > 1 && page < n - 1 ? '<button class="corner" data-act="flip" data-id="' + id + '" aria-label="Turn to page ' + (page + 2) + '">' + SPR.draw("corner", PX) + "</button>" : "");
   }
   function paperInner(id) {
     if (id === "id") return idInner();
@@ -1580,7 +1772,7 @@ window.DEMOS = (function () {
   }
   function paperHTML(id) {
     const st = pst(id), i = caseIndex(id), kind = i >= 0 ? "case" : id;
-    const cls = "paper p-" + kind + (st.open ? " open" : "") + (st.away ? " away" : "") + (isPhone() ? "" : " packed") +
+    const cls = "paper p-" + kind + (st.open ? " open" : "") + (st.away ? " away" : "") + (i >= 0 && st.inBox && !st.open && !isPhone() ? " filed" : "") + (isPhone() ? "" : " packed") +
       (i >= 0 && ui.hot && uses(state.projects[i].stack, ui.hot) ? " hot" : "");
     const label = i >= 0 ? "Case file: " + state.projects[i].name : paperLabel(id);
     return '<article class="' + cls + '" data-id="' + id + '" data-drag tabindex="0" aria-label="' + esc(label) + '"' +
@@ -1606,7 +1798,7 @@ window.DEMOS = (function () {
   function boothHTML() {
     const p = state.profile, qs = state.interview.map((q, i) => [q, i]).filter((x) => x[0].q && x[0].a);
     return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline">' + SPR.scene(PX) + "</span>" +
-      SPR.applicant(p.applicant || "thea", PX, portraitAlt + ", standing at the booth window", "applicant") + '<span class="ledge" aria-hidden="true"></span>' +
+      SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="ledge" aria-hidden="true"></span>' +
       '<div class="shutter" id="shutter"><span>Booth closed. Scroll to open.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
       '<div class="board" id="board" aria-hidden="true"></div><p class="sr-only">Departure board: ' + esc(p.board.join(", ")) + "</p></div>" +
       '<div class="booth-main"><div class="booth-links"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
@@ -1625,10 +1817,12 @@ window.DEMOS = (function () {
     const sticker = (id) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.draw(id, PX) + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
-      '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop a paper on the counter to put it away</span></div>' +
-      '<div class="lamp" aria-hidden="true"><span class="off">' + SPR.lamp(false, PX) + '</span><span class="on">' + SPR.lamp(true, PX) + "</span></div>" +
+      '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
+      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.draw("filebox", PX) + '</span><button class="box-all" data-act="all-back">Put all back</button></div>' +
+      '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.draw("printer", PX) + '<span class="led" aria-hidden="true"></span></button></div>' +
+      '<div class="record-view" id="record-view" hidden><div class="rv-bar"><span class="rv-title">Entry record</span><button class="btn-quiet" data-act="record-down">Put it on the desk</button></div><div class="rv-scroll" id="rv-scroll"></div></div>' +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + '</span><span class="ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
-      sticker("cup") + sticker("plant") + sticker("laptop") +
+      sticker("cup") + sticker("plant") + sticker("laptop") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
       '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.draw("envelope", PX) + '<span class="ink red env-stamp">Applicant file</span></div>' +
       '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">Scroll down and the applicant file unpacks itself.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
@@ -1639,22 +1833,17 @@ window.DEMOS = (function () {
   // ----- entry record -----
   function recordHTML() {
     const p = state.profile, e = state.education, feat = state.projects.filter((x) => x.featured);
-    const slip = '<div class="slip' + (ui.slipTorn && !isPhone() ? " loose" : "") + '" id="slip" tabindex="-1"' + (ui.slipTorn ? " data-drag" : "") + '><p class="s-title">Contact slip</p>' +
+    const slip = '<div class="slip" id="slip" tabindex="-1"><p class="s-title">Contact slip</p>' +
       '<span class="email">' + esc(p.email) + '</span><div class="row"><button class="btn-quiet" data-act="copy">Copy address</button>' +
       p.links.map((l) => (safeUrl(l.url) ? '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>" : "")).join("") + "</div></div>";
-    return '<section class="record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
-      "<p>The 60-second version, printed at the booth. Stamp it if you want to leave a verdict.</p></div>" +
-      '<div class="printer-area' + (ui.printed ? " printed" : "") + '" id="printer-area"><div class="printer" id="printer">' +
-      (ui.printed ? "" : '<button class="btn-quiet" data-act="print">Print record</button>') + '<span class="led" aria-hidden="true"></span></div>' +
-      '<div class="receipt' + (ui.slipTorn ? " torn" : "") + '" id="receipt" data-stamp-root tabindex="0" aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
+    return '<article class="receipt" id="receipt" data-stamp-root data-rec tabindex="0" aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
       '<div class="rec stampable" data-stamp="record"><p class="r-title">Entry record</p><p>Desk 04 · ' + today + "</p>" +
       "<dl><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Seeking</dt><dd>" + esc(p.seeking) + "</dd><dt>Based in</dt><dd>" + esc(p.basedIn) + "</dd><dt>Education</dt><dd>" +
       esc(e.degree) + ", " + esc(e.graduated) + '</dd></dl><p class="r-h">Strengths</p><ul>' + state.strengths.filter(Boolean).map((s) => "<li>" + esc(s) + "</li>").join("") +
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
-      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</div>" +
-      (ui.slipTorn ? slip : "") + "</div></div>" +
-      '<footer class="foot">' + esc(p.name) + " · " + esc(p.basedIn) + "</footer></section>";
+      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>" +
+      (ui.slipTorn ? slip.replace('class="slip"', 'class="slip loose" data-drag') : "");
   }
 
   // ----- fixed controls: the stamp bar and the pill nav -----
@@ -1704,9 +1893,9 @@ window.DEMOS = (function () {
     if (!$("#scene")) return;
     const s = sceneNow(), prev = force ? {} : ui.scene || {}, n = ORDER().length;
     const sh = $("#shutter"), ct = $("#counter"), desk = $("#desk");
-    if (s.shut !== prev.shut) { sh.style.transform = "translateY(" + -s.shut * 25 + "%)"; sh.classList.toggle("up", s.shut === 4); if (!force) FX.play("tick"); }
+    if (s.shut !== prev.shut) { sh.style.transform = "translateY(" + -s.shut * 25 + "%)"; sh.classList.toggle("up", s.shut === 4); if (!force) FX.play("shutter"); }
     if (s.counter !== prev.counter) ct.style.transform = "translateX(" + -(3 - s.counter) * 34 + "%)";
-    if (s.lamp !== prev.lamp) { desk.classList.toggle("lamp-on", s.lamp); if (!force && s.lamp) FX.play("tick"); }
+    if (s.lamp !== prev.lamp) { setLampVisible(s.lamp); if (!force && s.lamp) FX.play("lamp"); }
     if (s.board !== prev.board) { if (s.board) board.start(); else board.blank(); }
     ORDER().forEach((id, i) => {
       const want = i < s.out, had = prev.out != null && i < prev.out;
@@ -1726,26 +1915,32 @@ window.DEMOS = (function () {
   // the ID card, diploma and commendations across the middle overlapping only by their margins,
   // a clear lane on the right, and the bottom strip kept for the drawer front and the pill nav.
   // On short screens the whole layout shrinks a little so every paper starts on the desk.
-  const LANE = 170, MID_X = 286, TOP = 50, BOTTOM = 68, STACK_STEP = 28;
+  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 23;
   const usable = () => { const d = $("#desk"); return { w: d.clientWidth, h: d.clientHeight, top: TOP, bottom: d.clientHeight - BOTTOM - 6 }; };
+  // the file box sits in the bottom-left corner; each folder has its own slot in it
+  function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
+  function slotPos(i) { const b = boxRect(); return [b.x + 12 + (i % 2) * 3, b.y + 34 + i * SLOT]; }
+  function placeFurniture() {
+    const u = usable(), box = $("#filebox"), pr = $("#printer");
+    box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
+    pr.style.left = u.w - LANE + 8 + "px"; pr.style.top = u.top + 96 + "px";
+  }
   function computeFit() {
     if (isPhone()) { ui.fit = 1; return; }
     const u = usable(), avail = u.bottom - u.top, el = (id) => paperEl(id);
-    const folders = caseIds().map(el).filter(Boolean), last = folders[folders.length - 1];
-    const stackH = 24 + (folders.length - 1) * STACK_STEP + (last ? last.offsetHeight : 120);
     const mids = ["id", "diploma", "honours"].map(el), midH = Math.max.apply(null, mids.map((e, k) => e.offsetHeight + [8, 16, 0][k]));
-    const minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
-    ui.fit = clamp(Math.min(avail / stackH, avail / midH, (u.w - LANE - MID_X) / minW), 0.72, 1);
+    const left = boxRect().w + 30, minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
+    ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.72, 1);
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
   function landing(id, el) {
     const u = usable(), i = caseIndex(id), s = ui.fit;
-    if (i >= 0) return [20 + (i % 2) * 6, Math.round(u.top + 24 * s + i * STACK_STEP * s)];
+    if (i >= 0) return slotPos(i);
     const widths = ["id", "diploma", "honours"].map((k) => { const e = paperEl(k); return (e ? e.offsetWidth : 300) * s; });
-    const midX = MID_X * Math.min(1, s + 0.1), avail = u.w - LANE - midX, min = widths[0] * 0.85 + widths[1] * 0.85 + widths[2];
-    const extra = Math.max(0, avail - min) / 2;
-    const gap0 = widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 40), gap1 = widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 40);
-    const k = { id: 0, diploma: 1, honours: 2 }[id], x = [midX, midX + gap0, midX + gap0 + gap1][k];
+    const left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] * 0.85 + widths[1] * 0.85 + widths[2];
+    const extra = Math.max(0, avail - min) / 3;
+    const gap0 = widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 60), gap1 = widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 60);
+    const x0 = left + Math.min(extra, 40), k = { id: 0, diploma: 1, honours: 2 }[id], x = [x0, x0 + gap0, x0 + gap0 + gap1][k];
     return [Math.round(x), Math.round(u.top + [8, 16, 0][k] * s)];
   }
   function envCenter() { const e = $("#envelope"); return [e.offsetLeft + e.offsetWidth / 2, e.offsetTop + e.offsetHeight / 2]; }
@@ -1756,7 +1951,7 @@ window.DEMOS = (function () {
     if (!el || st.away) return;
     if (st.x == null) { const p = landing(id, el); st.x = p[0]; st.y = p[1]; }
     if (isPhone()) { el.classList.remove("packed"); return; }
-    const go = () => { el.classList.remove("packed"); setPos(el, st.x, st.y); el.style.zIndex = 10 + (order || 0); };
+    const go = () => { el.classList.remove("packed"); setPos(el, st.x, st.y); el.style.zIndex = st.inBox ? 20 + caseIndex(id) : 10 + (order || 0); };
     if (instant) still(el, go); else { el.classList.add("moving"); go(); FX.play("rustle"); }
   }
   function pack(id, instant) {
@@ -1767,20 +1962,24 @@ window.DEMOS = (function () {
   }
   function placeStickers() {
     const u = usable(), w = u.w;
-    const spots = { cup: [w - 150, u.bottom - 60], plant: [w - 110, u.top + 150], laptop: [MID_X + 10, u.bottom - 50] };
+    const spots = { cup: [w - LANE + 40, u.bottom - 70], plant: [w - LANE + 70, u.top + 230], laptop: [boxRect().w + 170, u.bottom - 52] };
     $$(".sticker", $("#desk")).forEach((el) => {
       const id = el.dataset.sticker, p = ui.stickers[id] || spots[id];
       setPos(el, clamp(p[0], 0, w - 50), clamp(p[1], u.top, u.bottom - 48));
       el.style.rotate = (rnd(id, "t") * 16 - 8).toFixed(0) + "deg";
     });
+    const cup = ui.stickers.cup || spots.cup, ring = $(".cup-ring");
+    if (ring) setPos(ring, clamp(cup[0] - 40, 0, w - 50), clamp(cup[1] + 6, u.top, u.bottom - 40));
   }
   function relayout() {
     if (isPhone() || !$("#desk")) return;
+    placeFurniture();
     computeFit();
     paperIds().forEach((id) => {
       const el = paperEl(id), st = pst(id);
       if (!el || st.open || st.away) return;
-      if (!ui.handled || st.x == null) { const p = landing(id, el); st.x = p[0]; st.y = p[1]; }
+      if (st.inBox) { const p = slotPos(caseIndex(id)); st.x = p[0]; st.y = p[1]; }
+      else if (!ui.handled || st.x == null) { const p = landing(id, el); st.x = p[0]; st.y = p[1]; }
       if (!el.classList.contains("packed")) still(el, () => setPos(el, st.x, st.y));
     });
   }
@@ -1790,8 +1989,8 @@ window.DEMOS = (function () {
     updateBar();
     if (isPhone()) return;
     relayout();
-    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el, false); });
-    placeStickers();
+    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
+    placeStickers(); placeLamp(); placeReceipt();
     layoutDrawer(false);
     applyScene(true);
   }
@@ -1807,76 +2006,111 @@ window.DEMOS = (function () {
     if (el.classList.contains("paper")) { ui.front = el.dataset.id; refreshSkills(); }
   }
   function markHandled() { if (!ui.handled) { ui.handled = true; ui.maxOut = Math.max(ui.maxOut, (ui.scene && ui.scene.out) || 0); } }
-  const boxOf = (el) => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth * (el.classList.contains("open") ? 1 : ui.fit), h: el.offsetHeight * (el.classList.contains("open") ? 1 : ui.fit) });
-  const hits = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-  // Open files take the space right of the folder stack, as tall as the desk allows,
-  // and the papers they would cover slide aside until the file is closed again.
-  function placeOpen(el, nudge) {
+  // An open file takes the left side of the desk, over the box and the ID card, as tall as the desk allows.
+  // The diploma and commendations stay where they are and stay readable.
+  function placeOpen(el) {
     if (isPhone()) return;
-    const u = usable(), st = pst(el.dataset.id), i = caseIndex(el.dataset.id);
-    const w = Math.min(700, Math.max(380, Math.round((u.w - LANE - MID_X) * 0.78)));
-    el.style.width = w + "px"; el.style.height = u.bottom - u.top + "px";
-    st.x = MID_X; st.y = u.top;
+    const u = usable(), st = pst(el.dataset.id), i = caseIndex(el.dataset.id), dip = paperEl("diploma");
+    const limit = dip && !pst("diploma").away ? dip.offsetLeft - 14 : u.w * 0.55;
+    const w = Math.round(clamp(limit - 16, 440, 760));
+    el.style.width = w + "px"; el.style.height = u.bottom - 4 + "px";
+    st.x = 16; st.y = 4;
     setPos(el, st.x, st.y);
     st.pages = paginate(i, el); st.page = Math.min(st.page, st.pages.length - 1);
     el.innerHTML = caseInner(i);
-    if (!nudge) return;
-    const file = { x: st.x, y: st.y, w: w, h: u.bottom - u.top };
-    let k = 0;
-    paperIds().forEach((id) => {
-      const o = paperEl(id), ost = pst(id);
-      if (!o || o === el || ost.open || ost.away || o.classList.contains("packed")) return;
-      const b = boxOf(o);
-      if (!hits(file, b)) return;
-      if (!ost.nudged) ost.nudged = [ost.x, ost.y];
-      ost.x = clamp(file.x + file.w + 14 + k * 26, 0, u.w - Math.round(b.w * 0.45)); ost.y = clamp(ost.y + k * 14, u.top, u.bottom - 40); k++;
-      o.classList.add("moving", "nudge"); setPos(o, ost.x, ost.y);
-    });
-  }
-  function unnudge() {
-    if (paperIds().some((id) => pst(id).open)) return;
-    paperIds().forEach((id) => {
-      const o = paperEl(id), ost = pst(id);
-      if (!o || !ost.nudged) return;
-      ost.x = ost.nudged[0]; ost.y = ost.nudged[1]; ost.nudged = null;
-      o.classList.add("moving", "nudge"); setPos(o, ost.x, ost.y);
-    });
   }
   function openCase(id) {
     const el = paperEl(id), st = pst(id), i = caseIndex(id);
     if (!el || st.open) return;
     markHandled();
+    if (st.inBox) takeOut(id, true);
     st.open = true; st.page = 0; st.home = [st.x, st.y];
     el.classList.add("open"); el.setAttribute("aria-expanded", "true");
     el.innerHTML = caseInner(i);
     if (isPhone()) { st.pages = paginate(i, el); el.innerHTML = caseInner(i); }
-    else placeOpen(el, true);
-    raise(el); FX.play("rustle");
+    else placeOpen(el);
+    raise(el); FX.play("lift");
     el.focus({ preventScroll: true });
     say("case:" + i);
   }
-  function closeCase(id) {
+  function closeCase(id, quiet) {
     const el = paperEl(id), st = pst(id);
     if (!el || !st.open) return;
     st.open = false; st.page = 0; st.pages = null;
     el.classList.remove("open"); el.setAttribute("aria-expanded", "false"); el.style.width = ""; el.style.height = "";
     el.innerHTML = folderInner(caseIndex(id));
-    if (!isPhone() && st.home) { st.x = st.home[0]; st.y = st.home[1]; el.classList.add("moving"); setPos(el, st.x, st.y); }
-    unnudge();
-    FX.play("rustle");
-    el.focus({ preventScroll: true });
+    if (!isPhone() && st.home && !st.inBox) { st.x = st.home[0]; st.y = st.home[1]; el.classList.add("moving"); setPos(el, st.x, st.y); }
+    if (!quiet) { FX.play("settle"); el.focus({ preventScroll: true }); }
   }
   function turn(part, swap) {
     if (reduced() || !part) { swap(); return; }
     part.classList.add("flip-out");
     setTimeout(() => { swap(); if (part.isConnected) part.classList.remove("flip-out"); }, 95);
   }
-  function flipCase(id) {
-    const el = paperEl(id), st = pst(id), i = caseIndex(id);
-    turn($(".paper-body", el), () => { st.page = (st.page + 1) % (st.pages || [1]).length; el.innerHTML = caseInner(i); const c = $(".corner", el); if (c) c.focus({ preventScroll: true }); });
-    FX.play("rustle");
+  // A sheet turning over inside the folder: the current page lifts from its right edge and turns over its
+  // left edge in four steps, with the next page already visible underneath. Going back reverses it.
+  function startSheet(id, dir) {
+    const el = paperEl(id), st = pst(id), to = st.page + dir, sheets = $(".sheets", el), body = $(".paper-body", el);
+    const sheet = document.createElement("div");
+    sheet.className = "sheet " + (dir > 0 ? "fwd" : "back");
+    sheet.innerHTML = '<div class="sheet-face sheet-front"><div class="paper-body">' + (dir > 0 ? st.pages[st.page] : st.pages[to]) + '</div></div><div class="sheet-face sheet-back"></div>';
+    if (dir > 0) body.innerHTML = st.pages[to];
+    sheets.appendChild(sheet);
+    el.classList.add("turning");
+    return sheet;
   }
+  function finishSheet(id, sheet, dir, complete) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id), to = st.page + dir;
+    sheet.style.transform = "";
+    if (complete) sheet.classList.add("go");
+    setTimeout(() => {
+      if (complete) st.page = to;
+      el.classList.remove("turning");
+      el.innerHTML = caseInner(i);
+      focusPageControl(el, dir);
+    }, 320);
+  }
+  function flipCase(id, dir) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id), n = (st.pages || [1]).length;
+    dir = dir || 1;
+    const to = st.page + dir;
+    if (to < 0 || to >= n) return;
+    FX.play("flip");
+    if (reduced() || isPhone() || !$(".sheets", el)) { st.page = to; el.innerHTML = caseInner(i); focusPageControl(el, dir); return; }
+    const sheet = startSheet(id, dir);
+    void sheet.offsetWidth;
+    finishSheet(id, sheet, dir, true);
+  }
+  function focusPageControl(el, dir) {
+    const b = $('.pg-btn[data-dir="' + dir + '"]:not([disabled])', el) || $(".pg-btn:not([disabled])", el) || $(".corner", el);
+    if (b) b.focus({ preventScroll: true });
+  }
+  function takeOut(id, instant) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id);
+    if (!st.inBox) return;
+    st.inBox = false;
+    el.classList.remove("filed");
+    const u = usable(), out = st.outPos || [boxRect().x + 8 + (i % 3) * 18, Math.max(u.top + 4, boxRect().y - 150 + (i % 3) * 14)];
+    st.x = out[0]; st.y = out[1];
+    if (instant) still(el, () => setPos(el, st.x, st.y)); else { el.classList.add("moving"); setPos(el, st.x, st.y); FX.play("lift"); }
+    raise(el);
+  }
+  function fileBack(id, quiet) {
+    const el = paperEl(id), st = pst(id), i = caseIndex(id);
+    if (!el || i < 0) return;
+    if (st.open) closeCase(id, true);
+    if (!st.inBox) st.outPos = [st.x, st.y];
+    st.inBox = true;
+    el.classList.add("filed", "moving");
+    const p = slotPos(i); st.x = p[0]; st.y = p[1];
+    setPos(el, st.x, st.y);
+    el.style.setProperty("--tilt", "0deg");
+    el.style.zIndex = 20 + i;
+    if (!quiet) FX.play("filebox");
+  }
+  function putAllBack() { caseIds().forEach((id) => fileBack(id, true)); FX.play("filebox"); }
   function putAway(id, prev) {
+    if (caseIndex(id) >= 0) { fileBack(id); return; }
     const el = paperEl(id), st = pst(id);
     if (st.open) closeCase(id);
     st.away = true; st.prev = prev;
@@ -1938,11 +2172,12 @@ window.DEMOS = (function () {
   function stampableAt(x, y) { return stampables().find((s) => inside(rectOf(s), x, y)) || null; }
   function stampableShown() {
     if ($("#intro")) return ui.introStep >= 1 && !ui.introDone;
-    if (ui.view !== "desk" || editing || !ui.printed) return false;
-    const r = $("#receipt");
-    if (!r) return false;
+    if (ui.view !== "desk" || editing) return false;
+    if (ui.recordView) return true;
+    const r = receiptEl();
+    if (!r || !ui.printed || ui.printing) return false;
     const b = rectOf(r);
-    return b.bottom > 120 && b.top < window.innerHeight - 120;
+    return b.bottom > 120 && b.top < window.innerHeight - 120 && b.right > 0 && b.left < window.innerWidth;
   }
   function updateBar() {
     const bar = $("#stampbar");
@@ -2016,7 +2251,7 @@ window.DEMOS = (function () {
     if (!held) return;
     const h = held; held = null;
     $("#ink-preview").hidden = true;
-    const art = rectOf($(".stamp-art", h.btn)), done = () => { h.el.remove(); h.btn.classList.remove("empty"); updateBar(); };
+    const art = rectOf($(".stamp-art", h.btn)), done = () => { h.el.remove(); h.btn.classList.remove("empty"); updateBar(); if (!now) FX.play("clack"); };
     if (now || reduced()) { done(); return; }
     h.el.classList.remove("lifted", "p1", "p2"); h.el.classList.add("glide");
     h.el.style.left = art.left + "px"; h.el.style.top = art.top + "px";
@@ -2059,45 +2294,95 @@ window.DEMOS = (function () {
     }, 400 + (kind === "approved" ? 1200 : 2400));
   }
 
-  // ----- the entry record printer and the tear-off slip -----
-  function printNow() {
-    ui.printed = true;
-    const a = $("#printer-area"), r = $("#receipt");
-    if (!a) return;
-    a.classList.add("printed"); if (r) r.style.maxHeight = "";
-    const b = $('[data-act="print"]'); if (b) b.remove();
-    updateBar();
+  // ----- the printer on the desk and the entry record it prints -----
+  function receiptEl() { return $("#receipt"); }
+  function recordFits() {
+    const r = receiptEl(), u = usable();
+    return r && r.offsetHeight + 12 <= u.bottom - u.top;
   }
-  function printSlowly() {
-    if (ui.printed) return;
-    ui.printed = true;
-    const r = $("#receipt"), full = r.scrollHeight, steps = 12;
-    const b = $('[data-act="print"]'); if (b) b.remove();
+  function placeReceipt() {
+    const r = receiptEl();
+    if (!r || ui.recordView || isPhone() || r.parentElement !== $("#desk")) return;
+    const u = usable(), s = Math.min(1, (u.bottom - u.top) / r.offsetHeight);
+    r.style.setProperty("--rfit", s.toFixed(3));
+    const pos = ui.recPos || [u.w - LANE - 372, u.top + 4];
+    ui.recPos = [clamp(pos[0], 0, u.w - r.offsetWidth * s), clamp(pos[1], 0, Math.max(0, u.bottom - r.offsetHeight * s))];
+    setPos(r, ui.recPos[0], ui.recPos[1]);
+  }
+  function makeReceipt() {
+    if (receiptEl()) return receiptEl();
+    $("#desk").insertAdjacentHTML("beforeend", recordHTML());
+    const r = receiptEl();
+    r.classList.add("paper", "p-record");
+    r.dataset.drag = "";
+    renderMarks("record");
+    const slip = $("#slip.loose");
+    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.slipPos || [MID_X, TOP + 40])[0], (ui.slipPos || [MID_X, TOP + 40])[1]); }
+    return r;
+  }
+  function openRecordView() {
+    const r = makeReceipt(), view = $("#record-view");
+    ui.recordView = true;
+    r.style.left = ""; r.style.top = ""; r.style.removeProperty("--rfit");
+    $("#rv-scroll").appendChild(r);
+    view.hidden = false;
+    view.style.zIndex = 880;
+    r.focus({ preventScroll: true });
+    updateBar(); updatePill();
+  }
+  function closeRecordView() {
+    const r = receiptEl(), view = $("#record-view");
+    if (!ui.recordView || !r) return;
+    ui.recordView = false;
+    view.hidden = true;
+    $("#desk").appendChild(r);
+    const slip = $("#rv-scroll .slip.loose");
+    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.recPos || [MID_X, TOP])[0] - 40, TOP + 30); }
+    placeReceipt(); raise(r); FX.play("settle");
+    r.focus({ preventScroll: true });
+    updateBar(); updatePill();
+  }
+  // Click the printer: the light blinks, the record feeds out of the slot line by line, then it is a paper.
+  function printRecord() {
+    if (ui.printed) { if (!isPhone()) openRecordView(); else receiptEl().scrollIntoView({ behavior: behavior(), block: "start" }); return; }
+    if (ui.printing) return;
+    ui.printing = true;
+    const pr = $("#printer"), r = makeReceipt();
+    pr.classList.add("busy");
     say("record");
-    if (reduced()) { printNow(); return; }
+    if (isPhone()) { pr.after(r); }
+    const full = r.offsetHeight, u = usable();
+    const finish = () => {
+      ui.printing = false; ui.printed = true; pr.classList.remove("busy"); r.classList.remove("feeding"); r.style.clipPath = "";
+      if (isPhone()) { r.scrollIntoView({ behavior: behavior(), block: "start" }); return; }
+      if (recordFits()) { ui.recPos = [r.offsetLeft, r.offsetTop]; placeReceipt(); raise(r); updateBar(); }
+      else openRecordView();
+    };
+    if (isPhone() || reduced()) { FX.play("print"); finish(); return; }
+    // feed from the printer's slot: start hidden above the slot and reveal one line at a time
+    const slotX = pr.offsetLeft + pr.offsetWidth / 2, slotY = pr.offsetTop + pr.offsetHeight - 14;
+    r.classList.add("feeding");
+    setPos(r, Math.round(clamp(slotX - r.offsetWidth / 2, 0, u.w - r.offsetWidth)), Math.round(slotY));
+    raise(r);
     FX.play("print");
-    for (let k = 1; k <= steps; k++) setTimeout(() => { r.style.maxHeight = Math.round(30 + (full - 30) * k / steps) + "px"; if (k === steps) printNow(); }, k * 95);
+    const steps = 16;
+    for (let k = 0; k <= steps; k++) setTimeout(() => {
+      const shown = Math.round(full * k / steps);
+      r.style.clipPath = "inset(0 0 " + (full - shown) + "px 0)";
+      if (k === steps) setTimeout(finish, 120);
+    }, k * 100);
   }
-  function watchPrinter() {
-    const p = $("#printer");
-    if (!p || ui.printed) return;
-    if (!("IntersectionObserver" in window)) { printNow(); return; }
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); printSlowly(); } }, { threshold: 0.3 });
-    io.observe(p);
-  }
-  function setTear(v) { ui.torn = v; const r = $("#receipt"); if (r) r.style.setProperty("--tear", v); }
+  function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }
   function tearOff() {
     if (ui.slipTorn) return;
-    const slip = $("#slip"), area = $("#printer-area"), sr = rectOf(slip), ar = rectOf(area);
-    ui.slipTorn = true; FX.play("rustle");
-    $("#receipt").classList.add("torn"); $("#perf").remove();
-    area.appendChild(slip);
+    const slip = $("#slip"), r = receiptEl();
+    ui.slipTorn = true; FX.play("lift");
+    r.classList.add("torn"); $("#perf").remove();
+    slip.classList.add("loose");
     slip.dataset.drag = "";
-    if (!isPhone()) {
-      slip.classList.add("loose");
-      ui.slipPos = [Math.round(sr.left - ar.left + 12), Math.round(sr.top - ar.top + 18)];
-      moveTo(slip, ui.slipPos[0], ui.slipPos[1]);
-    }
+    if (ui.recordView) $("#rv-scroll").appendChild(slip);
+    else if (isPhone()) r.after(slip);
+    else { $("#desk").appendChild(slip); moveTo(slip, r.offsetLeft - 60, r.offsetTop + 40); raise(slip); }
     setTear(0);
     slip.focus({ preventScroll: true });
   }
@@ -2106,22 +2391,35 @@ window.DEMOS = (function () {
     [0.35, 0.7, 1].forEach((v, i) => setTimeout(() => { setTear(v); if (v === 1) tearOff(); }, i * 60));
   }
 
+  // ----- the lamp: its base on the desk, its arm and shade reaching up over the counter and the booth -----
+  function placeLamp() {
+    const lamp = $("#lamp"), desk = $("#desk");
+    if (!lamp || !desk || isPhone()) return;
+    lamp.style.left = desk.offsetLeft + desk.clientWidth - 236 + "px";
+    lamp.style.top = desk.offsetTop - 104 + "px";
+  }
+  function setLampVisible(on) { const st = $("#stage"); if (st) st.classList.toggle("lamp-ready", on); }
+  function toggleLamp() { ui.lampOn = !ui.lampOn; $("#stage").classList.toggle("lamp-off", !ui.lampOn); FX.play("lamp"); $("#lamp-switch").setAttribute("aria-pressed", String(ui.lampOn)); }
+
   // ----- pill nav -----
-  const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"], ["contact", "Contact"]];
+  const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"]];
   function currentArea() {
     if (ui.view !== "desk" || !$("#scene")) return 0;
-    const vh = window.innerHeight, rec = rectOf($("#record")), slip = $("#slip");
-    if (slip && ui.printed && rectOf(slip).top < vh * 0.7) return 3;
-    if (rec.top < vh * 0.55) return 2;
-    if (isPhone()) return rectOf($("#desk")).top < vh * 0.5 ? 1 : 0;
+    if (ui.recordView) return 2;
+    if (isPhone()) { const r = receiptEl(); if (r && rectOf(r).top < window.innerHeight * 0.5) return 2; return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0; }
     return -rectOf($("#scene")).top >= BOOT - 10 ? 1 : 0;
   }
   function goArea(i) {
     const id = AREAS[i][0], sc = $("#scene");
+    if (id !== "record" && ui.recordView) closeRecordView();
     if (id === "booth") window.scrollTo({ top: isPhone() ? 0 : docTop(sc), behavior: behavior() });
     else if (id === "desk") window.scrollTo({ top: isPhone() ? docTop($("#desk")) - 8 : docTop(sc) + unpackEnd(), behavior: behavior() });
-    else if (id === "record") window.scrollTo({ top: docTop($("#record")), behavior: behavior() });
-    else { printNow(); $("#slip").scrollIntoView({ behavior: behavior(), block: "center" }); }
+    else {
+      // bring the desk into view, then let the printer print (or show the record if it already has)
+      if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
+      window.scrollTo({ top: isPhone() ? docTop($("#printer")) - 8 : docTop(sc) + unpackEnd(), behavior: "auto" });
+      printRecord();
+    }
   }
   function updatePill() { const n = $("#area-name"); if (n) n.textContent = AREAS[currentArea()][1]; }
 
@@ -2203,7 +2501,7 @@ window.DEMOS = (function () {
         '</p><p class="meta">Graduated ' + f("education.graduated", "When") + " · Coursework: " + f("education.coursework", "Coursework") + "</p>") +
       sec("contact", "Contact", "Email is the fastest way to reach me.", '<div class="row">' + f("profile.email", "Email address", "email") +
         (editing ? "" : '<button class="btn-quiet" data-act="copy">Copy address</button>') + '</div><div class="' + (editing ? "" : "row ") + 'links">' + links + "</div>" + add("profile.links", "link", "link")) +
-      '<footer class="foot">' + esc(p.name) + " · " + esc(p.basedIn) + "</footer></div>";
+      "</div>";
     $$(".f", app).forEach((el) => {
       try { el.contentEditable = "plaintext-only"; } catch (err) { el.contentEditable = "true"; }
       if (el.contentEditable !== "plaintext-only") el.contentEditable = "true";
@@ -2211,19 +2509,19 @@ window.DEMOS = (function () {
   }
 
   function renderDesk() {
-    app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage" id="stage">' + boothHTML() + deskHTML() + "</div></section>" + recordHTML() + "</main>";
+    app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage' + (ui.lampOn ? "" : " lamp-off") + '" id="stage">' + boothHTML() + deskHTML() +
+      '<div class="lamp" id="lamp"><span class="lamp-art" aria-hidden="true"><span class="off">' + SPR.lamp(false, PX) + '</span><span class="on">' + SPR.lamp(true, PX) + "</span></span>" +
+      '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div></div></section></main>';
     board = FX.board($("#board"), state.profile.board, 20);
     sizeScene();
+    if (!isPhone()) placeFurniture();
     computeFit();
-    placeStickers();
+    placeStickers(); placeLamp();
     renderPutAway();
-    renderMarks("record");
-    if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
-    if (ui.printed) printNow();
     layoutDrawer(false);
     applyScene(true);
-    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el, false); });
-    watchPrinter();
+    paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
+    if (ui.printed) { const r = makeReceipt(); if (isPhone()) $("#printer").after(r); else if (ui.recordView) { ui.recordView = false; openRecordView(); } else placeReceipt(); }
     updatePill(); updateBar();
   }
   function render() {
@@ -2320,7 +2618,12 @@ window.DEMOS = (function () {
     passport: renderIntro,
     "flip-pass": flipPass,
     bar() { const open = $("#stampbar").classList.contains("out"); ui.barPinned = !open; updateBar(); },
-    print() { printSlowly(); },
+    print() { printRecord(); },
+    "record-down"() { closeRecordView(); },
+    "all-back"() { putAllBack(); },
+    "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
+    page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
+    lamp() { toggleLamp(); },
     view(b) { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
     step(b) { goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
@@ -2334,7 +2637,7 @@ window.DEMOS = (function () {
     radio(b) { ui.radioOn = !ui.radioOn; b.textContent = ui.radioOn ? "Mute radio" : "Unmute radio"; b.setAttribute("aria-pressed", String(ui.radioOn)); if (!ui.radioOn) $("#aside").hidden = true; },
     ask(b) { ui.asked = +b.dataset.q; const el = $("#bubble"); el.hidden = false; el.textContent = state.interview[ui.asked].a; },
     "close-case"(b) { closeCase(b.dataset.id); },
-    flip(b) { flipCase(b.dataset.id); },
+    flip(b) { flipCase(b.dataset.id, 1); },
     return(b) { returnPaper(b.dataset.id); },
     drawer() { if (drawerDrag && drawerDrag.moved) return; setDrawer(ui.drawer > 0.5 ? 0 : 1); },
     skill(b) {
@@ -2367,11 +2670,13 @@ window.DEMOS = (function () {
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
-    if (folder && !justDragged) openCase(folder.dataset.id);
+    if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) takeOut(folder.dataset.id); else openCase(folder.dataset.id); return; }
+    const rec = ev.target.closest("#desk > .receipt");
+    if (rec && !justDragged && !ui.printing && !isPhone() && !ev.target.closest("button, a, .perf")) openRecordView();
   }, true);
 
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
-  let drag = null, pageDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
+  let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
   document.addEventListener("pointerdown", (ev) => {
     if (ev.button !== 0) return;
@@ -2389,6 +2694,13 @@ window.DEMOS = (function () {
       if (held) springBack(true);
       pending = { kind: sbtn.dataset.kind, sx: ev.clientX, sy: ev.clientY, id: ev.pointerId };
       try { sbtn.setPointerCapture(ev.pointerId); } catch (err) { /* optional */ }
+      return;
+    }
+    const cc = ev.target.closest('.corner[data-act="flip"]');
+    if (cc && !isPhone() && !reduced()) {
+      const el = cc.closest(".paper");
+      sheetDrag = { id: el.dataset.id, sx: ev.clientX, w: $(".sheets", el).offsetWidth, moved: false, p: 0, sheet: null };
+      try { cc.setPointerCapture(ev.pointerId); } catch (err) { /* optional */ }
       return;
     }
     const pc = ev.target.closest('.corner[data-act="flip-pass"]');
@@ -2415,6 +2727,14 @@ window.DEMOS = (function () {
       held.grab = [p.sx - held.fx, p.sy - held.fy];
     }
     if (held && held.mode === "drag" && !held.busy) { placeHeld(ev.clientX - held.grab[0], ev.clientY - held.grab[1]); return; }
+    if (sheetDrag) {
+      const dx = sheetDrag.sx - ev.clientX;
+      if (dx > 6 && !sheetDrag.moved) { sheetDrag.moved = true; sheetDrag.sheet = startSheet(sheetDrag.id, 1); sheetDrag.sheet.classList.add("held-page"); FX.play("flip"); }
+      if (!sheetDrag.moved) return;
+      sheetDrag.p = clamp(dx / sheetDrag.w, 0, 1);
+      sheetDrag.sheet.style.transform = "rotateY(" + -Math.round(sheetDrag.p * 8) * 22.5 + "deg)";
+      return;
+    }
     if (pageDrag) {
       const dx = ev.clientX - pageDrag.sx;
       if (Math.abs(dx) > 6 && !pageDrag.moved) { pageDrag.moved = true; pageDrag.leaf.classList.add("held-page"); $("#passport").classList.add("turning"); }
@@ -2442,14 +2762,18 @@ window.DEMOS = (function () {
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 5) return;
       drag.moved = true;
+      if (drag.el.classList.contains("filed")) { const id = drag.el.dataset.id; pst(id).inBox = false; drag.el.classList.remove("filed"); }
       drag.el.classList.remove("moving", "nudge"); drag.el.classList.add("held");
       try { drag.el.setPointerCapture(ev.pointerId); } catch (err) { /* capture is optional */ }
-      FX.play("rustle");
+      FX.play("lift");
       if (drag.el.classList.contains("paper")) markHandled();
     }
     moveTo(drag.el, drag.ox + dx, drag.oy + dy);
-    const ct = $("#counter");
-    if (ct && drag.el.classList.contains("paper")) { const r = rectOf(ct); ct.classList.toggle("ready", ev.clientY < r.bottom && ev.clientY > r.top - 40); }
+    const ct = $("#counter"), isCase = drag.el.classList.contains("p-case"), fb = $("#filebox");
+    if (ct && drag.el.classList.contains("paper") && !isCase && !drag.el.classList.contains("p-record")) {
+      const r = rectOf(ct); ct.classList.add("show-hint"); ct.classList.toggle("ready", ev.clientY < r.bottom && ev.clientY > r.top - 40);
+    }
+    if (fb && isCase) fb.classList.toggle("hot", inside(rectOf(fb), ev.clientX, ev.clientY));
   });
   function endDrag(ev) {
     if (pending && (!ev || ev.pointerId === pending.id)) {
@@ -2459,6 +2783,14 @@ window.DEMOS = (function () {
       return;
     }
     if (held && held.mode === "drag" && !held.busy) { if (held.over) stampDown(); else springBack(); return; }
+    if (sheetDrag) {
+      const d = sheetDrag; sheetDrag = null;
+      if (!d.moved) return;
+      swallowClick = true;
+      d.sheet.classList.remove("held-page");
+      finishSheet(d.id, d.sheet, 1, d.p > 0.5);
+      return;
+    }
     if (pageDrag) {
       const d = pageDrag; pageDrag = null;
       if (!d.moved) return;
@@ -2479,13 +2811,16 @@ window.DEMOS = (function () {
     d.el.classList.remove("held");
     const tilt = +(Math.random() * 6 - 3).toFixed(1);
     d.el.style.setProperty("--tilt", tilt + "deg");
-    const ct = $("#counter");
+    const ct = $("#counter"), fb = $("#filebox");
+    if (ct) ct.classList.remove("show-hint");
+    if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
+    if (d.el.classList.contains("p-record")) { ui.recPos = [d.el.offsetLeft, d.el.offsetTop]; FX.play("settle"); return; }
     if (d.el.classList.contains("paper")) {
       pst(d.el.dataset.id).tilt = tilt;
       if (ct && ct.classList.contains("ready")) { ct.classList.remove("ready"); putAway(d.el.dataset.id, { x: d.ox, y: Math.max(d.oy, TOP) }); return; }
     }
     if (ct) ct.classList.remove("ready");
-    FX.play("rustle");
+    FX.play("settle");
   }
   document.addEventListener("pointerup", endDrag);
   document.addEventListener("pointercancel", endDrag);
@@ -2519,6 +2854,7 @@ window.DEMOS = (function () {
     }
     if (ev.key === "Escape") {
       if (held) { springBack(); return; }
+      if (ui.recordView) { closeRecordView(); return; }
       if ($("#intro")) { closeIntro(); return; }
       if (ui.drawer > 0.5) { setDrawer(0); $("#handle").focus(); return; }
       const open = paperIds().filter((id) => pst(id).open);
@@ -2535,7 +2871,8 @@ window.DEMOS = (function () {
     }
     const el = t.closest && t.closest("[data-drag]");
     if (!el || el !== t || isPhone()) return;
-    if ((ev.key === "Enter" || ev.key === " ") && el.matches(".p-case:not(.open)")) { ev.preventDefault(); openCase(el.dataset.id); return; }
+    if ((ev.key === "Enter" || ev.key === " ") && el.matches(".p-case:not(.open)")) { ev.preventDefault(); if (pst(el.dataset.id).inBox) takeOut(el.dataset.id); else openCase(el.dataset.id); return; }
+    if ((ev.key === "b" || ev.key === "B") && el.matches(".p-case")) { ev.preventDefault(); fileBack(el.dataset.id); return; }
     const step = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[ev.key];
     if (step) { ev.preventDefault(); markHandled(); raise(el); moveTo(el, el.offsetLeft + step[0], el.offsetTop + step[1]); }
   });
@@ -2573,7 +2910,7 @@ window.DEMOS = (function () {
       "<title>CV Please</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n" +
       '<link rel="stylesheet" href="' + $("#fonts").getAttribute("href") + '" id="fonts">\n' +
       "<style id=\"page-style\">" + $("#page-style").textContent + "</style>\n<div id=\"app\"></div>\n<div id=\"intro-root\"></div>\n<div id=\"fixed-root\"></div>\n" +
-      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("sprites") + block("fx") + block("demos") + block("main") + "</body></html>";
+      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("sprites") + block("sounds") + block("fx") + block("demos") + block("main") + "</body></html>";
   }
   async function save() {
     if (!artifact || busy || !dirty) return;
