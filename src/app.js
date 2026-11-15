@@ -9,11 +9,11 @@
   let editing = false, dirty = false, canEdit = false, busy = false, note = "", artifact = null;
   const ui = {
     view: "desk", admitted: null, introStep: 0, introDone: false, passPage: 0,
-    marks: { visa: [], record: [] }, inked: { visa: false, record: false }, papers: {}, stickers: {}, scene: null, maxOut: 0,
+    marks: { visa: [], record: [], id: [] }, inked: { visa: false, record: false, id: false }, papers: {}, stickers: {}, scene: null, maxOut: 0,
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
-    lampOn: true, printing: false, contactOpen: false,
+    lampOn: ["dusk", "night"].includes(dayPhase()), lampTouched: false, pinHot: null, noteSent: false, printing: false, contactOpen: false,
   };
   let topZ = 40, board = null;
 
@@ -53,8 +53,9 @@
 
   function idInner() {
     const p = state.profile;
-    return '<div class="pad"><p class="doc-title">Identity card</p><div class="id-body"><div class="id-photo">' + SPR.applicant("thea", 2, portraitAlt) +
-      '</div><dl class="fields">' + field("Name", p.name) + field("Nationality", p.nationality) + field("Based in", p.basedIn) + field("Occupation", p.occupation) + "</dl></div></div>";
+    return '<div class="pad stampable" data-stamp="id"><p class="doc-title">Identity card</p><div class="id-body"><div class="id-photo">' + SPR.applicant("thea", 2, portraitAlt) +
+      '</div><dl class="fields">' + field("Name", p.name) + field("Nationality", p.nationality) + field("Based in", p.basedIn) + field("Occupation", p.occupation) + "</dl></div>" +
+      '<div class="stamp-box ghost' + (ui.inked.id ? " inked" : "") + '" aria-hidden="true"></div><div class="marks" data-marks="id"></div></div>';
   }
   function diplomaInner() {
     const e = state.education;
@@ -62,9 +63,21 @@
       '<p class="dip-line"><b>' + esc(e.degree) + '</b></p><p class="dip-line">' + esc(e.school) + '</p><p class="dip-line">' + esc(e.major) +
       '</p><p class="dip-line">Graduated ' + esc(e.graduated) + '</p><p class="dip-line">Coursework: ' + esc(e.coursework) + "</p></div>";
   }
+  // each award gets its pin, matched by the award's own words
+  function pinFor(a) {
+    const r = (a.result || "").toLowerCase();
+    if (r.includes("entrepreneur")) return "pin-entrepreneurial";
+    if (r.includes("runner")) return "pin-runnerup";
+    if (r.includes("best solution")) return "pin-bestsolution";
+    return "";
+  }
   function honoursInner() {
-    return '<div class="pad"><p class="doc-title">Commendations</p>' + state.awards.filter((a) => a.result).map((a) =>
-      '<div class="honour"><b>' + esc(a.result) + "</b>, " + esc(a.event) + " " + esc(a.year) + "<p>" + esc(a.note) + "</p></div>").join("") + "</div>";
+    return '<div class="pad"><p class="doc-title">Commendations</p>' + state.awards.filter((a) => a.result).map((a, i) => {
+      const pin = pinFor(a);
+      return '<div class="honour' + (pin ? " pinned" : "") + (ui.pinHot === i ? " lit" : "") + '">' +
+        (pin ? '<button class="pin" data-act="pin" data-i="' + i + '" aria-pressed="' + (ui.pinHot === i) + '" aria-label="Pin for ' + esc(a.result) + '. Highlight this award.">' + SPR.art(pin, 2) + "</button>" : "") +
+        '<div class="hon-text"><span class="hon-line"><b>' + esc(a.result) + "</b>, " + esc(a.event) + " " + esc(a.year) + "</span><p>" + esc(a.note) + "</p></div></div>";
+    }).join("") + "</div>";
   }
   function folderInner(i) {
     const p = state.projects[i];
@@ -153,8 +166,9 @@
   function deniedLine() { return "Entry denied. The applicant is still available at " + state.profile.email + "."; }
   function boothHTML() {
     const p = state.profile, qs = state.interview.map((q, i) => [q, i]).filter((x) => x[0].q && x[0].a);
-    return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline">' + SPR.scene(PX) + "</span>" +
-      SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="ledge" aria-hidden="true"></span>' +
+    return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline" id="skyline" data-phase="' + dayPhase() + '">' + SPR.scene(PX, dayPhase()) + "</span>" +
+      SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="blink" id="blink" aria-hidden="true"><i></i><i></i></span><span class="ledge" aria-hidden="true"></span>' +
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", SC) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div>' +
       '<div class="shutter" id="shutter"><span>Booth closed. Scroll to open.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
       '<div class="board" id="board" aria-hidden="true"></div><p class="sr-only">Departure board: ' + esc(p.board.join(", ")) + "</p></div>" +
       '<div class="booth-main"><div class="booth-links"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
@@ -166,11 +180,30 @@
       '<div class="booth-side"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
       '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '" aria-label="Sound" title="Sound">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + "</button>" +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
-      '</div><p class="aside" id="aside" aria-live="polite" hidden></p></header>';
+      '</div><p class="aside" id="aside" aria-live="polite" hidden></p>' +
+      '<div class="pinboard" aria-label="Pinboard">' + SPR.art("pinboard", SC) + '<span class="pb-map">' + SPR.art("map-manila", SC, "", "A scrap of a map of Manila") + '<span class="pb-pin" aria-hidden="true"></span></span>' +
+      '<p class="pb-scrap">' + esc(pinNote()) + "</p></div></header>";
   }
 
+  // the visitor's local hour sets the sky: dawn, day, dusk or night
+  function dayPhase(d) {
+    const h = (d || new Date()).getHours();
+    return h >= 5 && h < 9 ? "dawn" : h >= 9 && h < 17 ? "day" : h >= 17 && h < 19 ? "dusk" : "night";
+  }
+  const pinNote = () => (/relocat/i.test(state.profile.basedIn || "") ? "Relocating to Metro Manila" : "");
+  function checkSky() {
+    const sk = $("#skyline");
+    if (!sk) return;
+    const ph = dayPhase();
+    if (sk.dataset.phase === ph) return;
+    sk.dataset.phase = ph;
+    sk.classList.add("fade");
+    setTimeout(() => { sk.innerHTML = SPR.scene(PX, ph); sk.classList.remove("fade"); }, reduced() ? 0 : 300);
+    if (!ui.lampTouched && (ph === "dusk" || ph === "night") !== ui.lampOn) toggleLamp(true);
+  }
+  setInterval(checkSky, 60000);
   function deskHTML() {
-    const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + "</span>";
+    const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + (id === "mug" ? '<span class="steam">' + SPR.draw("steam1", PX) + SPR.draw("steam2", PX) + "</span>" : "") + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
       '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
@@ -179,13 +212,17 @@
       '<div class="printer" id="printer"><div class="feed" id="feed" aria-hidden="true"></div><button class="printer-btn" data-act="print" aria-label="Print the entry record">' +
       SPR.art("printer", SC) + '<span class="led" aria-hidden="true"></span></button></div>' +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
-      sticker("mug", "mug") + sticker("plant", "plant") + sticker("pen", "pen") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
+      sticker("mug", "mug") + sticker("plant", "plant") + sticker("pen", "pen") +
+      '<button class="notepad" id="notepad" data-act="note" aria-label="Sticky notes: leave Thea a note"' + (ui.noteSent ? " hidden" : "") + ">" + SPR.art("sticky-pad", SC) + "</button>" +
+      '<form class="vnote" id="vnote" hidden><label class="sr-only" for="vnote-text">Your note to Thea</label><textarea id="vnote-text" maxlength="280" rows="5" placeholder="Write a note for Thea"></textarea>' +
+      '<p class="vn-count" id="vn-count" aria-live="polite">0 of 280</p><div class="vn-row"><a class="btn-main" id="vn-send" href="#">Leave note</a><button type="button" class="btn-quiet" data-act="note-cancel">Put it back</button></div></form>' +
+      '<p class="vsent" id="vsent"' + (ui.noteSent ? "" : " hidden") + '><span class="vs-text" id="vs-text"></span><span class="vs-tag">Sent</span></p>' + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
       '<div class="lamp" id="lamp">' + SPR.art("lamp", SC) + '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div>' +
       '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.art("envelope", SC) + '<span class="env-stamp">Applicant<br>file</span></div>' +
       '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">Scroll down and the applicant file unpacks itself.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
-      '<div class="drawer" id="drawer"><div class="drawer-front"><button class="handle" id="handle" data-act="drawer" aria-expanded="false" aria-controls="drawer-box">' +
-      SPR.draw("handle", PX) + '<span>Skills drawer</span></button></div><div class="drawer-box" id="drawer-box">' + skillsHTML() + "</div></div></section>";
+      '<div class="desk-edge" aria-hidden="true"></div>' + drawerHTML("skills", "Skills") + drawerHTML("personal", "Personal") +
+      '<p class="pnote" id="pnote" hidden></p></section>';
   }
 
   // ----- entry record -----
@@ -213,7 +250,8 @@
   const stampArt = (kind) => '<span class="stamp-art">' + SPR.stamp(kind, 2) + '<span class="word" style="left:' + FACE.x * 2 + "px;top:" + FACE.y * 2 + "px;width:" + FACE.w * 2 + "px;height:" + FACE.h * 2 + 'px">' +
     (kind === "approved" ? "APPROVED" : "DENIED") + "</span></span>";
   function renderFixed() {
-    const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys">' + stampArt(kind) + "</button>";
+    const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys"><span class="inkpad" aria-hidden="true">' +
+      SPR.art(kind === "approved" ? "inkpad-green" : "inkpad-red", SC) + "</span>" + stampArt(kind) + "</button>";
     fixedRoot.innerHTML = '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
       '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
@@ -264,7 +302,7 @@
     ORDER().forEach((id, i) => {
       const want = i < s.out, had = prev.out != null && i < prev.out;
       if (!force && want === had) return;
-      if (want) unpack(id, force, i); else pack(id, force);
+      if (want) { if (ui.stagger && !force) setTimeout(() => unpack(id, false, i), i * ui.stagger); else unpack(id, force, i); } else pack(id, force);
     });
     $("#envelope").classList.toggle("folded", s.out >= n);
     $("#unpack-hint").hidden = s.out >= n;
@@ -336,6 +374,16 @@
     const c = envCenter(), go = () => { el.classList.add("packed"); setPos(el, Math.round(c[0] - el.offsetWidth / 2), Math.round(c[1] - el.offsetHeight / 2)); };
     if (instant) still(el, go); else { el.classList.add("moving"); go(); }
   }
+  // the note pad sits on the desk's right side, under the mug; the sent note sticks to the desk edge
+  function placeNotepad() {
+    const pad = $("#notepad"), mug = $('.sticker[data-sticker="mug"]'), u = usable();
+    if (!pad || isPhone()) return;
+    const x = clamp(mug.offsetLeft + mug.offsetWidth / 2 - pad.offsetWidth / 2, 0, u.w - pad.offsetWidth - 8);
+    let y = mug.offsetTop + mug.offsetHeight + 12;
+    if (y + pad.offsetHeight > u.bottom) y = mug.offsetTop - 12 - pad.offsetHeight;
+    pad.hidden = ui.noteSent || y < u.top || (y + pad.offsetHeight > u.bottom);
+    setPos(pad, x, y);
+  }
   function placeStickers() {
     const u = usable(), w = u.w, pr = $("#printer"), box = boxRect(), mugEl = $('.sticker[data-sticker="mug"]');
     const mugBelow = pr.offsetTop + pr.offsetHeight + 8 + mugEl.offsetHeight <= u.bottom;
@@ -349,7 +397,7 @@
       const p = ui.stickers[id] || spots[id];
       setPos(el, clamp(p[0], 0, w - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
     });
-    placePlant();
+    placePlant(); placeNotepad();
     const mug = mugEl, ring = $(".cup-ring");
     if (ring && mug) setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40));
   }
@@ -390,6 +438,7 @@
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     placeStickers(); checkLamp();
     layoutDrawer(false);
+    $$(".pobj").forEach(placePobj); drawHands();
     applyScene(true);
   }
 
@@ -397,8 +446,8 @@
   function raise(el) {
     if (topZ > 600) {
       // keep the pile's order but pull the numbers back down, so the lamp light and bar stay on top
-      $$("#desk .paper, #desk .sticker, #drawer").sort((a, b) => (+a.style.zIndex || 0) - (+b.style.zIndex || 0)).forEach((e, k) => { e.style.zIndex = 10 + k; });
-      topZ = 10 + $$("#desk .paper, #desk .sticker, #drawer").length;
+      $$("#desk .paper, #desk .sticker").sort((a, b) => (+a.style.zIndex || 0) - (+b.style.zIndex || 0)).forEach((e, k) => { e.style.zIndex = 10 + k; });
+      topZ = 10 + $$("#desk .paper, #desk .sticker").length;
     }
     el.style.zIndex = ++topZ;
     if (el.classList.contains("paper")) { ui.front = el.dataset.id; refreshSkills(); }
@@ -422,6 +471,7 @@
     if (!el || st.open) return;
     markHandled();
     if (st.inBox) takeOut(id, true);
+    say("firstcase");
     st.open = true; st.page = 0; st.home = [st.x, st.y];
     el.classList.add("open"); el.setAttribute("aria-expanded", "true");
     el.innerHTML = caseInner(i);
@@ -546,26 +596,183 @@
     else if (el.id === "slip") ui.slipPos = [x, y];
   }
 
-  // ----- the skills drawer: a real drawer that slides up from the bottom edge -----
-  function boxH() { const b = $("#drawer-box"); return b ? b.offsetHeight : 0; }
-  function layoutDrawer(animate) {
-    const d = $("#drawer");
-    if (!d) return;
-    if (!isPhone()) d.style.setProperty("--drawer-max", Math.max(160, usable().bottom - TOP + BOTTOM - 70) + "px");
-    d.classList.toggle("sliding", !!animate);
-    d.style.setProperty("--drawer-y", (1 - ui.drawer) * boxH() + "px");
-    const open = ui.drawer > 0.5;
-    $("#drawer-box").inert = !open;
-    $("#drawer-box").hidden = isPhone() && !open;
-    $("#handle").setAttribute("aria-expanded", String(open));
+  // ----- the two desk drawers, Skills and Personal: one drawer sprite, only the front shows until it opens -----
+  const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 90 };
+  // Thea's things in the Personal drawer, at their spots on the drawer floor (art pixels)
+  const POBJ = {
+    bottle: { art: "cola-bottle", x: 22, y: 24, label: "Glass bottle", hint: "Press Enter to nudge it." },
+    watch: { art: "watch", x: 30, y: 68, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
+    sketchbook: { art: "sketchbook-closed", x: 150, y: 34, label: "Sketchbook", hint: "Press Enter to open it." },
+  };
+  const noteOf = (id) => ((state.effects || []).find((e) => e.id === id) || {}).note || "";
+  function pobjHTML(id) {
+    const o = POBJ[id], a = ART[o.art];
+    return '<span class="pobj p-' + id + (o.rot ? " rot" : "") + '" data-p="' + id + '" data-drag role="button" tabindex="0" aria-label="' + esc(o.label + ". " + o.hint + " Press M to move it between the drawer and the desk.") +
+      '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") + "</span>";
   }
-  function setDrawer(v) {
-    const was = ui.drawer > 0.5;
-    ui.drawer = v; layoutDrawer(true);
-    if (v > 0.5 && !was) { markHandled(); FX.play("drawer"); $("#drawer").style.zIndex = 650; say("drawer"); }
-    else if (v <= 0.5 && was) { FX.play("drawer"); setTimeout(() => { if (ui.drawer <= 0.5) $("#drawer").style.zIndex = 6; }, 260); }
+  function drawerHTML(id, label) {
+    const a = ART.drawer, floorId = id === "skills" ? "drawer-box" : "dw-things";
+    const inner = id === "skills" ? skillsHTML() : Object.keys(POBJ).map(pobjHTML).join("");
+    return '<div class="dw dw-' + id + '" id="dw-' + id + '" data-dw="' + id + '" style="--dw-w:' + a.w * SC + "px;--dw-h:" + a.h * SC + 'px">' + SPR.art("drawer", SC, "dw-art") +
+      '<div class="dw-floor" id="' + floorId + '">' + inner + "</div>" +
+      '<button class="dw-front" data-act="dw" data-dw="' + id + '" aria-expanded="false" aria-controls="' + floorId + '"><span class="dw-plate">' + label + "</span></button></div>";
+  }
+  // Closed fronts sit side by side in the bottom strip, left of the pill nav. When there is not room for a whole
+  // front, the drawer shows a centred slice of it. An open drawer shows the whole sprite, kept inside the desk.
+  function layoutDrawer(animate) {
+    const desk = $("#desk"), dws = desk ? $$(".dw", desk) : [];
+    if (!dws.length) return;
+    dws.forEach((el) => {
+      const open = ui.dwOpen === el.dataset.dw;
+      el.classList.toggle("open", open);
+      const fl = $(".dw-floor", el); fl.inert = !open && !isPhone();
+      $(".dw-front", el).setAttribute("aria-expanded", String(open || isPhone()));
+    });
+    if (isPhone()) return;
+    const W = ART.drawer.w * SC, H = ART.drawer.h * SC, F = DW_FRONT * SC, dr = rectOf(desk), pills = $("#pills");
+    let right = desk.clientWidth / 2 - 200;
+    if (pills && !pills.classList.contains("solo") && getComputedStyle(pills).display !== "none") right = rectOf(pills).left - dr.left - 16;
+    const gap = 12, crop = clamp(Math.floor((right - 16 - gap) / 2 / SC) * SC, 40 * SC, W);
+    dws.forEach((el, k) => {
+      const base = Math.round(16 + crop / 2 + k * (crop + gap) - W / 2), open = el.classList.contains("open");
+      const shift = open ? clamp(base, 8, desk.clientWidth - W - 8) - base : 0;
+      el.classList.toggle("sliding", !!animate);
+      el.style.left = base + "px";
+      el.style.top = desk.clientHeight - Math.round((BOTTOM - F) / 2) - H + "px";
+      el.style.setProperty("--crop", (W - crop) / 2 + "px");
+      el.style.setProperty("--shift", shift + "px");
+      el.style.setProperty("--hide", H - F + "px");
+    });
+  }
+  function setDrawer(id) {
+    const was = ui.dwOpen;
+    if (was === id) return;
+    ui.dwOpen = id;
+    if (id) { markHandled(); say(id === "skills" ? "drawer" : "personal"); }
+    FX.play("dwslide");
+    layoutDrawer(true);
+    if (!id) hideNote();
   }
   function refreshSkills() { const b = $("#drawer-box"); if (b) b.innerHTML = skillsHTML(); }
+
+  // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
+  function showNote(el) {
+    const n = $("#pnote"), text = noteOf(el.dataset.p), desk = $("#desk");
+    if (!n || !text || isPhone()) return;
+    n.textContent = text; n.hidden = false;
+    const r = rectOf(el), d = rectOf(desk), w = n.offsetWidth, h = n.offsetHeight;
+    let x = r.right - d.left + 12, y = r.top - d.top;
+    if (x + w > desk.clientWidth - 8) x = r.left - d.left - w - 12;
+    n.style.left = clamp(x, 8, desk.clientWidth - w - 8) + "px"; n.style.top = clamp(y, 8, desk.clientHeight - h - 8) + "px";
+  }
+  function hideNote() { const n = $("#pnote"); if (n) n.hidden = true; }
+  // the hands are pixel lines on a canvas the size of the sprite, so they turn with it and stay on the art grid
+  const WATCH = { cx: 16.5, cy: 50 };
+  let slow = null;
+  function shownTime() {
+    const now = new Date();
+    if (!slow) return now;
+    return new Date(slow.from + Math.floor((Date.now() - slow.from) / 3000) * 1000);
+  }
+  function drawHands() {
+    const t = shownTime(), cs = getComputedStyle(document.documentElement);
+    const ink = cs.getPropertyValue("--ink").trim(), red = cs.getPropertyValue("--stamp-red").trim();
+    $$("canvas.hands").forEach((c) => {
+      const g = c.getContext("2d");
+      g.clearRect(0, 0, c.width, c.height);
+      const line = (turns, len, thick, col) => {
+        const a = turns * 2 * Math.PI - Math.PI / 2, dx = Math.cos(a), dy = Math.sin(a);
+        g.fillStyle = col;
+        for (let k = 0; k <= len; k++) {
+          const x = Math.floor(WATCH.cx + dx * k), y = Math.floor(WATCH.cy + dy * k);
+          g.fillRect(x, y, 1, 1);
+          if (thick > 1) { if (Math.abs(dx) > Math.abs(dy)) g.fillRect(x, y - 1, 1, 1); else g.fillRect(x - 1, y, 1, 1); }
+        }
+      };
+      const sec = t.getSeconds(), min = t.getMinutes() + sec / 60, hr = (t.getHours() % 12) + min / 60;
+      line(hr / 12, 6, 2, ink); line(min / 60, 9, 1, ink); line(sec / 60, 10, 1, red);
+      g.fillStyle = ink; g.fillRect(Math.floor(WATCH.cx) - 1, Math.floor(WATCH.cy) - 1, 2, 2);
+    });
+  }
+  let lastSec = -1;
+  setInterval(() => {
+    if (document.hidden || !$("canvas.hands")) return;
+    const s = shownTime().getSeconds();
+    if (s === lastSec) return;
+    lastSec = s; drawHands();
+    if (ui.dwOpen === "personal" || $("#desk > .pobj.p-watch")) FX.play("wtick");
+  }, 250);
+  // Slow time: about 12 seconds where the second hand ticks every 3 seconds, animations run at a third of their
+  // speed, the desk dims a little, the lamp pool warms a step and sounds drop in pitch. Then it eases back.
+  function slowAnimations() { document.getAnimations().forEach((a) => { if (a.playbackRate !== 1 / 3) a.playbackRate = 1 / 3; }); }
+  function setSlow(on) {
+    const stage = $("#stage");
+    if (on && !slow) {
+      slow = { from: Date.now() - (Date.now() % 1000), timer: setTimeout(() => setSlow(false), 12000), loop: setInterval(slowAnimations, 150) };
+      if (stage) stage.classList.add("slow");
+      FX.setRate(0.9); slowAnimations();
+    } else if (!on && slow) {
+      clearTimeout(slow.timer); clearInterval(slow.loop); slow = null;
+      if (stage) stage.classList.remove("slow");
+      FX.setRate(1);
+      document.getAnimations().forEach((a) => { a.playbackRate = 1; });
+      drawHands();
+    }
+  }
+  function usePobj(el) {
+    const id = el.dataset.p;
+    showNote(el);
+    if (id === "watch") { if (!reduced()) setSlow(!slow); return; }
+    if (id === "bottle") {
+      FX.play("fizz");
+      if (reduced()) return;
+      el.classList.remove("wobble"); void el.offsetWidth; el.classList.add("wobble");
+      setTimeout(() => el.classList.remove("wobble"), 260);
+      return;
+    }
+    if (id === "sketchbook") { say("sketchbook"); if ((state.sketches || []).length) openSketchbook(); }
+  }
+  // move a thing between its drawer spot and the desk (dragging does the same with the pointer)
+  function pobjToDesk(el, x, y) {
+    const desk = $("#desk");
+    el.classList.remove("rot"); el.classList.add("sticker", "on-desk");
+    el.dataset.sticker = el.dataset.p;
+    desk.appendChild(el);
+    moveTo(el, x, y); raise(el); drawHands();
+  }
+  function pobjHome(el) {
+    const id = el.dataset.p, o = POBJ[id], fl = $("#dw-things");
+    el.classList.remove("sticker", "on-desk", "held"); if (o.rot) el.classList.add("rot");
+    delete el.dataset.sticker; delete ui.stickers[id];
+    el.style.zIndex = "";
+    fl.appendChild(el);
+    placePobj(el); drawHands();
+  }
+  function placePobj(el) {
+    const o = POBJ[el.dataset.p];
+    el.style.left = (o.x - DW_FLOOR.x) * SC + "px"; el.style.top = (o.y - DW_FLOOR.y) * SC + "px";
+  }
+  function movePobj(el) {
+    if (isPhone()) return;
+    if (el.classList.contains("on-desk")) { pobjHome(el); if (ui.dwOpen !== "personal") setDrawer("personal"); }
+    else { const u = usable(); pobjToDesk(el, Math.round(u.w / 2 - 60), u.top + 40); }
+    FX.play("tap"); el.focus({ preventScroll: true });
+  }
+  // the sketchbook opens over the desk like a case file, two sketches to a spread; until there are sketches it stays shut
+  let sketchSpread = 0;
+  function openSketchbook() {
+    const list = state.sketches || [];
+    if (!list.length) return;
+    let ov = $("#sketchbook-view");
+    if (!ov) { ov = document.createElement("div"); ov.className = "sk-view"; ov.id = "sketchbook-view"; $("#desk").appendChild(ov); }
+    const a = ART["sketchbook-open"], desk = $("#desk"), sc = Math.max(2, Math.min(8, Math.floor(Math.min((desk.clientWidth - 80) / a.w, (desk.clientHeight - 140) / a.h))));
+    const page = (src, x0, x1) => src ? '<img class="sketch" src="' + esc(src) + '" alt="A sketch by Thea" style="left:' + (x0 * sc + 2) + "px;top:" + (3 * sc + 2) + "px;width:" + ((x1 - x0) * sc - 4) + "px;height:" + (53 * sc - 4) + 'px">' : "";
+    ov.innerHTML = '<div class="sk-book" style="width:' + a.w * sc + "px;height:" + a.h * sc + 'px">' + SPR.art("sketchbook-open", sc) +
+      page(list[sketchSpread * 2], 5, 47) + page(list[sketchSpread * 2 + 1], 53, 95) + "</div>" +
+      '<div class="sk-nav"><button class="btn-quiet" data-act="sk-turn" data-dir="-1"' + (sketchSpread ? "" : " disabled") + '>Turn back</button><button class="btn-quiet" data-act="sk-close">Close sketchbook</button><button class="btn-quiet" data-act="sk-turn" data-dir="1"' + ((sketchSpread + 1) * 2 < list.length ? "" : " disabled") + ">Turn the page</button></div>";
+    ov.hidden = false;
+    const b = $(".sk-nav button:not([disabled])", ov); if (b) b.focus({ preventScroll: true });
+  }
 
   // ----- the stamps -----
   // Stamps live in their slots on the bar. Drag one onto a paper and let go: it presses down, leaves ink exactly
@@ -590,6 +797,7 @@
     const bar = $("#stampbar");
     if (!bar) return;
     const auto = stampableShown() || !!held;
+    document.documentElement.classList.toggle("holding-stamp", !!held);
     if (auto !== ui.barAuto) { ui.barAuto = auto; ui.barPinned = null; }
     const open = ui.barPinned == null ? auto : ui.barPinned;
     bar.classList.toggle("out", open);
@@ -619,7 +827,7 @@
     dock.classList.add("sliding");
     dock.style.translate = "";
     setTimeout(() => {
-      dock.classList.remove("sliding"); placeTray();
+      dock.classList.remove("sliding"); placeTray(); layoutDrawer(false);
       nav.classList.add("rising"); nav.classList.remove("below");
       setTimeout(() => nav.classList.remove("rising"), 260);
     }, 300);
@@ -642,7 +850,7 @@
   }
   function markHTML(m) {
     return '<span class="mark ink ' + (m.kind === "approved" ? "green" : "red") + '" style="left:' + m.x + "px;top:" + m.y + "px;--tilt:" + m.rot + "deg;opacity:" + m.op +
-      ";--mx:" + m.mx + "px;--my:" + m.my + 'px">' + (m.kind === "approved" ? "APPROVED" : "DENIED") + "</span>";
+      ";--mx:" + m.mx + "px;--my:" + m.my + 'px">' + (m.kind === "approved" ? "APPROVED" : "DENIED") + (m.really ? '<span class="really">...really?</span>' : "") + "</span>";
   }
   function renderMarks(key) {
     $$('[data-marks="' + key + '"]').forEach((el) => {
@@ -657,7 +865,8 @@
     const fw = FACE.w, fh = FACE.h; // the inked area is the face, drawn at twice its drawing size
     if (x + fw > box.left && x - fw < box.right && y + fh > box.top && y - fh < box.bottom) ui.inked[key] = true;
     renderMarks(key); FX.play("thud");
-    $("#stamp-status").textContent = (kind === "approved" ? "Approved" : "Denied") + " stamp pressed on the " + (key === "visa" ? "visa" : "entry record") + ".";
+    if (key === "id" && kind === "denied") { ui.marks.id[ui.marks.id.length - 1].really = true; renderMarks("id"); }
+    $("#stamp-status").textContent = (kind === "approved" ? "Approved" : "Denied") + " stamp pressed on the " + (key === "visa" ? "visa" : key === "id" ? "ID card" : "entry record") + ".";
     afterStamp(key, kind);
   }
 
@@ -835,7 +1044,7 @@
     return '<div class="cm-mail" id="cm-mail"><p class="cm-title" id="cm-title">New message</p>' +
       '<div class="cm-row"><span class="cm-lab">To:</span><span class="cm-val">' + esc(p.email) + '</span><button class="cm-btn" data-act="cm-copy">Copy address</button></div>' +
       '<label class="cm-row" for="cm-subject"><span class="cm-lab">Subject:</span><input id="cm-subject" class="cm-in" value="Hello from your portfolio" autocomplete="off"></label>' +
-      '<label class="cm-lab cm-block" for="cm-msg">Message:</label><textarea id="cm-msg" class="cm-in" rows="3"></textarea>' +
+      '<p class="cm-sudo" id="cm-sudo" role="status" hidden></p><label class="cm-lab cm-block" for="cm-msg">Message:</label><textarea id="cm-msg" class="cm-in" rows="3"></textarea>' +
       '<div class="cm-row"><a class="cm-btn cm-send" id="cm-send" href="' + esc(mailto()) + '">Send</a><button class="cm-btn" data-act="cm-browser">Look me up</button><span class="cm-note" id="cm-note" aria-live="polite"></span></div></div>' +
       '<div class="cm-browser" id="cm-browser" hidden><div class="br-title"><span>Look me up</span><button class="br-x" data-act="br-close" aria-label="Close the browser">X</button></div>' +
       '<div class="br-nav"><button class="br-arrow" aria-label="Back" disabled>' + SPR.draw("left", 3) + '</button><button class="br-arrow" aria-label="Forward" disabled>' + SPR.draw("right", 3) + "</button>" +
@@ -946,7 +1155,7 @@
 
   // ----- the lamp: base on the desk's top-right corner, shade over the counter strip only -----
   function setLampVisible(on) { const st = $("#stage"); if (st) st.classList.toggle("lamp-ready", on); }
-  function toggleLamp() { ui.lampOn = !ui.lampOn; $("#stage").classList.toggle("lamp-off", !ui.lampOn); FX.play("lamp"); $("#lamp-switch").setAttribute("aria-pressed", String(ui.lampOn)); }
+  function toggleLamp(auto) { if (auto !== true) ui.lampTouched = true; ui.lampOn = !ui.lampOn; $("#stage").classList.toggle("lamp-off", !ui.lampOn); FX.play("lamp"); $("#lamp-switch").setAttribute("aria-pressed", String(ui.lampOn)); }
   // Open or held papers pass over the lamp; when one overlaps it, the lamp fades back.
   function checkLamp() {
     const lamp = $("#lamp");
@@ -977,8 +1186,35 @@
   }
   function updatePill() { const n = $("#area-name"); if (n) n.textContent = AREAS[currentArea()][1]; }
 
+  // the note goes out through the visitor's own mail app; nothing is stored or sent by the page
+  function noteLink() {
+    const t = $("#vnote-text"), a = $("#vn-send"), c = $("#vn-count");
+    if (!t || !a) return;
+    const text = t.value.slice(0, 280);
+    c.textContent = text.length + " of 280";
+    a.href = "mailto:" + state.profile.email + "?subject=" + encodeURIComponent("A note from your desk") + "&body=" + encodeURIComponent(text);
+    a.classList.toggle("off", !text.trim());
+    a.setAttribute("aria-disabled", String(!text.trim()));
+  }
+  function noteSent() {
+    const t = $("#vnote-text"), f = $("#vnote"), sent = $("#vsent");
+    if (!t || !t.value.trim()) return false;
+    ui.noteSent = true; ui.noteText = t.value.trim();
+    f.hidden = true; $("#notepad").hidden = true;
+    $("#vs-text").textContent = ui.noteText.length > 60 ? ui.noteText.slice(0, 57) + "..." : ui.noteText;
+    sent.hidden = false; FX.play("tap");
+    return true;
+  }
   // ----- the radio's asides (only lines Thea has written are ever shown) -----
   let asideTimer = null;
+  function sayNow(trigger) {
+    const line = (state.assistant.find((a) => a.when === trigger) || {}).line, el = $("#aside");
+    if (!line || !el) return false;
+    el.textContent = line; el.hidden = false;
+    clearTimeout(asideTimer);
+    asideTimer = setTimeout(() => { el.hidden = true; }, 5000);
+    return true;
+  }
   function say(trigger) {
     if (!ui.radioOn || !hasRadio() || ui.said.has(trigger)) return;
     const i = trigger.indexOf("case:") === 0 ? +trigger.slice(5) : -1;
@@ -1007,7 +1243,9 @@
     point: "", strength: "", link: { label: "", url: "" }, skill: { group: "", items: [] }, award: { year: "", result: "", event: "", note: "" },
     project: { name: "", short: "", icon: "paper", demo: "", role: "", dates: "", event: "", award: "", line: "", points: [""], stack: "", aside: "", featured: "" },
   };
-  const WHEN = { arrive: "When the booth opens", unpacked: "When the file is unpacked", drawer: "When the skills drawer opens", record: "When the entry record prints",
+  const WHEN = { arrive: "When the booth opens", unpacked: "When the file is unpacked", drawer: "When the Skills drawer opens", record: "When the entry record prints",
+    firstcase: "When the first case file opens", personal: "When the Personal drawer opens", watch: "When the watch is picked up", sketchbook: "When the sketchbook is opened",
+    intercom: "When the intercom is pressed", idle: "After 30 quiet seconds",
     approved: "After an approved stamp on the record", denied: "After a denied stamp on the record" };
 
   function listCase(x, i) {
@@ -1047,6 +1285,8 @@
           : answered.map((q) => "<h3>" + esc(q.q) + "</h3><p>" + esc(q.a) + "</p>").join("")) : "") +
       (editing ? sec("radio", "Booth radio", "One line each, shown once. The radio stays hidden until at least one line is written.",
         state.assistant.map((a, i) => row(esc(WHEN[a.when] || a.when), f("assistant." + i + ".line", "Leave empty to stay quiet"))).join("")) : "") +
+      (editing ? sec("things", "Desk things", "A note beside each thing in the Personal drawer. Empty notes stay hidden.",
+        (state.effects || []).map((e, i) => row(esc({ watch: "Watch", sketchbook: "Sketchbook", bottle: "Bottle" }[e.id] || e.id), f("effects." + i + ".note", "Leave empty to stay hidden"))).join("")) : "") +
       sec("honours", "Commendations", "Hackathon results from 2026.", state.awards.map((a, i) => '<div class="honour"><span class="yr">' + f("awards." + i + ".year", "Year") + "</span><div><b>" +
         f("awards." + i + ".result", "Result") + "</b>, " + f("awards." + i + ".event", "Event") + "<p>" + f("awards." + i + ".note", "What it was for") + "</p>" + del("awards", i, "entry") + "</div></div>").join("") + add("awards", "award", "entry")) +
       sec("skills", "Skills", "What I have used in the case files above.", '<dl class="skills">' + state.skills.map((s, i) => "<dt>" + f("skills." + i + ".group", "Group") + "</dt><dd>" +
@@ -1071,9 +1311,10 @@
     computeFit();
     placeStickers();
     renderPutAway();
-    renderMarks("record");
+    renderMarks("record"); renderMarks("id");
     if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
     layoutDrawer(false);
+    $$(".pobj").forEach(placePobj); drawHands();
     applyScene(true);
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     updatePill(); updateBar();
@@ -1162,7 +1403,93 @@
     el.classList.add("leaving");
     document.documentElement.classList.remove("locked");
     ui.introDone = true;
-    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); }, reduced() ? 0 : 420);
+    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); firstVisit(); }, reduced() ? 0 : 420);
+  }
+
+  // ----- the first visit, once per visit: about two seconds, skippable with a click or any key -----
+  let firstRun = null;
+  function firstVisit() {
+    if (ui.firstDone || !$("#scene") || isPhone()) return;
+    ui.firstDone = true;
+    const finish = () => {
+      if (!firstRun) return;
+      firstRun.timers.forEach(clearTimeout); firstRun = null;
+      document.removeEventListener("pointerdown", finish, true); document.removeEventListener("keydown", finish, true);
+      ui.boothForced = true; ui.forced = true; ui.stagger = 0; applyScene(true);
+      $$(".arriving").forEach((e) => e.classList.remove("arriving"));
+      window.scrollTo({ top: docTop($("#scene")) + unpackEnd(), behavior: "auto" });
+    };
+    if (reduced()) { firstRun = { timers: [] }; finish(); return; }
+    firstRun = { timers: [] };
+    const at = (ms, fn) => firstRun.timers.push(setTimeout(fn, ms));
+    document.addEventListener("pointerdown", finish, true); document.addEventListener("keydown", finish, true);
+    window.scrollTo({ top: docTop($("#scene")), behavior: "auto" });
+    $$("#filebox, #filebox-front, .dw").forEach((e) => e.classList.add("arriving", "hold"));
+    at(60, () => { ui.boothForced = true; applyScene(); });
+    at(520, () => { if (ui.lampOn) FX.play("lamp"); });
+    at(700, () => { ui.forced = true; ui.stagger = 60; window.scrollTo({ top: docTop($("#scene")) + unpackEnd(), behavior: "auto" }); applyScene(); ui.stagger = 0; });
+    at(1500, () => { $$(".arriving").forEach((e) => e.classList.remove("hold")); FX.play("dwslide"); });
+    at(2000, () => { $$(".arriving").forEach((e) => e.classList.remove("arriving")); firstRun.timers = []; finish(); });
+  }
+
+  // ----- idle details: mug steam, a blink at the window; paused when hidden, off with reduced motion -----
+  const pace = (a, b) => (a + Math.random() * (b - a)) * (slow ? 3 : 1);
+  function steamLoop() {
+    setTimeout(() => {
+      const st = $(".steam");
+      if (st && !document.hidden && !reduced()) {
+        st.className = "steam f1";
+        setTimeout(() => { st.className = "steam f2"; }, 320 * (slow ? 3 : 1));
+        setTimeout(() => { st.className = "steam f1"; }, 640 * (slow ? 3 : 1));
+        setTimeout(() => { st.className = "steam"; }, 960 * (slow ? 3 : 1));
+      }
+      steamLoop();
+    }, pace(4000, 6000));
+  }
+  function blinkLoop() {
+    setTimeout(() => {
+      const bl = $("#blink");
+      if (bl && !document.hidden && !reduced()) { bl.classList.add("on"); setTimeout(() => bl.classList.remove("on"), 140 * (slow ? 3 : 1)); }
+      blinkLoop();
+    }, pace(6000, 10000));
+  }
+  steamLoop(); blinkLoop();
+  // thirty quiet seconds: the booth assistant may say something, once
+  let idleTimer = null;
+  function poke() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (ui.view === "desk" && !$("#intro")) say("idle"); }, 30000); }
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => document.addEventListener(t, poke, { passive: true, capture: true }));
+  poke();
+  // easter eggs: "hire" typed on the desk, five clicks on the mug, "sudo" in the message box
+  let typed = "", mugClicks = 0, mugTimer = null;
+  function hireEgg(ev) {
+    if (ev.key.length !== 1 || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    typed = (typed + ev.key.toLowerCase()).slice(-4);
+    if (typed !== "hire") return;
+    typed = "";
+    toggleTray(true);
+    const b = slotBtn("approved");
+    if (b && !reduced()) { b.classList.add("eager"); setTimeout(() => b.classList.remove("eager"), 1200); }
+  }
+  function mugEgg() {
+    clearTimeout(mugTimer); mugTimer = setTimeout(() => { mugClicks = 0; }, 2500);
+    if (++mugClicks < 5) return;
+    mugClicks = 0;
+    const mug = $('.sticker[data-sticker="mug"]'), desk = $("#desk");
+    let n = $("#refill");
+    if (!n) { n = document.createElement("p"); n.id = "refill"; n.className = "refill"; n.setAttribute("role", "status"); desk.appendChild(n); }
+    n.textContent = "refill requested";
+    n.hidden = false;
+    setPos(n, clamp(mug.offsetLeft - 150, 8, desk.clientWidth - 160), clamp(mug.offsetTop - 30, TOP, usable().bottom - 50));
+    FX.play("peel");
+    setTimeout(() => { n.hidden = true; }, 3200);
+  }
+  function sudoEgg(t) {
+    if (!/sudo\s*$/i.test(t.value)) return;
+    const r = $("#cm-sudo");
+    if (!r) return;
+    r.textContent = "Permission denied. This desk runs without root.";
+    r.hidden = false;
+    clearTimeout(sudoEgg.timer); sudoEgg.timer = setTimeout(() => { r.hidden = true; }, 3000);
   }
 
   // ----- actions -----
@@ -1183,6 +1510,32 @@
       try { navigator.clipboard.writeText(state.profile.email).then(done, () => { if (note) note.textContent = state.profile.email; }); } catch (err) { if (note) note.textContent = state.profile.email; }
     },
     "all-back"() { putAllBack(); },
+    pin(b) {
+      const i = +b.dataset.i;
+      ui.pinHot = ui.pinHot === i ? null : i;
+      $$(".p-honours .honour, .list .honour").forEach((h) => { const pb = $(".pin", h); const on = pb && +pb.dataset.i === ui.pinHot; h.classList.toggle("lit", on); if (pb) pb.setAttribute("aria-pressed", String(on)); });
+      FX.play("tap");
+    },
+    intercom() {
+      FX.play("chime");
+      const area = AREAS[currentArea()][0], trigger = area === "booth" ? "arrive" : area === "desk" ? "unpacked" : "record";
+      setTimeout(() => { if (!sayNow("intercom")) sayNow(trigger); }, reduced() ? 0 : 450);
+    },
+    note() {
+      const f = $("#vnote"), pad = $("#notepad"), desk = $("#desk");
+      if (!f) return;
+      FX.play("peel");
+      f.hidden = false;
+      if (!isPhone()) {
+        const w = f.offsetWidth, h = f.offsetHeight;
+        setPos(f, clamp(pad.offsetLeft + pad.offsetWidth - w, 8, desk.clientWidth - w - 8), clamp(pad.offsetTop - h + pad.offsetHeight, TOP, usable().bottom - h));
+      }
+      raise(f);
+      if (!reduced()) { f.classList.remove("peeling"); void f.offsetWidth; f.classList.add("peeling"); }
+      $("#vnote-text").focus({ preventScroll: true });
+      noteLink();
+    },
+    "note-cancel"() { const f = $("#vnote"); if (f) f.hidden = true; const pad = $("#notepad"); if (pad) pad.focus({ preventScroll: true }); },
     tab(b) { const id = b.dataset.id; openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
@@ -1202,7 +1555,9 @@
     "close-case"(b) { closeCase(b.dataset.id); },
     flip(b) { flipCase(b.dataset.id, 1); },
     return(b) { returnPaper(b.dataset.id); },
-    drawer() { if (drawerDrag && drawerDrag.moved) return; setDrawer(ui.drawer > 0.5 ? 0 : 1); },
+    dw(b) { if (drawerDrag && drawerDrag.moved) return; setDrawer(ui.dwOpen === b.dataset.dw ? null : b.dataset.dw); },
+    "sk-turn"(b) { sketchSpread = Math.max(0, sketchSpread + +b.dataset.dir); FX.play("flip"); openSketchbook(); },
+    "sk-close"() { const ov = $("#sketchbook-view"); if (ov) ov.hidden = true; },
     skill(b) {
       ui.hot = ui.hot === b.dataset.s ? null : b.dataset.s;
       refreshSkills();
@@ -1229,9 +1584,15 @@
 
   document.addEventListener("click", (ev) => {
     if (swallowClick) { swallowClick = false; ev.preventDefault(); ev.stopPropagation(); return; }
+    const vs = ev.target.closest("#vn-send");
+    if (vs) { if (!noteSent()) ev.preventDefault(); return; }
     const tile = ev.target.closest("a.br-tile[data-address]");
     if (tile) { typeAddress(tile.dataset.address); return; }
     if (ev.target.closest(".stamp-btn")) return; // stamps are handled by pointer and keyboard
+    const po = ev.target.closest(".pobj");
+    if (po) { if (!justDragged) usePobj(po); return; }
+    if (ev.target.closest('.sticker[data-sticker="mug"]') && !justDragged) { mugEgg(); return; }
+    if (ui.dwOpen && !isPhone() && !ev.target.closest(".dw, #pills, #fixed-root")) setDrawer(null);
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
@@ -1243,7 +1604,12 @@
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
   let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
+  document.addEventListener("pointerover", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !drag) showNote(po); });
+  document.addEventListener("pointerout", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !po.contains(ev.relatedTarget)) hideNote(); });
+  document.addEventListener("focusout", (ev) => { if (ev.target.closest && ev.target.closest(".pobj")) hideNote(); });
+  document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches(".pobj")) showNote(ev.target); });
   document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches("#cm-subject, #cm-msg")) lastField = ev.target; });
+  document.addEventListener("input", (ev) => { if (ev.target.id === "vnote-text") noteLink(); if (ev.target.id === "cm-msg") sudoEgg(ev.target); });
   document.addEventListener("pointerdown", (ev) => {
     const key = ev.target.closest && ev.target.closest(".cm-key");
     if (key && ui.contactOpen) {
@@ -1289,7 +1655,8 @@
       try { pc.setPointerCapture(ev.pointerId); } catch (err) { /* optional */ }
       return;
     }
-    if (ev.target.closest("#handle") && !isPhone()) { drawerDrag = { sy: ev.clientY, start: ui.drawer, h: boxH(), moved: false }; return; }
+    const front = ev.target.closest(".dw-front");
+    if (front && !isPhone()) { drawerDrag = { sy: ev.clientY, id: front.dataset.dw, moved: false }; return; }
     const perf = ev.target.closest("#perf");
     if (perf) { perfDrag = { sx: ev.clientX, w: perf.offsetWidth, start: ui.torn }; perfMoved = false; perf.setPointerCapture(ev.pointerId); return; }
     const el = ev.target.closest("[data-drag]");
@@ -1327,7 +1694,8 @@
     if (drawerDrag) {
       const dy = drawerDrag.sy - ev.clientY;
       if (Math.abs(dy) > 5) drawerDrag.moved = true;
-      if (drawerDrag.moved && drawerDrag.h) { ui.drawer = clamp(drawerDrag.start + dy / drawerDrag.h, 0, 1); layoutDrawer(false); }
+      if (dy > 16 && ui.dwOpen !== drawerDrag.id) setDrawer(drawerDrag.id);
+      else if (dy < -16 && ui.dwOpen === drawerDrag.id) setDrawer(null);
       return;
     }
     if (perfDrag) {
@@ -1341,10 +1709,15 @@
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 5) return;
       drag.moved = true;
+      if (drag.el.classList.contains("pobj") && !drag.el.classList.contains("on-desk")) {
+        const r = rectOf(drag.el), d = rectOf($("#desk")), x = r.left - d.left, y = r.top - d.top;
+        hideNote(); pobjToDesk(drag.el, x, y); drag.ox = x; drag.oy = y;
+      }
       if (drag.el.classList.contains("filed")) { const id = drag.el.dataset.id; pst(id).inBox = false; drag.el.classList.remove("filed"); }
       drag.el.classList.remove("moving", "nudge"); drag.el.classList.add("held");
       try { drag.el.setPointerCapture(ev.pointerId); } catch (err) { /* capture is optional */ }
       FX.play(drag.el.classList.contains("sticker") ? "tap" : "lift");
+      if (drag.el.dataset.p === "watch") say("watch");
       if (drag.el.classList.contains("paper")) markHandled();
     }
     moveTo(drag.el, drag.ox + dx, drag.oy + dy);
@@ -1380,7 +1753,7 @@
       return;
     }
     if (drawerDrag) {
-      if (drawerDrag.moved) { setDrawer(ui.drawer > 0.4 ? 1 : 0); setTimeout(() => { drawerDrag = null; }, 0); } else drawerDrag = null;
+      if (drawerDrag.moved) setTimeout(() => { drawerDrag = null; }, 0); else drawerDrag = null;
       return;
     }
     if (perfDrag) { perfDrag = null; return; }
@@ -1394,6 +1767,10 @@
     const ct = $("#counter"), fb = $("#filebox");
     if (ct) ct.classList.remove("show-hint");
     if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
+    if (d.el.classList.contains("pobj")) {
+      const home = $("#dw-personal.open .dw-floor");
+      if (home && inside(rectOf(home), ev.clientX, ev.clientY)) { pobjHome(d.el); FX.play("tap"); return; }
+    }
     checkLamp();
     if (d.el.classList.contains("paper")) {
       pst(d.el.dataset.id).tilt = tilt;
@@ -1407,6 +1784,10 @@
   document.addEventListener("dragstart", (ev) => { if (ev.target.closest && ev.target.closest("[data-drag], .stamp-btn, [data-stamp-root]")) ev.preventDefault(); });
 
   document.addEventListener("keydown", (ev) => {
+    if (!ui.contactOpen && !editing && ui.view === "desk" && !$("#intro") && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable], .f"))) hireEgg(ev);
+    const po = ev.target.closest && ev.target.closest(".pobj");
+    if (po && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); usePobj(po); return; }
+    if (po && (ev.key === "m" || ev.key === "M")) { ev.preventDefault(); movePobj(po); return; }
     if (ui.contactOpen) {
       if (ev.key === "Escape") { ev.preventDefault(); if (!closeBrowser()) closeContact(); return; }
       if (ev.target.matches && ev.target.matches("#cm-subject, #cm-msg") && !ev.ctrlKey && !ev.metaKey) {
@@ -1453,7 +1834,9 @@
       if (held) { springBack(); return; }
 
       if ($("#intro")) { closeIntro(); return; }
-      if (ui.drawer > 0.5) { setDrawer(0); $("#handle").focus(); return; }
+      if (slow) { setSlow(false); return; }
+      const sv = $("#sketchbook-view"); if (sv && !sv.hidden) { sv.hidden = true; return; }
+      if (ui.dwOpen && !isPhone()) { const f = $("#dw-" + ui.dwOpen + " .dw-front"); setDrawer(null); if (f) f.focus({ preventScroll: true }); return; }
       const open = paperIds().filter((id) => pst(id).open);
       const which = open.includes(ui.front) ? ui.front : open[open.length - 1];
       if (which) closeCase(which);

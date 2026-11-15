@@ -1,11 +1,11 @@
 // Sounds (off until the visitor turns them on) and the split-flap board in the booth window.
 window.FX = (function () {
   const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const VOLUME = { tick: 0.12, print: 0.3, lift: 0.42, settle: 0.45, tap: 0.45 };
+  const VOLUME = { tick: 0.12, print: 0.3, lift: 0.42, settle: 0.45, tap: 0.45, wtick: 0.05, fizz: 0.35, chime: 0.4, peel: 0.4, dwslide: 0.4 };
   // the handling sounds are the most frequent, so they are the quietest, low-passed, with less pitch spread
-  const SOFT = { lift: true, settle: true, tap: true };
+  const SOFT = { lift: true, settle: true, tap: true, dwslide: true, peel: true };
   const GAP = { tick: 40, lift: 120 };
-  const snd = { on: false, ctx: null, last: {}, bufs: {}, gain: null };
+  const snd = { on: false, ctx: null, last: {}, bufs: {}, gain: null, rate: 1 };
   try { snd.on = sessionStorage.getItem("cvp-sound") === "on"; } catch (err) { /* storage can be blocked */ }
 
   function ctx() {
@@ -36,7 +36,7 @@ window.FX = (function () {
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
     // a little pitch variation so repeats do not sound mechanical: 3% for handling, 5% for the rest
-    src.playbackRate.value = SOFT[name] ? 0.97 + Math.random() * 0.06 : 0.95 + Math.random() * 0.1;
+    src.playbackRate.value = (SOFT[name] ? 0.97 + Math.random() * 0.06 : 0.95 + Math.random() * 0.1) * snd.rate;
     g.gain.value = VOLUME[name] || 1;
     if (SOFT[name]) {
       const lp = c.createBiquadFilter();
@@ -95,5 +95,5 @@ window.FX = (function () {
     };
   }
 
-  return { play: play, toggle: toggle, board: board, get soundOn() { return snd.on; } };
+  return { play: play, toggle: toggle, board: board, setRate(r) { snd.rate = r; }, get soundOn() { return snd.on; } };
 })();

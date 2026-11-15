@@ -91,6 +91,8 @@ window.SPR = (function () {
   S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
+  S.steam1 = ["...f...", "..f..f.", ".f..f..", "..f..f.", ".f..f..", "..f....", "......."];
+  S.steam2 = ["..f....", ".f..f..", "..f..f.", ".f..f..", "..f..f.", "...f...", "......."];
   S.speakeron = ["....y......", "...yy....y.", "..yyy..y..y", "yyyyy...y.y", "yyyyy...y.y", "yyyyy...y.y", "..yyy..y..y", "...yy....y.", "....y......"];
   S.speakeroff = ["....y......", "...yy......", "..yyy.y...y", "yyyyy..y.y.", "yyyyy...y..", "yyyyy..y.y.", "..yyy.y...y", "...yy......", "....y......"];
   S.corner = [".........k", "........kP", ".......kPP", "......kPPP", ".....kPPPP", "....kPPPPu", "...kPPPPuu", "..kPPPuuuu", ".kPPuuuuuu", "kkkkkkkkkk"];
@@ -201,13 +203,22 @@ window.SPR = (function () {
   const box = (x, y, w, h, c) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="var(--' + c + ')"/>';
 
   // The view through the booth window: a skyline and a short queue outside.
-  function scene(scale) {
-    const W = 96, H = 32, rnd = seeded(2026);
-    let out = box(0, 0, W, H, "booth-light");
+  // The sky follows the visitor's local hour in stepped colours: dawn, day, dusk and night.
+  const SKY = {
+    dawn: { sky: "paper-deep", band: "manila", lit: 0.88 },
+    day: { sky: "booth-light", band: "", lit: 2 },
+    dusk: { sky: "gold-dark", band: "wood-4", lit: 0.5 },
+    night: { sky: "booth-dark", band: "", lit: 0.2 },
+  };
+  function scene(scale, phase) {
+    const W = 96, H = 32, rnd = seeded(2026), k = SKY[phase] || SKY.day, stars = seeded(7);
+    let out = box(0, 0, W, H, k.sky);
+    if (k.band) out += box(0, H - 16, W, 4, k.band) + box(0, H - 19, W, 3, k.band === "manila" ? "paper" : "gold-dark");
+    if (phase === "night") for (let i = 0; i < 16; i++) out += box(1 + Math.floor(stars() * (W - 2)), 1 + Math.floor(stars() * 9), 1, 1, "field");
     for (let x = 0; x < W; ) {
       const w = 6 + Math.floor(rnd() * 7), h = 8 + Math.floor(rnd() * 13);
       out += box(x, H - 6 - h, w, h, "booth") + box(x, H - 6 - h, 1, h, "booth-dark");
-      for (let wy = H - 4 - h; wy < H - 9; wy += 3) for (let wx = x + 2; wx < x + w - 1; wx += 2) if (rnd() > 0.6) out += box(wx, wy, 1, 1, "cover-ink");
+      for (let wy = H - 4 - h; wy < H - 9; wy += 3) for (let wx = x + 2; wx < x + w - 1; wx += 2) if (rnd() > k.lit) out += box(wx, wy, 1, 1, "cover-ink");
       x += w;
     }
     out += box(0, H - 6, W, 6, "booth-dark");
