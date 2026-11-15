@@ -1784,3 +1784,8 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .receipt.feeding-down { animation: rec-feed 0.5s steps(6, end); }
 @keyframes rec-feed { from { translate: 0 -48px; clip-path: inset(0 0 100% 0); } to { translate: 0 0; clip-path: inset(-20px -20px -20px -20px); } }
 @media (prefers-reduced-motion: reduce) { .pr-paper.drop { transition: none; } .receipt.feeding-down { animation: none; } }
+/* reprint: the sheet drops fast onto the record's spot and the record grows out of it */
+.pr-paper.drop { translate: 0 var(--fall, 240px); transition: translate 0.18s cubic-bezier(0.5, 0, 1, 1); }
+.receipt.cleared { visibility: hidden; }
+.receipt.feeding-down { animation: rec-grow 0.28s steps(5, end); transform-origin: 50% 0; }
+@keyframes rec-grow { from { scale: 0.14 0.1; } to { scale: 1 1; } }

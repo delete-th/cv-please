@@ -1788,6 +1788,11 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .receipt.feeding-down { animation: rec-feed 0.5s steps(6, end); }
 @keyframes rec-feed { from { translate: 0 -48px; clip-path: inset(0 0 100% 0); } to { translate: 0 0; clip-path: inset(-20px -20px -20px -20px); } }
 @media (prefers-reduced-motion: reduce) { .pr-paper.drop { transition: none; } .receipt.feeding-down { animation: none; } }
+/* reprint: the sheet drops fast onto the record's spot and the record grows out of it */
+.pr-paper.drop { translate: 0 var(--fall, 240px); transition: translate 0.18s cubic-bezier(0.5, 0, 1, 1); }
+.receipt.cleared { visibility: hidden; }
+.receipt.feeding-down { animation: rec-grow 0.28s steps(5, end); transform-origin: 50% 0; }
+@keyframes rec-grow { from { scale: 0.14 0.1; } to { scale: 1 1; } }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -4284,10 +4289,23 @@ window.DEMOS = (function () {
     for (let k = 1; k <= steps; k++) setTimeout(() => { paper.style.setProperty("--rise", k * step * ART_PX + "px"); }, k * tick);
     const torn = steps * tick + 160;
     setTimeout(() => { paper.classList.add("tear"); FX.play("lift"); }, torn);
-    setTimeout(() => { paper.classList.add(inRecords ? "drop" : "off"); pr.classList.remove("on"); }, torn + tick);
+    setTimeout(() => {
+      pr.classList.remove("on");
+      if (!inRecords) { paper.classList.add("off"); return; }
+      const rc = receiptEl(), pp = rectOf(paper), rr = rc && !rc.hidden ? rectOf(rc) : null;
+      // fall to the record's top centre
+      const fall = rr ? Math.max(40, rr.top + 24 - pp.top) : 240;
+      paper.style.setProperty("--fall", Math.round(fall) + "px");
+      paper.classList.add("drop");
+      if (rc) rc.classList.add("cleared");
+    }, torn + tick);
     if (!inRecords) setTimeout(() => goRoom(1, true), torn + tick + 60);
-    setTimeout(() => { landRecord(true, inRecords); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
-    setTimeout(() => { paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
+    setTimeout(() => {
+      if (inRecords) { paper.style.visibility = "hidden"; const rc = receiptEl(); if (rc) rc.classList.remove("cleared"); }
+      landRecord(true, inRecords);
+      setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380);
+    }, torn + (inRecords ? tick + 200 : 700));
+    setTimeout(() => { paper.className = "pr-paper"; paper.style.visibility = ""; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
   }
   function scrollToRecord(how) {
     const r = $("#record"), rc = receiptEl();

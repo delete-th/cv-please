@@ -1244,10 +1244,23 @@
     for (let k = 1; k <= steps; k++) setTimeout(() => { paper.style.setProperty("--rise", k * step * ART_PX + "px"); }, k * tick);
     const torn = steps * tick + 160;
     setTimeout(() => { paper.classList.add("tear"); FX.play("lift"); }, torn);
-    setTimeout(() => { paper.classList.add(inRecords ? "drop" : "off"); pr.classList.remove("on"); }, torn + tick);
+    setTimeout(() => {
+      pr.classList.remove("on");
+      if (!inRecords) { paper.classList.add("off"); return; }
+      const rc = receiptEl(), pp = rectOf(paper), rr = rc && !rc.hidden ? rectOf(rc) : null;
+      // fall to the record's top centre
+      const fall = rr ? Math.max(40, rr.top + 24 - pp.top) : 240;
+      paper.style.setProperty("--fall", Math.round(fall) + "px");
+      paper.classList.add("drop");
+      if (rc) rc.classList.add("cleared");
+    }, torn + tick);
     if (!inRecords) setTimeout(() => goRoom(1, true), torn + tick + 60);
-    setTimeout(() => { landRecord(true, inRecords); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
-    setTimeout(() => { paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
+    setTimeout(() => {
+      if (inRecords) { paper.style.visibility = "hidden"; const rc = receiptEl(); if (rc) rc.classList.remove("cleared"); }
+      landRecord(true, inRecords);
+      setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380);
+    }, torn + (inRecords ? tick + 200 : 700));
+    setTimeout(() => { paper.className = "pr-paper"; paper.style.visibility = ""; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
   }
   function scrollToRecord(how) {
     const r = $("#record"), rc = receiptEl();
