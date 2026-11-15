@@ -1579,6 +1579,15 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .passport[data-frame="0"]:focus-visible { outline: 3px solid var(--cover-ink); outline-offset: 6px; }
 @keyframes pp-nudge { 0%, 84% { translate: 0 0; } 86% { translate: -4px 0; } 88% { translate: 4px 0; } 90% { translate: -4px 0; } 92% { translate: 4px 0; } 94%, 100% { translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .passport .pp-frames, .passport.dp .dp-cover { animation: none !important; } }
+/* the diploma borrows the desk's fonts: the university keeps its blackletter; the rest uses Courier Prime, Jersey 10 and Barlow */
+.p-diploma .dip-small { font-family: var(--sans); }
+.p-diploma .dip-it { font-style: italic; }
+.p-diploma .dip-name { font: 700 20px/1.2 var(--typed); }
+.p-diploma .dip-degree { font: 400 30px/1 var(--display); -webkit-font-smoothing: none; }
+.p-diploma .dip-honour { font: italic 600 16px/1.2 var(--sans); }
+.p-diploma .dip-conf { font: 700 13px/1 var(--typed); }
+.p-diploma .dip-sign b { font: 600 11px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; font-variant: normal; }
+.p-diploma .dip-small { max-width: 300px; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
