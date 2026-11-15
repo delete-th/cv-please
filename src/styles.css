@@ -1817,3 +1817,21 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .window { flex: none; height: 124px; min-height: 0; }
   .window .applicant { top: auto; bottom: 2px; }
 }
+/* the new things in the Personal drawer: extra layers sit over the base sprite at the same scale */
+.pobj .k-down, .pobj .u-on, .pobj .g-stick { visibility: hidden; pointer-events: none; }
+.p-keycap .k-down { top: auto; bottom: 0; height: calc(21 * var(--sprite-scale) * 1px); }
+.p-keycap.pressed .art-keycap-up { visibility: hidden; }
+.p-keycap.pressed .k-down { visibility: visible; }
+.p-usb .u-on { width: calc(52 * var(--sprite-scale) * 1px); }
+.p-usb.lit .u-on { visibility: visible; }
+.p-usb.lit .art-usb:not(.u-on) { visibility: hidden; }
+/* gum: the top foil stick (art x 37 to 47, rows 0 to 7) slides out two pixels and back */
+.p-gum .g-stick { visibility: visible; clip-path: inset(0 0 calc(9 * var(--sprite-scale) * 1px) calc(37 * var(--sprite-scale) * 1px)); filter: none; }
+.p-gum.slide .g-stick { animation: gum-slide 0.34s steps(1, end); }
+@keyframes gum-slide { 0% { translate: 0 0; } 20% { translate: calc(1 * var(--sprite-scale) * 1px) 0; } 40%, 70% { translate: calc(2 * var(--sprite-scale) * 1px) 0; } 85% { translate: calc(1 * var(--sprite-scale) * 1px) 0; } 100% { translate: 0 0; } }
+@media (max-width: 820px) {
+  .p-keycap .k-down { height: calc(21 * 2px) !important; }
+  .p-usb .u-on { width: calc(52 * 2px) !important; }
+  .p-gum .g-stick { clip-path: inset(0 0 18px 74px); }
+}
+@media (prefers-reduced-motion: reduce) { .p-gum.slide .g-stick { animation: none; } }

@@ -35,6 +35,9 @@ window.FX = (function () {
     if (c && name === "flip") { paperFlip(c); return; }
     if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
     if (c && name === "chime") { cuteChime(c); return; }
+    if (c && name === "tin") { tinRattle(c); return; }
+    if (c && name === "keyclack") { keyClack(c); return; }
+    if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -102,6 +105,30 @@ window.FX = (function () {
     note(t0, 740, 880, 0.16, 0.5);
     note(t0 + 0.12, 1050, 1175, 0.24, 0.45);
     note(t0 + 0.12, 2350, 2350, 0.12, 0.06, "sine");
+  }
+  // a short filtered noise tick: the building block for the small sounds below
+  function tick(c, len, freq, vol, at) {
+    const t0 = (at || c.currentTime) + 0.003, n = Math.max(1, Math.floor(c.sampleRate * len)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; bp.type = "bandpass"; bp.frequency.value = freq * (0.95 + Math.random() * 0.1); bp.Q.value = 2.5; g.gain.value = vol;
+    s.connect(bp); bp.connect(g); g.connect(snd.gain); s.start(t0);
+  }
+  // a mint taken from a tin: three or four small metallic knocks, close together
+  function tinRattle(c) {
+    const t0 = c.currentTime, k = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < k; i++) {
+      const at = t0 + i * (0.028 + Math.random() * 0.02), o = c.createOscillator(), g = c.createGain();
+      o.type = "square"; o.frequency.value = 2900 + Math.random() * 900;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.05, at + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.03);
+      o.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.04);
+      tick(c, 0.02, 4200, 0.35, at);
+    }
+  }
+  // a mechanical key: a crisp click on the way down and a softer thock under it
+  function keyClack(c) {
+    tick(c, 0.012, 4800, 0.5);
+    tick(c, 0.03, 900, 0.45);
   }
   function toggle() {
     snd.on = !snd.on;

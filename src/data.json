@@ -400,6 +400,22 @@
     {
       "id": "bottle",
       "note": "My favourite dose of sugar."
+    },
+    {
+      "id": "usb",
+      "note": ""
+    },
+    {
+      "id": "gum",
+      "note": ""
+    },
+    {
+      "id": "mints",
+      "note": ""
+    },
+    {
+      "id": "keycap",
+      "note": ""
     }
   ],
   "sketches": []

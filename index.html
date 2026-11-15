@@ -1821,6 +1821,24 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .window { flex: none; height: 124px; min-height: 0; }
   .window .applicant { top: auto; bottom: 2px; }
 }
+/* the new things in the Personal drawer: extra layers sit over the base sprite at the same scale */
+.pobj .k-down, .pobj .u-on, .pobj .g-stick { visibility: hidden; pointer-events: none; }
+.p-keycap .k-down { top: auto; bottom: 0; height: calc(21 * var(--sprite-scale) * 1px); }
+.p-keycap.pressed .art-keycap-up { visibility: hidden; }
+.p-keycap.pressed .k-down { visibility: visible; }
+.p-usb .u-on { width: calc(52 * var(--sprite-scale) * 1px); }
+.p-usb.lit .u-on { visibility: visible; }
+.p-usb.lit .art-usb:not(.u-on) { visibility: hidden; }
+/* gum: the top foil stick (art x 37 to 47, rows 0 to 7) slides out two pixels and back */
+.p-gum .g-stick { visibility: visible; clip-path: inset(0 0 calc(9 * var(--sprite-scale) * 1px) calc(37 * var(--sprite-scale) * 1px)); filter: none; }
+.p-gum.slide .g-stick { animation: gum-slide 0.34s steps(1, end); }
+@keyframes gum-slide { 0% { translate: 0 0; } 20% { translate: calc(1 * var(--sprite-scale) * 1px) 0; } 40%, 70% { translate: calc(2 * var(--sprite-scale) * 1px) 0; } 85% { translate: calc(1 * var(--sprite-scale) * 1px) 0; } 100% { translate: 0 0; } }
+@media (max-width: 820px) {
+  .p-keycap .k-down { height: calc(21 * 2px) !important; }
+  .p-usb .u-on { width: calc(52 * 2px) !important; }
+  .p-gum .g-stick { clip-path: inset(0 0 18px 74px); }
+}
+@media (prefers-reduced-motion: reduce) { .p-gum.slide .g-stick { animation: none; } }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -2227,6 +2245,22 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   {
    "id": "bottle",
    "note": "My favourite dose of sugar."
+  },
+  {
+   "id": "usb",
+   "note": ""
+  },
+  {
+   "id": "gum",
+   "note": ""
+  },
+  {
+   "id": "mints",
+   "note": ""
+  },
+  {
+   "id": "keycap",
+   "note": ""
   }
  ],
  "sketches": []
@@ -2400,8 +2434,8 @@ window.ART = {
 },
 "drawer": {
 "w": 210,
-"h": 121,
-"src": "data:image/png;base64,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"
+"h": 155,
+"src": "data:image/png;base64,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"
 },
 "inkpad-green": {
 "w": 48,
@@ -2452,6 +2486,51 @@ window.ART = {
 "w": 37,
 "h": 94,
 "src": "data:image/png;base64,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"
+},
+"gum": {
+"w": 48,
+"h": 17,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAARCAYAAACb8i8UAAABkElEQVR4XmP8xfKTQZxf5D/DIAAvP75hJNUZjILCvP8nzyoiSd/el9cYZkRWE6UnY3krg7O4FkG1uWl9YDXInkAO2Bd3DsPNkFCxhatjQTYZ5DBiwZf3L4hVSpK5uBwNAueu3mNQk+JiyMxIZBCfIfIf5FkmmCtIcTytgF6wPsOd06vBxoNCHORgGMYVYHAPDAaQ6u4MdwbI4cjg1rNvYC6MhgGUJDQYALoDkcHm7QcwnDjoPIAM7r68yHDt3Hu84TpoPYAc2tNnzMfpiUHrAXRHIxejILB633oG8TSR/4PKA6DkouwJCWxQUVlfkgQvPkGlEHL+gCWtQVUKIQMtI0GUkgjZ8UbaSnClYA+QWwdsP38cbwajBIBCGFRpoRenIIAsBk5C9y48J9mu7eIQxxPyBClmg9I9KORhoHfuNgx3HX19jsFa1Ag1BgYLANXEs3fuxescZMeDwKDNA6CQxgdg8mSXQoQqGHLAq9PPGMRMpcAxcWntRQbrDEhSwVUPgBpzjIOlPwByDL5+Ca6+AgAJ5bKVs6DUPAAAAABJRU5ErkJggg=="
+},
+"mints-3": {
+"w": 29,
+"h": 27,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAbCAYAAACAyoQSAAABsklEQVR4XsVWsUoDQRTcE/0ArzBEOAmIdjYRwXyAdUCwsAlYKtpYW2pro2BpKSIIYmGhrZwYtNAuEgkEErCInYjNyWyYzWZze0lxe5nqsi/vzb69N7Pn/U39CiLw85H6kTKanbbHkpN4INnH63XKVD0ExW5DIJekAAgXiuvOSO9vTsVaeVc26OVy0xEJS6vLzkjDpxexv7cpjk8uxARYGs2WM7I4SNKsMT7Su4dH583q8+JBp5govOSwWkudvLSyqGpiiCAZSapr1SVoEEqnALTkCtAooRwJWq3sHMl1aArAe+CzDXxXtv8xjoaCcj6Sx2szB7OIPghJMX3T3DjX6Ep9x0ugqO7DsEessXPToxHXOzZzTfTpFIVNQoBF4mKMD8vVMWAO+i51ezS7i7POUXOtjoSihWDWOkBJsWG5A6TswCw6yqVgyz07v7IfL4YBejIJkESdxd25LGrLhRPpkJKBBW5vbTi9xOkDGDgpGf/2WVSqNaeOBOOZe/sUoRDdTg8L8+L9q2MdmjRx+fPdG6SlGT/N2okYzyUOAz5o1DPpEkcLPtWpa2IQEuoSB7L6wv8HzQHyWuW/xDQAAAAASUVORK5CYII="
+},
+"mints-2": {
+"w": 29,
+"h": 27,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAbCAYAAACAyoQSAAABuElEQVR4XmP8xfqDAQYk+cX+wzlUBs8/vmKEGcmCbOGDS5uobBUCSOpBPASyHGwpyIcgC92DCxhu3r5HdYvVVZUYDmybyeDglQ62i1FYhO8/TAAkKScnTXVLHz16CvZMe20GQ2XzDAYmqtuABaB7hC6WooOBs/T48fPg+KQlcHW2Zdh37CrYCiZQEgZFbkKEGy3tBIPdew+DswwjrHCgZcEAA7ACAl44gAAo69AKgPIoSomEXDjQAoCyDMhDkl5i/8ElEi4L0UsmWEIDGQDL7MiAUEJMz++EW4wSvDAAshC9HFbQ8wMbDLMQWR4kRwggewJuKUgQZCg2C0EAZAnIcGyVAkwOBNB9DAsZZAAvHLBZ+ODJc7weQJaHOQZkCTIGAZzFIHocEmOhgowkoVDFCjCKweWrt4EVggxENhQmDnMMuoUweWIAiqWgIAaVTui+BBkIEgcBUH7DJQ8q6ogB4PoUVM9FhnoRlQrJBaA4Ty3sBheF4NR7fdI6htRjV2laIoEslDxzE+xmsE/j+MXI9QDJYNHHVwNYn9IbgOtTkJfpAU6K8WDWp7SMW5jHUCpxEKBlRY7cwgcAOaHjroZ1NkMAAAAASUVORK5CYII="
+},
+"mints-1": {
+"w": 29,
+"h": 27,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAbCAYAAACAyoQSAAABkElEQVR4XmP8xfqDAQYk+cX+wzlUBs8/vmKEGcmCbOGDS5uobBUCSOpBPASyHGwpyIcgC92DCxhu3r5HdYvVVZUYDmybyeDglQ62i1FYhO8/TAAkKScnTXVLHz16CvZMe20GQ2XzDAYmqtuABaB7hC6WooOBs/T48fPg+KQlcHW2Zdh37CrYCiZQEgZFbkKEGy3tBIPdew+DswwjrHCgZcEAA7ACAl44gAAo69AKgPIoSomEXDjQAoCyDMhDkl5i/8ElEi4L0UsmShNaen4n3GKU4IUBkIXo5bCCnh9FFiN7Ap5PYYLYLAQBcisDUNCCikFkAPcpKPjQLXzw5DmDgowkXD255TJIH16fwgDIQloBjGJw+eptYLtAPkT2JUycGgDFUlAQg0ondF+CLASJUwuA4xRkKCihgFIoCCBnZGQAKsbIBSDzUwu7wdrBll6ftI4h9dhVmpZIIAslz9wEWwpuOcTxi5HrAZLBoo+vBrA+pTcA16cgL9MDnBTjwaxPaRm3MI+hVOIgQMuKHLmFDwBpib0th7PgOgAAAABJRU5ErkJggg=="
+},
+"mints-0": {
+"w": 29,
+"h": 27,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAbCAYAAACAyoQSAAABW0lEQVR4XmP8xfqDAQYk+cX+wzlUBs8/vmKEGcmCbOGDS5uobBUCSOpBPASyHGwpyIcgC92DCxhu3r5HdYvVVZUYDmybyeDglQ62i1FYhO8/TAAkKScnTXVLHz16CvZMe20GQ2XzDAYmqtuABaB7hC6WooOBs/T48fPg+KQlcHW2Zdh37CrYCiZQEgZFbkKEGy3tBIPdew+DswwjrHCgZcEAA7ACAl44gAAo69AKgPIoSomEXDjQAoCyDMhDkl5i/0G+ZaK1hTCQnt8JsZhf7D/dsgxy8Qq3lBZlLgiAghZUDCIDeEIC5VOQxaD8RG0AspiuPsUG6BanyADFUloXhSj5dPnqbQygSlxBz49mCQpkfmphN9hecEK6PmkdQ+qxqzQtkUAWSp65CbYU3HKI4xejdoLFCRZ9fDUIEhK9ALg+BXmZHuCkGA9mfUrLuIV5DKUSBwFaVuTILXwAuKiXxOyZjGsAAAAASUVORK5CYII="
+},
+"keycap-up": {
+"w": 33,
+"h": 26,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAaCAYAAAA5WTUBAAABbUlEQVR4XmP8xfKTAReQERb/j1MSB3jy9iUjqXpY8DngxvEVpJrHIGMp/p9UhzBhswUUAuQ4AATiIjxIDkGsjqAE+LqYkayd6o7YvOcU2BGkpCcMR1ASFTAAihJSHAJ3BMhyUlxPLCDGTJTcAfMBtQA8RFbgzzHgkAC5FqZh0Yod1HIDw+Wr98HYUFcdb4jgLCdA4PLVaxQ7SFdbEewQfIDquYMcgNMR5IYCWeUEMamX1gBrmiA3FGAAV+JG9jBy/QJ2BHLWBLFDU5pweh6U0kHg/OWbONWAAEgdKFEig9Vz6hh0tbUgBRlSRYc3d2ADhCyHAXQHgACy50AVJMwhdM8d6NU8KIqwhgS1S05cABQ9oNAhOTpIBbCCCmQhOC2kIFprIAeAQgbuCEKlGqUAZCHIITDHaFhGwI2keUggA+SEiZFF6QVwtT3pnjuwAbAjaJ0eCJUtTKAgIqSIGgBXVIAAI6zzQ8uKDJ8DQAAAEKaRjoxp69YAAAAASUVORK5CYII="
+},
+"keycap-down": {
+"w": 33,
+"h": 21,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAVCAYAAADID4fUAAABo0lEQVR4XmP8xfKTARuQFZX4j1WCAPj+5ScDJw87w+PXLxgJqYUBRmyOADng6pFlxJqBAbRtosBixDqECd0EEU5BihwAAlM68sA0yCxifAJ3BEgDKARAQUktEBPhTlS0gh0Bc3GwjwO17AenjbsPnoPNJBQiYEe8+f6ece6UUrADQJqpAZBD1NJCD2+IgB2BnBOoGR3EAnia2H/kErF6qA5YqG4iFKBHK4gPC3EQG5QEYGqp7oj9R06AzcYWrchlj6yNxH9YOYLhCGQfwAwkFygrSKJojc5oZLhw5SZYDOQgmEMwHAHyAaWWg9IXenSAzD1+4hI4GmDRAirURHIE/4MdAeLAEiYoXyfndJOdS2CWgwoqdACOou+Q4lzEQPA/rFgA1x2gwgSbJmoBUKGVEuMO9xzIofcurGWo65jFsGTFTogjChIjwGU8SDGtACgtwOoUEACFPMgBoOiheu7AB5CjGRQlE6CK6eYIeNnwHdOZGFU5rQC+6oAJlF3WbjlAK7vBAJQe8FWMTKC4gVW7tATIxTQ6gDfvQNmUFjUoLATwOQIAiXDHvZlaVIoAAAAASUVORK5CYII="
+},
+"usb": {
+"w": 53,
+"h": 17,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAARCAYAAAB92+RQAAABlUlEQVR4XmP8xfKTgVggwS/yn1i19AAvPr5hxGYPC7GWgzxkbW3OoKokSawWmoLb954zSBwV+Y/NYyykhD7IQyDDaA3aUkxQrKiacwarlbKyMgwSDJgeA8fU7XMbCLpT1SiAoBp0gO44egF48jt95iLV7KS3Z5BTGyg5MqH7JCqtHozJASDP4PJQTN1GuJEgNjKfUpAQG8CwbFYj3BiiCwpKALqHQGBJkz+Yhsnh4hMDFiyGZB+QxyTSRP5jeArZx5QCZAfDYgfkeJg4Ps8iA1Ds4yosQACU5CQWi/x3szUE8zGSH7UAuoeQYwcGYLEDk0PmUwIwYgqWnyiNMXQHIwN8csgAX+wgA/RqiS55ihhArAdwAVAkTF24DSxNVU+BHEaoOKfU8dgAqPQDeejo0ZPg/AX2VGv/ArBaUEYDKQCBXYfPExPAeAEtPIANwEo/WJOJEdSgJbapBGqWyMlJU+xZaoBHj56CjXn8+AlGwxYcU7hau+iZEeQhmGGDGZBUpA82D2GLJRAAJz9iAbHJlF4AVwoDAKUhsMdgUT8PAAAAAElFTkSuQmCC"
+},
+"usb-on": {
+"w": 52,
+"h": 17,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAARCAYAAACSGY9uAAABv0lEQVR4Xs2WPUgDMRiGc3LOHZQOV38WQRB0EKQgnRydXHS2iO7uDh2cdRQUaRcXuzg5uiiCi4OKIBREqx3cHNXh5E35zphL7pJcr/SBwP3kLt/7/SXet//FTAkKxdB0bp50Pj883f9904UhZrGywKanSqaf5EbQ6DpWJcy38TrEPLXeczOU2KlWouvd+lVsPTj29aXDAlYMZVE8Qvc3zVQjZ8urqXNUiMa5gO9VolJTrv1w7bKelqxCTBEzDNEakj9c3tjnwwWIoKFiq3YaPRavgXxvSnV9hZ0fb/PpEBcTlIRYP3c/j3yI6FIDxmIc1taUxovvgE2K1RtnPABUNrEuR2pVUFOAkKWjeT7lYvOWzQ3PaP1AxpIokCbMJl2pKQTlbuczbtsuyJ4nMZResjC6z4I3OlIIES5qClQ/cqTwHO2SQNsEE5PBv/VtvJtGUuph/bf23xYCe2GjVYTEfUgWQsAIV1E2tSOCgNC2YiWoF7garQORITGoJy5o7+Akmo82CJqXz5nt77XxKqhEqDl4OJyaHn/GxkvaVOsnVL+oIeXRJ+n0SpBo+tmgYrWxDhKq6ACecqaYpmY/0GXVLwfWzkIdJhdUAAAAAElFTkSuQmCC"
 },
 "passport-seq-sheet": {
 "w": 832,
@@ -2846,6 +2925,9 @@ window.FX = (function () {
     if (c && name === "flip") { paperFlip(c); return; }
     if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
     if (c && name === "chime") { cuteChime(c); return; }
+    if (c && name === "tin") { tinRattle(c); return; }
+    if (c && name === "keyclack") { keyClack(c); return; }
+    if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -2913,6 +2995,30 @@ window.FX = (function () {
     note(t0, 740, 880, 0.16, 0.5);
     note(t0 + 0.12, 1050, 1175, 0.24, 0.45);
     note(t0 + 0.12, 2350, 2350, 0.12, 0.06, "sine");
+  }
+  // a short filtered noise tick: the building block for the small sounds below
+  function tick(c, len, freq, vol, at) {
+    const t0 = (at || c.currentTime) + 0.003, n = Math.max(1, Math.floor(c.sampleRate * len)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; bp.type = "bandpass"; bp.frequency.value = freq * (0.95 + Math.random() * 0.1); bp.Q.value = 2.5; g.gain.value = vol;
+    s.connect(bp); bp.connect(g); g.connect(snd.gain); s.start(t0);
+  }
+  // a mint taken from a tin: three or four small metallic knocks, close together
+  function tinRattle(c) {
+    const t0 = c.currentTime, k = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < k; i++) {
+      const at = t0 + i * (0.028 + Math.random() * 0.02), o = c.createOscillator(), g = c.createGain();
+      o.type = "square"; o.frequency.value = 2900 + Math.random() * 900;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.05, at + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.03);
+      o.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.04);
+      tick(c, 0.02, 4200, 0.35, at);
+    }
+  }
+  // a mechanical key: a crisp click on the way down and a softer thock under it
+  function keyClack(c) {
+    tick(c, 0.012, 4800, 0.5);
+    tick(c, 0.03, 900, 0.45);
   }
   function toggle() {
     snd.on = !snd.on;
@@ -3100,7 +3206,7 @@ window.DEMOS = (function () {
     view: "desk", admitted: null, introStep: 0, introDone: false, passPage: 0,
     marks: { visa: [], record: [], id: [], diploma: [] }, inked: { visa: false, record: false, id: false, diploma: false }, papers: {}, stickers: {}, scene: null, maxOut: 0,
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
-    hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
+    mints: 3, hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
     room: 0, liftCard: null, lampOn: ["dusk", "night"].includes(dayPhase()), lampTouched: false, pinHot: null, noteSent: false, printing: false, contactOpen: false,
   };
@@ -3821,18 +3927,23 @@ window.DEMOS = (function () {
   }
 
   // ----- the two desk drawers, Skills and Personal: one drawer sprite, only the front shows until it opens -----
-  const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 90 };
+  const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 122 };
   // Thea's things in the Personal drawer, at their spots on the drawer floor (art pixels)
   const POBJ = {
     bottle: { art: "cola-bottle", x: 19, y: 27, label: "Glass bottle", hint: "Press Enter to nudge it." },
     watch: { art: "watch", x: 35, y: 64, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
     sketchbook: { art: "sketchbook-closed", x: 146, y: 40, label: "Sketchbook", hint: "Press Enter to open it." },
+    usb: { art: "usb", x: 20, y: 110, label: "USB stick with a tape label", hint: "Press Enter to plug it in and open Thea's GitHub in a new tab." },
+    gum: { art: "gum", x: 78, y: 110, label: "Pack of stick gum", hint: "Press Enter to slide a stick out." },
+    mints: { art: "mints-3", x: 128, y: 106, label: "Tin of mints", hint: "Press Enter to take a mint." },
+    keycap: { art: "keycap-up", x: 162, y: 104, label: "Keycap fidget toy", hint: "Press Space or Enter to click it." },
   };
   const noteOf = (id) => ((state.effects || []).find((e) => e.id === id) || {}).note || "";
   function pobjHTML(id) {
     const o = POBJ[id], a = ART[o.art];
     return '<span class="pobj p-' + id + (o.rot ? " rot" : "") + '" data-p="' + id + '" data-drag role="button" tabindex="0" aria-label="' + esc(o.label + ". " + o.hint + " Press M to move it between the drawer and the desk.") +
-      '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") + "</span>";
+      '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(id === "mints" ? "mints-" + ui.mints : o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") +
+      (id === "keycap" ? SPR.art("keycap-down", SC, "k-down") : "") + (id === "usb" ? SPR.art("usb-on", SC, "u-on") : "") + (id === "gum" ? SPR.art("gum", SC, "g-stick") : "") + "</span>";
   }
   const TABC = ['#8fa7b8', '#b9a2c4', '#8fb39a', '#d9b26a', '#c98b7a', '#a7b78a', '#9a9a8c'];
   const FS = 4; // closed fronts on the desk edge are drawn at 4x so the plate fits its label
@@ -3950,7 +4061,7 @@ window.DEMOS = (function () {
       big.style.setProperty("--front-h", DW_FRONT * gm.sc + "px");
       big.style.setProperty("--ps", gm.sc);
       big.style.setProperty("--fl-x", 14 * gm.sc + "px"); big.style.setProperty("--fl-y", 14 * gm.sc + "px");
-      big.style.setProperty("--fl-w", (182 + gm.extra) * gm.sc + "px"); big.style.setProperty("--fl-h", 90 * gm.sc + "px");
+      big.style.setProperty("--fl-w", (182 + gm.extra) * gm.sc + "px"); big.style.setProperty("--fl-h", DW_FLOOR.h * gm.sc + "px");
       $$(".pobj", $("#dw-things")).forEach(placePobj);
     };
     if (DWIMG.complete) apply(); else DWIMG.onload = apply;
@@ -3997,8 +4108,8 @@ window.DEMOS = (function () {
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
   const noteTurn = {};
-  function showNote(el) {
-    const id = el.dataset.p, lines = noteOf(id).split("|").map((x) => x.trim()).filter(Boolean);
+  function showNote(el, line) {
+    const id = el.dataset.p, lines = (line || noteOf(id)).split("|").map((x) => x.trim()).filter(Boolean);
     if (!lines.length || isPhone()) return;
     noteTurn[id] = ((noteTurn[id] == null ? -1 : noteTurn[id]) + 1) % lines.length;
     let b = $("#thea-say");
@@ -4071,7 +4182,31 @@ window.DEMOS = (function () {
   }
   function usePobj(el) {
     const id = el.dataset.p;
+    if (id === "keycap") return; // pressed on pointer down and key down, see keyPress
+    if (id === "mints") {
+      if (ui.mints === 0) { showNote(el, "Out of mints."); FX.play("tin"); return; }
+      ui.mints -= 1; FX.play("tin");
+      const img = $(".art", el); img.src = ART["mints-" + ui.mints].src;
+      showNote(el);
+      return;
+    }
     showNote(el);
+    if (id === "usb") {
+      const url = ((state.profile.links || []).find((l) => /github\.com/i.test(l.url || "")) || {}).url || "https://github.com/delete-th";
+      FX.play("usbclick");
+      const go = () => { el.classList.remove("lit"); window.open(safeUrl(url), "_blank", "noopener"); };
+      if (reduced()) { el.classList.add("lit"); setTimeout(go, 250); return; }
+      [0, 100, 200, 300, 400, 500].forEach((ms, k) => setTimeout(() => el.classList.toggle("lit", k % 2 === 0), ms));
+      setTimeout(go, 620);
+      return;
+    }
+    if (id === "gum") {
+      FX.play("rustle");
+      if (reduced()) return;
+      el.classList.remove("slide"); void el.offsetWidth; el.classList.add("slide");
+      setTimeout(() => el.classList.remove("slide"), 360);
+      return;
+    }
     if (id === "watch") { if (!reduced()) setSlow(!slow); return; }
     if (id === "bottle") {
       FX.play("fizz");
@@ -4083,6 +4218,11 @@ window.DEMOS = (function () {
     if (id === "sketchbook") { say("sketchbook"); if ((state.sketches || []).length) openSketchbook(); }
   }
   // move a thing between its drawer spot and the desk (dragging does the same with the pointer)
+  function keyPress(el, down) {
+    if (!el) return;
+    if (down) { if (!el.classList.contains("pressed")) FX.play("keyclack"); el.classList.add("pressed"); }
+    else el.classList.remove("pressed");
+  }
   function pobjToDesk(el, x, y) {
     const desk = $("#desk");
     el.classList.remove("rot"); el.classList.add("sticker", "on-desk");
@@ -4683,7 +4823,7 @@ window.DEMOS = (function () {
       (editing ? sec("radio", "Booth radio", "One line each, shown once. The radio stays hidden until at least one line is written.",
         state.assistant.map((a, i) => row(esc(WHEN[a.when] || a.when), f("assistant." + i + ".line", "Leave empty to stay quiet"))).join("")) : "") +
       (editing ? sec("things", "Desk things", "A note beside each thing in the Personal drawer. Empty notes stay hidden.",
-        (state.effects || []).map((e, i) => row(esc({ watch: "Watch", sketchbook: "Sketchbook", bottle: "Bottle" }[e.id] || e.id), f("effects." + i + ".note", "Leave empty to stay hidden"))).join("")) : "") +
+        (state.effects || []).map((e, i) => row(esc({ watch: "Watch", sketchbook: "Sketchbook", bottle: "Bottle", usb: "USB stick", gum: "Gum", mints: "Mint tin", keycap: "Keycap" }[e.id] || e.id), f("effects." + i + ".note", "Leave empty to stay hidden"))).join("")) : "") +
       sec("honours", "Commendations", "Hackathon results from 2026.", state.awards.map((a, i) => '<div class="honour"><span class="yr">' + f("awards." + i + ".year", "Year") + "</span><div><b>" +
         f("awards." + i + ".result", "Result") + "</b>, " + f("awards." + i + ".event", "Event") + "<p>" + f("awards." + i + ".note", "What it was for") + "</p>" + del("awards", i, "entry") + "</div></div>").join("") + add("awards", "award", "entry")) +
       sec("skills", "Skills", "What I have used in the case files above.", '<dl class="skills">' + state.skills.map((s, i) => "<dt>" + f("skills." + i + ".group", "Group") + "</dt><dd>" +
@@ -5184,6 +5324,10 @@ window.DEMOS = (function () {
   let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
   document.addEventListener("pointerover", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !drag) showNote(po); });
+  document.addEventListener("keyup", (ev) => { if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches('.pobj[data-p="keycap"]')) keyPress(ev.target, false); });
+  document.addEventListener("pointerdown", (ev) => { const k = ev.target.closest && ev.target.closest('.pobj[data-p="keycap"]'); if (k && ev.button === 0) keyPress(k, true); });
+  const keyUp = () => $$('.pobj[data-p="keycap"].pressed').forEach((k) => keyPress(k, false));
+  document.addEventListener("pointerup", keyUp); document.addEventListener("pointercancel", keyUp);
   document.addEventListener("pointerout", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !po.contains(ev.relatedTarget)) hideNote(); });
   document.addEventListener("focusout", (ev) => { if (ev.target.closest && ev.target.closest(".pobj")) hideNote(); });
   document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches(".pobj")) showNote(ev.target); });
@@ -5377,6 +5521,7 @@ window.DEMOS = (function () {
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
       ev.preventDefault(); goRoom(ui.room + (ev.key === "ArrowRight" ? 1 : -1)); return;
     }
+    if (po && po.dataset.p === "keycap" && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); if (!ev.repeat) keyPress(po, true); return; }
     if (po && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); usePobj(po); return; }
     if (po && (ev.key === "m" || ev.key === "M")) { ev.preventDefault(); movePobj(po); return; }
     if (ui.contactOpen) {

@@ -11,7 +11,7 @@
     view: "desk", admitted: null, introStep: 0, introDone: false, passPage: 0,
     marks: { visa: [], record: [], id: [], diploma: [] }, inked: { visa: false, record: false, id: false, diploma: false }, papers: {}, stickers: {}, scene: null, maxOut: 0,
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
-    hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
+    mints: 3, hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
     room: 0, liftCard: null, lampOn: ["dusk", "night"].includes(dayPhase()), lampTouched: false, pinHot: null, noteSent: false, printing: false, contactOpen: false,
   };
@@ -732,18 +732,23 @@
   }
 
   // ----- the two desk drawers, Skills and Personal: one drawer sprite, only the front shows until it opens -----
-  const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 90 };
+  const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 122 };
   // Thea's things in the Personal drawer, at their spots on the drawer floor (art pixels)
   const POBJ = {
     bottle: { art: "cola-bottle", x: 19, y: 27, label: "Glass bottle", hint: "Press Enter to nudge it." },
     watch: { art: "watch", x: 35, y: 64, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
     sketchbook: { art: "sketchbook-closed", x: 146, y: 40, label: "Sketchbook", hint: "Press Enter to open it." },
+    usb: { art: "usb", x: 20, y: 110, label: "USB stick with a tape label", hint: "Press Enter to plug it in and open Thea's GitHub in a new tab." },
+    gum: { art: "gum", x: 78, y: 110, label: "Pack of stick gum", hint: "Press Enter to slide a stick out." },
+    mints: { art: "mints-3", x: 128, y: 106, label: "Tin of mints", hint: "Press Enter to take a mint." },
+    keycap: { art: "keycap-up", x: 162, y: 104, label: "Keycap fidget toy", hint: "Press Space or Enter to click it." },
   };
   const noteOf = (id) => ((state.effects || []).find((e) => e.id === id) || {}).note || "";
   function pobjHTML(id) {
     const o = POBJ[id], a = ART[o.art];
     return '<span class="pobj p-' + id + (o.rot ? " rot" : "") + '" data-p="' + id + '" data-drag role="button" tabindex="0" aria-label="' + esc(o.label + ". " + o.hint + " Press M to move it between the drawer and the desk.") +
-      '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") + "</span>";
+      '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(id === "mints" ? "mints-" + ui.mints : o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") +
+      (id === "keycap" ? SPR.art("keycap-down", SC, "k-down") : "") + (id === "usb" ? SPR.art("usb-on", SC, "u-on") : "") + (id === "gum" ? SPR.art("gum", SC, "g-stick") : "") + "</span>";
   }
   const TABC = ['#8fa7b8', '#b9a2c4', '#8fb39a', '#d9b26a', '#c98b7a', '#a7b78a', '#9a9a8c'];
   const FS = 4; // closed fronts on the desk edge are drawn at 4x so the plate fits its label
@@ -861,7 +866,7 @@
       big.style.setProperty("--front-h", DW_FRONT * gm.sc + "px");
       big.style.setProperty("--ps", gm.sc);
       big.style.setProperty("--fl-x", 14 * gm.sc + "px"); big.style.setProperty("--fl-y", 14 * gm.sc + "px");
-      big.style.setProperty("--fl-w", (182 + gm.extra) * gm.sc + "px"); big.style.setProperty("--fl-h", 90 * gm.sc + "px");
+      big.style.setProperty("--fl-w", (182 + gm.extra) * gm.sc + "px"); big.style.setProperty("--fl-h", DW_FLOOR.h * gm.sc + "px");
       $$(".pobj", $("#dw-things")).forEach(placePobj);
     };
     if (DWIMG.complete) apply(); else DWIMG.onload = apply;
@@ -908,8 +913,8 @@
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
   const noteTurn = {};
-  function showNote(el) {
-    const id = el.dataset.p, lines = noteOf(id).split("|").map((x) => x.trim()).filter(Boolean);
+  function showNote(el, line) {
+    const id = el.dataset.p, lines = (line || noteOf(id)).split("|").map((x) => x.trim()).filter(Boolean);
     if (!lines.length || isPhone()) return;
     noteTurn[id] = ((noteTurn[id] == null ? -1 : noteTurn[id]) + 1) % lines.length;
     let b = $("#thea-say");
@@ -982,7 +987,31 @@
   }
   function usePobj(el) {
     const id = el.dataset.p;
+    if (id === "keycap") return; // pressed on pointer down and key down, see keyPress
+    if (id === "mints") {
+      if (ui.mints === 0) { showNote(el, "Out of mints."); FX.play("tin"); return; }
+      ui.mints -= 1; FX.play("tin");
+      const img = $(".art", el); img.src = ART["mints-" + ui.mints].src;
+      showNote(el);
+      return;
+    }
     showNote(el);
+    if (id === "usb") {
+      const url = ((state.profile.links || []).find((l) => /github\.com/i.test(l.url || "")) || {}).url || "https://github.com/delete-th";
+      FX.play("usbclick");
+      const go = () => { el.classList.remove("lit"); window.open(safeUrl(url), "_blank", "noopener"); };
+      if (reduced()) { el.classList.add("lit"); setTimeout(go, 250); return; }
+      [0, 100, 200, 300, 400, 500].forEach((ms, k) => setTimeout(() => el.classList.toggle("lit", k % 2 === 0), ms));
+      setTimeout(go, 620);
+      return;
+    }
+    if (id === "gum") {
+      FX.play("rustle");
+      if (reduced()) return;
+      el.classList.remove("slide"); void el.offsetWidth; el.classList.add("slide");
+      setTimeout(() => el.classList.remove("slide"), 360);
+      return;
+    }
     if (id === "watch") { if (!reduced()) setSlow(!slow); return; }
     if (id === "bottle") {
       FX.play("fizz");
@@ -994,6 +1023,11 @@
     if (id === "sketchbook") { say("sketchbook"); if ((state.sketches || []).length) openSketchbook(); }
   }
   // move a thing between its drawer spot and the desk (dragging does the same with the pointer)
+  function keyPress(el, down) {
+    if (!el) return;
+    if (down) { if (!el.classList.contains("pressed")) FX.play("keyclack"); el.classList.add("pressed"); }
+    else el.classList.remove("pressed");
+  }
   function pobjToDesk(el, x, y) {
     const desk = $("#desk");
     el.classList.remove("rot"); el.classList.add("sticker", "on-desk");
@@ -1594,7 +1628,7 @@
       (editing ? sec("radio", "Booth radio", "One line each, shown once. The radio stays hidden until at least one line is written.",
         state.assistant.map((a, i) => row(esc(WHEN[a.when] || a.when), f("assistant." + i + ".line", "Leave empty to stay quiet"))).join("")) : "") +
       (editing ? sec("things", "Desk things", "A note beside each thing in the Personal drawer. Empty notes stay hidden.",
-        (state.effects || []).map((e, i) => row(esc({ watch: "Watch", sketchbook: "Sketchbook", bottle: "Bottle" }[e.id] || e.id), f("effects." + i + ".note", "Leave empty to stay hidden"))).join("")) : "") +
+        (state.effects || []).map((e, i) => row(esc({ watch: "Watch", sketchbook: "Sketchbook", bottle: "Bottle", usb: "USB stick", gum: "Gum", mints: "Mint tin", keycap: "Keycap" }[e.id] || e.id), f("effects." + i + ".note", "Leave empty to stay hidden"))).join("")) : "") +
       sec("honours", "Commendations", "Hackathon results from 2026.", state.awards.map((a, i) => '<div class="honour"><span class="yr">' + f("awards." + i + ".year", "Year") + "</span><div><b>" +
         f("awards." + i + ".result", "Result") + "</b>, " + f("awards." + i + ".event", "Event") + "<p>" + f("awards." + i + ".note", "What it was for") + "</p>" + del("awards", i, "entry") + "</div></div>").join("") + add("awards", "award", "entry")) +
       sec("skills", "Skills", "What I have used in the case files above.", '<dl class="skills">' + state.skills.map((s, i) => "<dt>" + f("skills." + i + ".group", "Group") + "</dt><dd>" +
@@ -2095,6 +2129,10 @@
   let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
   document.addEventListener("pointerover", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !drag) showNote(po); });
+  document.addEventListener("keyup", (ev) => { if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches('.pobj[data-p="keycap"]')) keyPress(ev.target, false); });
+  document.addEventListener("pointerdown", (ev) => { const k = ev.target.closest && ev.target.closest('.pobj[data-p="keycap"]'); if (k && ev.button === 0) keyPress(k, true); });
+  const keyUp = () => $$('.pobj[data-p="keycap"].pressed').forEach((k) => keyPress(k, false));
+  document.addEventListener("pointerup", keyUp); document.addEventListener("pointercancel", keyUp);
   document.addEventListener("pointerout", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !po.contains(ev.relatedTarget)) hideNote(); });
   document.addEventListener("focusout", (ev) => { if (ev.target.closest && ev.target.closest(".pobj")) hideNote(); });
   document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches(".pobj")) showNote(ev.target); });
@@ -2288,6 +2326,7 @@
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
       ev.preventDefault(); goRoom(ui.room + (ev.key === "ArrowRight" ? 1 : -1)); return;
     }
+    if (po && po.dataset.p === "keycap" && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); if (!ev.repeat) keyPress(po, true); return; }
     if (po && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); usePobj(po); return; }
     if (po && (ev.key === "m" || ev.key === "M")) { ev.preventDefault(); movePobj(po); return; }
     if (ui.contactOpen) {
