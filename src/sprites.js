@@ -88,6 +88,9 @@ window.SPR = (function () {
   S.handle = ["..kkkkkkkkkkkk..", ".kyyyyyyyyyyyyk.", "kyYkkkkkkkkkkYyk", "kYk..........kYk", "kk............kk"];
   S.left = ["...y.", "..yy.", ".yyy.", "yyyy.", ".yyy.", "..yy.", "...y."];
   S.right = S.left.map((r) => r.split("").reverse().join(""));
+  S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
+  S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
+  S.caretdown = S.caretup.slice().reverse();
   S.corner = [".........k", "........kP", ".......kPP", "......kPPP", ".....kPPPP", "....kPPPPu", "...kPPPPuu", "..kPPPuuuu", ".kPPuuuuuu", "kkkkkkkkkk"];
 
 

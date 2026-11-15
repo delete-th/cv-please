@@ -693,19 +693,43 @@ html::-webkit-scrollbar-button { display: none; }
 .box-all { left: 84px; top: 189px; width: 132px; height: 18px; color: var(--fb-ink); font: 400 20px/18px var(--display); -webkit-font-smoothing: none; }
 .p-case.filed { width: 264px; height: 9px; }
 .p-case.filed .folder-tab { top: -22px; height: 22px; max-width: 264px; padding: 3px 8px 0; font: 400 20px/1 var(--display); }
-.record-sec { padding-bottom: calc(180px + var(--safe-b)); }
+.record-sec { padding-bottom: calc(240px + var(--safe-b)); }
 .record-area { min-height: 300px; }
 
-/* the stamps: a tray that slides up from the bottom strip, right of the pill nav */
-.stamp-dock { position: fixed; z-index: 66; left: calc(50% + 126px); bottom: calc(14px + var(--safe-b)); display: none; }
-html.desk-mode .stamp-dock, html.locked .stamp-dock { display: block; }
-.stamp-dock .stampbar { position: absolute; left: 0; right: auto; top: auto; bottom: 56px; display: block; width: max-content; translate: none; transform: translateY(calc(100% + 90px)); visibility: hidden; transition: transform 0.2s ease-out, visibility 0s linear 0.2s; }
-.stamp-dock .stampbar.out { transform: none; visibility: visible; transition: transform 0.2s ease-out; }
-.stamp-dock .bar-rail { flex-direction: row; flex-wrap: wrap; justify-content: center; max-width: 300px; padding: 10px 10px 8px; gap: 8px 12px; border: var(--px) solid var(--ink); box-shadow: var(--px) var(--px) 0 var(--shade); }
-.stamp-dock .rivets { display: none; }
-.stamp-dock .bar-note { order: 3; width: 100%; }
-.stamp-handle { display: flex; gap: 10px; align-items: center; height: 46px; padding: 4px 14px; background: var(--wood-4); border: var(--px) solid var(--ink); color: var(--ink); font: 400 20px/1 var(--pixel); cursor: pointer; -webkit-font-smoothing: none; }
+/* the bottom group: [Stamps] [< Area >], centred; the tray opens upward from the Stamps pill */
+.pills { position: fixed; z-index: 75; left: 50%; bottom: calc(16px + var(--safe-b)); translate: -50% 0; display: none; gap: 8px; align-items: flex-end; }
+html.desk-mode .pills, html.locked .pills { display: flex; }
+.pills .pill { position: relative; left: auto; bottom: auto; translate: none; display: flex; z-index: auto; }
+.pills.solo .pill { display: none; }
+.pill.below { translate: 0 calc(100% + 24px + var(--safe-b)); }
+.pill.rising { transition: translate 0.25s ease-out; }
+.stamp-dock { position: relative; display: block; }
+.stamp-dock.sliding { transition: translate 0.3s ease-out; }
+.stamp-handle { display: flex; gap: 10px; align-items: center; height: 48px; padding: 4px 18px 4px 16px; background: var(--booth-dark); color: var(--on-desk); border: 2px solid var(--ink); border-radius: 999px; box-shadow: var(--px) var(--px) 0 var(--shade); font: 400 20px/1 var(--pixel); -webkit-font-smoothing: none; }
+.stamp-handle:hover { background: var(--booth); }
 .stamp-handle:focus-visible { outline: 3px solid var(--cover-ink); outline-offset: 2px; }
+.stamp-handle .caret { display: grid; }
+.stamp-handle .caret .spr { grid-area: 1 / 1; }
+.stamp-handle[aria-expanded="true"] .caret .spr:first-child, .stamp-handle[aria-expanded="false"] .caret .spr:last-child { visibility: hidden; }
+.stamp-dock .stampbar { position: absolute; left: 50%; right: auto; top: auto; bottom: calc(100% + 8px); display: block; width: max-content; translate: calc(-50% + var(--tray-dx, 0px)) 0; transform: translateY(calc(100% + 96px + var(--safe-b))); visibility: hidden; transition: transform 0.2s ease-out, visibility 0s linear 0.2s; }
+.stamp-dock .stampbar.out { transform: none; visibility: visible; transition: transform 0.2s ease-out; }
+.stamp-dock .bar-rail { flex-direction: row; flex-wrap: nowrap; align-items: center; padding: 10px 16px 10px 12px; gap: 12px; border: var(--px) solid var(--ink); box-shadow: var(--px) var(--px) 0 var(--shade); }
+.stamp-dock .rivets { display: none; }
+.stamp-dock .bar-note { width: auto; max-width: 300px; padding: 0 0 0 4px; background: none; color: var(--on-desk); font-size: 20px; line-height: 1.25; text-align: left; }
+
+/* the passport screen keeps its pages above the open tray: 16px + pill + 8px + tray + 16px */
+.intro { --tray-clear: 220px; }
+.intro .intro-actions { order: -1; }
+.intro-inner > .intro-say { order: -2; }
+@media (min-width: 821px) {
+  .intro { padding-bottom: calc(var(--tray-clear) + var(--safe-b)); }
+}
+@media (min-width: 821px) and (max-height: 760px) {
+  .intro { padding-top: 12px; }
+  .intro-inner { gap: 10px; }
+  .passport { scale: 0.6667; transform-origin: 50% 0; margin-bottom: calc(var(--page-h) * -0.3333); }
+  .passport .mark { scale: 1.5; }
+}
 
 /* ---------- phones and small tablets ---------- */
 .phone-hint { display: none; }
@@ -826,14 +850,17 @@ html.desk-mode .stamp-dock, html.locked .stamp-dock { display: block; }
   .receipt.landing, .printer.busy .led { animation: none !important; }
 }
 @media (max-width: 820px) {
-  .stamp-dock { left: auto; right: var(--gut-r); }
-  .stamp-dock .stampbar { position: fixed; left: 0; right: 0; bottom: calc(68px + var(--safe-b)); width: auto; }
-  .stamp-dock .bar-rail { max-width: none; border-left: 0; border-right: 0; }
-  .stamp-handle { height: 40px; padding: 2px 10px; }
+  .pills { left: 0; right: 0; translate: none; justify-content: center; gap: 6px; pointer-events: none; }
+  .pills > * { pointer-events: auto; }
+  .stamp-dock .stampbar, html.locked .stamp-dock .stampbar { position: fixed; left: 0; right: 0; bottom: calc(72px + var(--safe-b)); width: auto; translate: none; }
+  .stamp-dock .bar-rail { flex-wrap: wrap; justify-content: center; gap: 6px 16px; padding: 8px var(--gut-r) 6px var(--gut-l); border-left: 0; border-right: 0; }
+  .stamp-dock .bar-note { order: 3; width: 100%; max-width: none; padding: 0; text-align: center; }
+  .stamp-handle { gap: 8px; padding: 4px 12px; }
+  .intro { padding-bottom: calc(240px + var(--safe-b)); }
   .filebox { width: auto; height: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stamp-dock .stampbar, .stamp-dock .stampbar.out { transition: none !important; }
+  .stamp-dock .stampbar, .stamp-dock .stampbar.out, .stamp-dock.sliding, .pill.rising { transition: none !important; }
   .cm-key.down { transform: none; }
   .br-load.go i { animation: none; width: 100%; }
 }
@@ -1395,6 +1422,9 @@ window.SPR = (function () {
   S.handle = ["..kkkkkkkkkkkk..", ".kyyyyyyyyyyyyk.", "kyYkkkkkkkkkkYyk", "kYk..........kYk", "kk............kk"];
   S.left = ["...y.", "..yy.", ".yyy.", "yyyy.", ".yyy.", "..yy.", "...y."];
   S.right = S.left.map((r) => r.split("").reverse().join(""));
+  S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
+  S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
+  S.caretdown = S.caretup.slice().reverse();
   S.corner = [".........k", "........kP", ".......kPP", "......kPPP", ".....kPPPP", "....kPPPPu", "...kPPPPuu", "..kPPPuuuu", ".kPPuuuuuu", "kkkkkkkkkk"];
 
 
@@ -2018,16 +2048,17 @@ window.DEMOS = (function () {
     (kind === "approved" ? "APPROVED" : "DENIED") + "</span></span>";
   function renderFixed() {
     const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys">' + stampArt(kind) + "</button>";
-    fixedRoot.innerHTML = '<div class="stamp-dock" id="stampdock"><div class="stampbar" id="stampbar" role="group" aria-label="Stamp tray">' +
-      '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("approved") + slot("denied") +
-      '<p class="bar-note"><span class="point">Drag a stamp onto the paper and let go. Or tap a stamp, then the paper.</span><span class="touch">Drag a stamp onto the paper, or tap one, then the paper.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
-      '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></div>' +
-      '<button class="handle stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("handle", PX) + "<span>Stamps</span></button></div>" +
-      '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
+    fixedRoot.innerHTML = '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
       '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
+      '<div class="pills" id="pills"><div class="stamp-dock" id="stampdock"><div class="stampbar" id="stampbar" role="group" aria-label="Stamp tray">' +
+      '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("approved") + slot("denied") +
+      '<p class="bar-note"><span class="point">Drag a stamp onto the paper, or tap one, then the paper.</span><span class="touch">Tap a stamp, then tap the paper.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
+      '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></div>' +
+      '<button class="stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("pillstamp", 2) + "<span>Stamps</span>" +
+      '<span class="caret" aria-hidden="true">' + SPR.draw("caretup", 2) + SPR.draw("caretdown", 2) + "</span></button></div>" +
       '<nav class="pill" id="pill" aria-label="Areas"><button data-act="step" data-dir="-1" aria-label="Previous area">' + SPR.draw("left", PX) +
-      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav>";
+      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav></div>";
   }
 
   // ----- scroll scene: the booth builds, then the file unpacks -----
@@ -2177,6 +2208,7 @@ window.DEMOS = (function () {
     });
   }
   function onResize() {
+    placeTray();
     if (!$("#desk")) return;
     sizeScene();
     updateBar();
@@ -2368,9 +2400,14 @@ window.DEMOS = (function () {
     if (ui.view !== "desk" || editing || ui.contactOpen) return false;
     const r = receiptEl();
     if (!r || r.hidden || !ui.printed) return false;
-    const b = rectOf(r);
-    return b.bottom > 120 && b.top < window.innerHeight - 120;
+    const b = rectOf(r), box = $(".stamp-box", r);
+    if (!box) return false;
+    // open only once the record's stamp box is clear of where the tray would sit
+    const bb = rectOf(box);
+    return b.bottom > 120 && bb.top >= 8 && bb.bottom <= trayTopOpen() - 16;
   }
+  // the top edge of the tray when it is open, whether or not it is open now
+  function trayTopOpen() { const g = $("#pills"), bar = $("#stampbar"); return g && bar ? rectOf(g).top - 8 - bar.offsetHeight : window.innerHeight; }
   function updateBar() {
     const bar = $("#stampbar");
     if (!bar) return;
@@ -2380,11 +2417,49 @@ window.DEMOS = (function () {
     bar.classList.toggle("out", open);
     $("#stamp-handle").setAttribute("aria-expanded", String(open));
     $("#bar-rail").inert = !open;
+    if (open) placeTray();
+  }
+  function placeTray() {
+    const dock = $("#stampdock"), bar = $("#stampbar");
+    if (!dock || !bar) return;
+    if (isPhone()) { bar.style.removeProperty("--tray-dx"); return; }
+    const d = rectOf(dock), w = bar.offsetWidth, c = d.left + d.width / 2 - (parseFloat(getComputedStyle(dock).translate) || 0);
+    const want = c - w / 2, left = clamp(want, 8, window.innerWidth - 8 - w);
+    bar.style.setProperty("--tray-dx", Math.round(left - want) + "px");
+  }
+  // After the passport: the Stamps pill slides left to make room, then the area pill rises into place beside it.
+  function revealNav() {
+    const g = $("#pills"), dock = $("#stampdock"), nav = $("#pill");
+    if (!g || !g.classList.contains("solo")) return;
+    if (reduced()) { g.classList.remove("solo"); placeTray(); return; }
+    const before = rectOf(dock).left;
+    nav.classList.add("below");
+    g.classList.remove("solo");
+    const after = rectOf(dock).left;
+    dock.style.translate = before - after + "px 0";
+    dock.getBoundingClientRect();
+    dock.classList.add("sliding");
+    dock.style.translate = "";
+    setTimeout(() => {
+      dock.classList.remove("sliding"); placeTray();
+      nav.classList.add("rising"); nav.classList.remove("below");
+      setTimeout(() => nav.classList.remove("rising"), 260);
+    }, 300);
+  }
+  // Keep the stamp box that is on screen above the open tray: the visa scrolls inside the passport screen
+  // (phones), the entry record scrolls the page.
+  function keepBoxClear() {
+    const bar = $("#stampbar"), intro = $("#intro");
+    if (!bar || !bar.classList.contains("out")) return;
+    const box = intro ? $("#intro .visa .stamp-box") : (ui.printed && receiptEl() && !receiptEl().hidden ? $(".stamp-box", receiptEl()) : null);
+    if (!box || !onScreen(box)) return;
+    const top = trayTopOpen(), b = rectOf(box), by = b.bottom - top + 24;
+    if (b.bottom > top - 16) (intro || window).scrollBy({ top: by, behavior: behavior() });
   }
   function toggleTray(force) {
     const open = force != null ? force : !$("#stampbar").classList.contains("out");
     ui.barPinned = open; updateBar();
-    if (open) { const first = $("#stampbar .stamp-btn"); if (first) setTimeout(() => first.focus({ preventScroll: true }), reduced() ? 0 : 210); }
+    if (open) { keepBoxClear(); const first = $("#stampbar .stamp-btn"); if (first) setTimeout(() => first.focus({ preventScroll: true }), reduced() ? 0 : 210); }
     else if (document.activeElement && document.activeElement.closest("#stampdock")) $("#stamp-handle").focus({ preventScroll: true });
   }
   function markHTML(m) {
@@ -2398,8 +2473,8 @@ window.DEMOS = (function () {
     });
   }
   function inkAt(s, x, y, kind) {
-    const key = s.dataset.stamp, r = rectOf(s), box = rectOf($(".stamp-box", s));
-    ui.marks[key].push({ kind: kind, x: Math.round(x - r.left), y: Math.round(y - r.top), rot: (Math.random() * 6 - 3).toFixed(1), op: (0.78 + Math.random() * 0.17).toFixed(2),
+    const key = s.dataset.stamp, r = rectOf(s), box = rectOf($(".stamp-box", s)), k = s.offsetWidth ? r.width / s.offsetWidth : 1;
+    ui.marks[key].push({ kind: kind, x: Math.round((x - r.left) / k), y: Math.round((y - r.top) / k), rot: (Math.random() * 6 - 3).toFixed(1), op: (0.78 + Math.random() * 0.17).toFixed(2),
       mx: Math.floor(Math.random() * 16) * 3, my: Math.floor(Math.random() * 16) * 3 });
     const fw = FACE.w, fh = FACE.h; // the inked area is the face, drawn at twice its drawing size
     if (x + fw > box.left && x - fw < box.right && y + fh > box.top && y - fh < box.bottom) ui.inked[key] = true;
@@ -2512,11 +2587,18 @@ window.DEMOS = (function () {
       FX.play("lift");
       feed.classList.add("torn");
       scrollToRecord("smooth");
-      setTimeout(() => { landRecord(true); }, 520);
+      setTimeout(() => { landRecord(true); setTimeout(() => { scrollToRecord("smooth"); updateBar(); }, 380); }, 520);
       setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 900);
     }, steps * 110 + 120);
   }
-  function scrollToRecord(how) { const r = $("#record"); if (r) window.scrollTo({ top: docTop(r), behavior: how === "smooth" && !reduced() ? "smooth" : "auto" }); }
+  function scrollToRecord(how) {
+    const r = $("#record"), rc = receiptEl();
+    if (!r) return;
+    let top = docTop(r);
+    const box = rc && !rc.hidden ? $(".stamp-box", rc) : null;
+    if (box) top = Math.max(top, docTop(box) + box.offsetHeight - (trayTopOpen() - 16) + 8);
+    window.scrollTo({ top: top, behavior: how === "smooth" && !reduced() ? "smooth" : "auto" });
+  }
   function landRecord(animate) {
     const r = receiptEl(), empty = $("#record-empty");
     ui.printed = true;
@@ -2867,6 +2949,7 @@ window.DEMOS = (function () {
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     document.documentElement.classList.add("locked");
+    const g = $("#pills"); if (g) g.classList.add("solo");
     $("#intro-btn").focus({ preventScroll: true });
     updateBar();
   }
@@ -2877,7 +2960,7 @@ window.DEMOS = (function () {
     $("#say").textContent = "";
     $("#intro-btn").hidden = true;
     FX.play("rustle");
-    setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); }, reduced() ? 0 : 500);
+    setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); setTimeout(keepBoxClear, reduced() ? 0 : 220); }, reduced() ? 0 : 500);
   }
   function closeIntro() {
     const el = $("#intro");
@@ -2886,7 +2969,7 @@ window.DEMOS = (function () {
     el.classList.add("leaving");
     document.documentElement.classList.remove("locked");
     ui.introDone = true;
-    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); }, reduced() ? 0 : 420);
+    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); }, reduced() ? 0 : 420);
   }
 
   // ----- actions -----

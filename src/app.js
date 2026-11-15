@@ -211,16 +211,17 @@
     (kind === "approved" ? "APPROVED" : "DENIED") + "</span></span>";
   function renderFixed() {
     const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys">' + stampArt(kind) + "</button>";
-    fixedRoot.innerHTML = '<div class="stamp-dock" id="stampdock"><div class="stampbar" id="stampbar" role="group" aria-label="Stamp tray">' +
-      '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("approved") + slot("denied") +
-      '<p class="bar-note"><span class="point">Drag a stamp onto the paper and let go. Or tap a stamp, then the paper.</span><span class="touch">Drag a stamp onto the paper, or tap one, then the paper.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
-      '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></div>' +
-      '<button class="handle stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("handle", PX) + "<span>Stamps</span></button></div>" +
-      '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
+    fixedRoot.innerHTML = '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
       '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
+      '<div class="pills" id="pills"><div class="stamp-dock" id="stampdock"><div class="stampbar" id="stampbar" role="group" aria-label="Stamp tray">' +
+      '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("approved") + slot("denied") +
+      '<p class="bar-note"><span class="point">Drag a stamp onto the paper, or tap one, then the paper.</span><span class="touch">Tap a stamp, then tap the paper.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
+      '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></div>' +
+      '<button class="stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("pillstamp", 2) + "<span>Stamps</span>" +
+      '<span class="caret" aria-hidden="true">' + SPR.draw("caretup", 2) + SPR.draw("caretdown", 2) + "</span></button></div>" +
       '<nav class="pill" id="pill" aria-label="Areas"><button data-act="step" data-dir="-1" aria-label="Previous area">' + SPR.draw("left", PX) +
-      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav>";
+      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav></div>";
   }
 
   // ----- scroll scene: the booth builds, then the file unpacks -----
@@ -370,6 +371,7 @@
     });
   }
   function onResize() {
+    placeTray();
     if (!$("#desk")) return;
     sizeScene();
     updateBar();
@@ -561,9 +563,14 @@
     if (ui.view !== "desk" || editing || ui.contactOpen) return false;
     const r = receiptEl();
     if (!r || r.hidden || !ui.printed) return false;
-    const b = rectOf(r);
-    return b.bottom > 120 && b.top < window.innerHeight - 120;
+    const b = rectOf(r), box = $(".stamp-box", r);
+    if (!box) return false;
+    // open only once the record's stamp box is clear of where the tray would sit
+    const bb = rectOf(box);
+    return b.bottom > 120 && bb.top >= 8 && bb.bottom <= trayTopOpen() - 16;
   }
+  // the top edge of the tray when it is open, whether or not it is open now
+  function trayTopOpen() { const g = $("#pills"), bar = $("#stampbar"); return g && bar ? rectOf(g).top - 8 - bar.offsetHeight : window.innerHeight; }
   function updateBar() {
     const bar = $("#stampbar");
     if (!bar) return;
@@ -573,11 +580,49 @@
     bar.classList.toggle("out", open);
     $("#stamp-handle").setAttribute("aria-expanded", String(open));
     $("#bar-rail").inert = !open;
+    if (open) placeTray();
+  }
+  function placeTray() {
+    const dock = $("#stampdock"), bar = $("#stampbar");
+    if (!dock || !bar) return;
+    if (isPhone()) { bar.style.removeProperty("--tray-dx"); return; }
+    const d = rectOf(dock), w = bar.offsetWidth, c = d.left + d.width / 2 - (parseFloat(getComputedStyle(dock).translate) || 0);
+    const want = c - w / 2, left = clamp(want, 8, window.innerWidth - 8 - w);
+    bar.style.setProperty("--tray-dx", Math.round(left - want) + "px");
+  }
+  // After the passport: the Stamps pill slides left to make room, then the area pill rises into place beside it.
+  function revealNav() {
+    const g = $("#pills"), dock = $("#stampdock"), nav = $("#pill");
+    if (!g || !g.classList.contains("solo")) return;
+    if (reduced()) { g.classList.remove("solo"); placeTray(); return; }
+    const before = rectOf(dock).left;
+    nav.classList.add("below");
+    g.classList.remove("solo");
+    const after = rectOf(dock).left;
+    dock.style.translate = before - after + "px 0";
+    dock.getBoundingClientRect();
+    dock.classList.add("sliding");
+    dock.style.translate = "";
+    setTimeout(() => {
+      dock.classList.remove("sliding"); placeTray();
+      nav.classList.add("rising"); nav.classList.remove("below");
+      setTimeout(() => nav.classList.remove("rising"), 260);
+    }, 300);
+  }
+  // Keep the stamp box that is on screen above the open tray: the visa scrolls inside the passport screen
+  // (phones), the entry record scrolls the page.
+  function keepBoxClear() {
+    const bar = $("#stampbar"), intro = $("#intro");
+    if (!bar || !bar.classList.contains("out")) return;
+    const box = intro ? $("#intro .visa .stamp-box") : (ui.printed && receiptEl() && !receiptEl().hidden ? $(".stamp-box", receiptEl()) : null);
+    if (!box || !onScreen(box)) return;
+    const top = trayTopOpen(), b = rectOf(box), by = b.bottom - top + 24;
+    if (b.bottom > top - 16) (intro || window).scrollBy({ top: by, behavior: behavior() });
   }
   function toggleTray(force) {
     const open = force != null ? force : !$("#stampbar").classList.contains("out");
     ui.barPinned = open; updateBar();
-    if (open) { const first = $("#stampbar .stamp-btn"); if (first) setTimeout(() => first.focus({ preventScroll: true }), reduced() ? 0 : 210); }
+    if (open) { keepBoxClear(); const first = $("#stampbar .stamp-btn"); if (first) setTimeout(() => first.focus({ preventScroll: true }), reduced() ? 0 : 210); }
     else if (document.activeElement && document.activeElement.closest("#stampdock")) $("#stamp-handle").focus({ preventScroll: true });
   }
   function markHTML(m) {
@@ -591,8 +636,8 @@
     });
   }
   function inkAt(s, x, y, kind) {
-    const key = s.dataset.stamp, r = rectOf(s), box = rectOf($(".stamp-box", s));
-    ui.marks[key].push({ kind: kind, x: Math.round(x - r.left), y: Math.round(y - r.top), rot: (Math.random() * 6 - 3).toFixed(1), op: (0.78 + Math.random() * 0.17).toFixed(2),
+    const key = s.dataset.stamp, r = rectOf(s), box = rectOf($(".stamp-box", s)), k = s.offsetWidth ? r.width / s.offsetWidth : 1;
+    ui.marks[key].push({ kind: kind, x: Math.round((x - r.left) / k), y: Math.round((y - r.top) / k), rot: (Math.random() * 6 - 3).toFixed(1), op: (0.78 + Math.random() * 0.17).toFixed(2),
       mx: Math.floor(Math.random() * 16) * 3, my: Math.floor(Math.random() * 16) * 3 });
     const fw = FACE.w, fh = FACE.h; // the inked area is the face, drawn at twice its drawing size
     if (x + fw > box.left && x - fw < box.right && y + fh > box.top && y - fh < box.bottom) ui.inked[key] = true;
@@ -705,11 +750,18 @@
       FX.play("lift");
       feed.classList.add("torn");
       scrollToRecord("smooth");
-      setTimeout(() => { landRecord(true); }, 520);
+      setTimeout(() => { landRecord(true); setTimeout(() => { scrollToRecord("smooth"); updateBar(); }, 380); }, 520);
       setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 900);
     }, steps * 110 + 120);
   }
-  function scrollToRecord(how) { const r = $("#record"); if (r) window.scrollTo({ top: docTop(r), behavior: how === "smooth" && !reduced() ? "smooth" : "auto" }); }
+  function scrollToRecord(how) {
+    const r = $("#record"), rc = receiptEl();
+    if (!r) return;
+    let top = docTop(r);
+    const box = rc && !rc.hidden ? $(".stamp-box", rc) : null;
+    if (box) top = Math.max(top, docTop(box) + box.offsetHeight - (trayTopOpen() - 16) + 8);
+    window.scrollTo({ top: top, behavior: how === "smooth" && !reduced() ? "smooth" : "auto" });
+  }
   function landRecord(animate) {
     const r = receiptEl(), empty = $("#record-empty");
     ui.printed = true;
@@ -1060,6 +1112,7 @@
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     document.documentElement.classList.add("locked");
+    const g = $("#pills"); if (g) g.classList.add("solo");
     $("#intro-btn").focus({ preventScroll: true });
     updateBar();
   }
@@ -1070,7 +1123,7 @@
     $("#say").textContent = "";
     $("#intro-btn").hidden = true;
     FX.play("rustle");
-    setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); }, reduced() ? 0 : 500);
+    setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); setTimeout(keepBoxClear, reduced() ? 0 : 220); }, reduced() ? 0 : 500);
   }
   function closeIntro() {
     const el = $("#intro");
@@ -1079,7 +1132,7 @@
     el.classList.add("leaving");
     document.documentElement.classList.remove("locked");
     ui.introDone = true;
-    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); }, reduced() ? 0 : 420);
+    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); }, reduced() ? 0 : 420);
   }
 
   // ----- actions -----
