@@ -1762,3 +1762,12 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 /* booth shortcuts in the booth's own display face */
 .booth-links .btn-quiet, .booth-links .btn-main { font: 400 20px/1 var(--display); letter-spacing: 0.02em; text-decoration: underline 2px; text-underline-offset: 5px; -webkit-font-smoothing: none; }
 .booth-links { gap: 8px 24px; }
+/* the Records room printer runs the same print as the desk one */
+.rec-printer { position: relative; width: 104px; height: 96px; }
+.rec-printer .printer-btn { position: relative; z-index: 1; display: block; padding: 0; border: 0; background: none; line-height: 0; }
+.rec-printer .pr-on, .rec-printer.on .pr-off { display: none; }
+.rec-printer.on .pr-on { display: block; }
+.rec-printer:not(.on) .pr-paper:not(.tear):not(.off) { visibility: hidden; }
+.rec-printer .art { filter: none; }
+.rec-printer { filter: var(--rest-shadow); }
+.rec-printer:has(.printer-btn:hover, .printer-btn:focus-visible) { filter: var(--shape-ring) var(--rest-shadow); }

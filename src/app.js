@@ -278,7 +278,8 @@
     return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
       "<p>The summary, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
-      '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer-off", 4) + "</button></div>" +
+      '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
+      '<span class="pr-paper" aria-hidden="true"></span><span class="pr-front" aria-hidden="true">' + SPR.art("printer-front-off", 4, "pr-off") + SPR.art("printer-front-on", 4, "pr-on") + "</span></div>" +
       '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk, or print it from here.</p>') +
       receipt + (ui.slipTorn ? slip : "") + "</div></div></section>";
   }
@@ -1224,11 +1225,13 @@
   // Then it tears at the slot, slides off to the right as the view pans to Records, and the printer goes dark.
   function printRecord() {
     if (ui.printing) return;
-    const pr = $("#printer"), paper = $("#feed");
+    // in the Records room the printer up there prints it; on the desk, the desk printer does and the view pans over
+    const inRecords = !isPhone() && ui.room === 1, pr = inRecords ? $(".rec-printer") : $("#printer"), paper = pr && $(".pr-paper", pr);
     say("record");
     if (isPhone() || reduced() || !pr || !paper) { FX.play("print"); landRecord(false); if (isPhone()) scrollToRecord("auto"); else goRoom(1); return; }
     ui.printing = true;
-    const ART_PX = 4, step = 2, steps = 9, tick = 80;
+    // the sheet rises 18 art pixels, or less when the printer sits near the top of the screen
+    const ART_PX = 4, step = 2, tick = 80, room = rectOf(pr).top + 28 - 4, steps = clamp(Math.floor(room / (step * ART_PX)), 4, 9);
     paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px");
     pr.classList.add("on");
     FX.play("print");
@@ -1236,7 +1239,7 @@
     const torn = steps * tick + 160;
     setTimeout(() => { paper.classList.add("tear"); FX.play("lift"); }, torn);
     setTimeout(() => { paper.classList.add("off"); pr.classList.remove("on"); }, torn + tick);
-    setTimeout(() => goRoom(1, true), torn + tick + 60);
+    if (!inRecords) setTimeout(() => goRoom(1, true), torn + tick + 60);
     setTimeout(() => { landRecord(true); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
     setTimeout(() => { paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
   }
