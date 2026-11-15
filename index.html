@@ -1779,6 +1779,15 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .p-case.open .paper-head { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; }
 .p-case.open .paper-head h2 { flex: 1; margin: 0; }
 .p-case.open .ph-row { flex: none; gap: 8px; }
+/* the lifted skill card: "Back in the drawer" as an icon with a hover label, bottom right of the card */
+.sk-lift-card .sl-back { position: absolute; right: 18px; bottom: 16px; display: grid; place-items: center; width: 34px; height: 30px; margin: 0; padding: 0; border: 2px solid var(--ink); background: var(--field); color: var(--ink); text-decoration: none; }
+.sk-lift-card .sl-back .ib-tip { top: auto; bottom: calc(100% + 6px); }
+.sk-lift-card { padding-bottom: 56px; }
+/* reprint in the Records room: the sheet drops down behind the printer's lip, the record feeds down below it */
+.pr-paper.drop { translate: 0 calc(100vh); transition: translate 0.45s ease-in; }
+.receipt.feeding-down { animation: rec-feed 0.5s steps(6, end); }
+@keyframes rec-feed { from { translate: 0 -48px; clip-path: inset(0 0 100% 0); } to { translate: 0 0; clip-path: inset(-20px -20px -20px -20px); } }
+@media (prefers-reduced-motion: reduce) { .pr-paper.drop { transition: none; } .receipt.feeding-down { animation: none; } }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -3798,7 +3807,7 @@ window.DEMOS = (function () {
     const g = state.skills[i], p = frontCase();
     return '<div class="sk-lift-card" role="dialog" aria-label="' + esc(g.group) + ' skills"><p class="sl-tab">' + esc(g.group) + '</p><div class="sl-chips">' +
       g.items.map((s) => '<button class="sk' + (ui.hot === s ? " hot" : "") + (p && uses(p.stack, s) ? " used" : "") + '" data-act="skill" data-s="' + esc(s) + '" aria-pressed="' + (ui.hot === s) + '">' + esc(s) + "</button>").join("") +
-      "</div>" + usedInHTML(g) + '<button class="btn-quiet sl-back" data-act="card-back">Back in the drawer</button></div>';
+      "</div>" + usedInHTML(g) + '<button class="sl-back icon-btn" data-act="card-back" aria-label="Back in the drawer">' + SPR.draw("tobox", 2) + '<span class="ib-tip" aria-hidden="true">Back in the drawer</span></button></div>';
   }
   function usedInHTML(g) {
     const sk = ui.hot && g.items.includes(ui.hot) ? ui.hot : null;
@@ -3919,7 +3928,13 @@ window.DEMOS = (function () {
   }
   function refreshSkills() {
     const b = $("#drawer-box"); if (b) b.innerHTML = isPhone() ? skillsHTML() : cardsHTML();
-    const ov = $("#sk-lift"); if (ov && !ov.hidden && ui.liftCard != null) { const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.s; ov.innerHTML = liftHTML(ui.liftCard); placeLift(); if (f) { const k = $('.sk[data-s="' + CSS.escape(f) + '"]', ov); if (k) k.focus({ preventScroll: true }); } }
+    const ov = $("#sk-lift"), card = ov && $(".sk-lift-card", ov);
+    if (card && !ov.hidden && ui.liftCard != null) {
+      const g = state.skills[ui.liftCard], p = frontCase();
+      $$(".sl-chips .sk", card).forEach((k) => { const sk = k.dataset.s; k.classList.toggle("hot", ui.hot === sk); k.setAttribute("aria-pressed", String(ui.hot === sk)); k.classList.toggle("used", !!(p && uses(p.stack, sk))); });
+      const old = $(".sl-note, .sl-used", card);
+      if (old) { const t = document.createElement("div"); t.innerHTML = usedInHTML(g); old.replaceWith(t.firstElementChild); }
+    }
   }
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
@@ -4269,9 +4284,9 @@ window.DEMOS = (function () {
     for (let k = 1; k <= steps; k++) setTimeout(() => { paper.style.setProperty("--rise", k * step * ART_PX + "px"); }, k * tick);
     const torn = steps * tick + 160;
     setTimeout(() => { paper.classList.add("tear"); FX.play("lift"); }, torn);
-    setTimeout(() => { paper.classList.add("off"); pr.classList.remove("on"); }, torn + tick);
+    setTimeout(() => { paper.classList.add(inRecords ? "drop" : "off"); pr.classList.remove("on"); }, torn + tick);
     if (!inRecords) setTimeout(() => goRoom(1, true), torn + tick + 60);
-    setTimeout(() => { landRecord(true); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
+    setTimeout(() => { landRecord(true, inRecords); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
     setTimeout(() => { paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
   }
   function scrollToRecord(how) {
@@ -4282,7 +4297,7 @@ window.DEMOS = (function () {
     if (box) top = Math.max(top, docTop(box) + box.offsetHeight - (trayTopOpen() - 16) + 8);
     window.scrollTo({ top: top, behavior: how === "smooth" && !reduced() ? "smooth" : "auto" });
   }
-  function landRecord(animate) {
+  function landRecord(animate, fromAbove) {
     const r = receiptEl(), empty = $("#record-empty");
     ui.printed = true;
     if (empty) empty.remove();
@@ -4290,8 +4305,8 @@ window.DEMOS = (function () {
     r.hidden = false;
     $$('.record-intro [data-act="print"]', $("#record")).forEach((b) => { b.textContent = "Print it again"; });
     renderMarks("record");
-    r.classList.remove("landing");
-    if (animate && !reduced()) { void r.offsetWidth; r.classList.add("landing"); FX.play("settle"); }
+    r.classList.remove("landing", "feeding-down");
+    if (animate && !reduced()) { void r.offsetWidth; r.classList.add(fromAbove ? "feeding-down" : "landing"); FX.play("settle"); }
     updateBar(); updatePill();
   }
   function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }

@@ -1775,3 +1775,12 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .p-case.open .paper-head { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; }
 .p-case.open .paper-head h2 { flex: 1; margin: 0; }
 .p-case.open .ph-row { flex: none; gap: 8px; }
+/* the lifted skill card: "Back in the drawer" as an icon with a hover label, bottom right of the card */
+.sk-lift-card .sl-back { position: absolute; right: 18px; bottom: 16px; display: grid; place-items: center; width: 34px; height: 30px; margin: 0; padding: 0; border: 2px solid var(--ink); background: var(--field); color: var(--ink); text-decoration: none; }
+.sk-lift-card .sl-back .ib-tip { top: auto; bottom: calc(100% + 6px); }
+.sk-lift-card { padding-bottom: 56px; }
+/* reprint in the Records room: the sheet drops down behind the printer's lip, the record feeds down below it */
+.pr-paper.drop { translate: 0 calc(100vh); transition: translate 0.45s ease-in; }
+.receipt.feeding-down { animation: rec-feed 0.5s steps(6, end); }
+@keyframes rec-feed { from { translate: 0 -48px; clip-path: inset(0 0 100% 0); } to { translate: 0 0; clip-path: inset(-20px -20px -20px -20px); } }
+@media (prefers-reduced-motion: reduce) { .pr-paper.drop { transition: none; } .receipt.feeding-down { animation: none; } }

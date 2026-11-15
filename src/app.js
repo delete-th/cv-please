@@ -767,7 +767,7 @@
     const g = state.skills[i], p = frontCase();
     return '<div class="sk-lift-card" role="dialog" aria-label="' + esc(g.group) + ' skills"><p class="sl-tab">' + esc(g.group) + '</p><div class="sl-chips">' +
       g.items.map((s) => '<button class="sk' + (ui.hot === s ? " hot" : "") + (p && uses(p.stack, s) ? " used" : "") + '" data-act="skill" data-s="' + esc(s) + '" aria-pressed="' + (ui.hot === s) + '">' + esc(s) + "</button>").join("") +
-      "</div>" + usedInHTML(g) + '<button class="btn-quiet sl-back" data-act="card-back">Back in the drawer</button></div>';
+      "</div>" + usedInHTML(g) + '<button class="sl-back icon-btn" data-act="card-back" aria-label="Back in the drawer">' + SPR.draw("tobox", 2) + '<span class="ib-tip" aria-hidden="true">Back in the drawer</span></button></div>';
   }
   function usedInHTML(g) {
     const sk = ui.hot && g.items.includes(ui.hot) ? ui.hot : null;
@@ -888,7 +888,13 @@
   }
   function refreshSkills() {
     const b = $("#drawer-box"); if (b) b.innerHTML = isPhone() ? skillsHTML() : cardsHTML();
-    const ov = $("#sk-lift"); if (ov && !ov.hidden && ui.liftCard != null) { const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.s; ov.innerHTML = liftHTML(ui.liftCard); placeLift(); if (f) { const k = $('.sk[data-s="' + CSS.escape(f) + '"]', ov); if (k) k.focus({ preventScroll: true }); } }
+    const ov = $("#sk-lift"), card = ov && $(".sk-lift-card", ov);
+    if (card && !ov.hidden && ui.liftCard != null) {
+      const g = state.skills[ui.liftCard], p = frontCase();
+      $$(".sl-chips .sk", card).forEach((k) => { const sk = k.dataset.s; k.classList.toggle("hot", ui.hot === sk); k.setAttribute("aria-pressed", String(ui.hot === sk)); k.classList.toggle("used", !!(p && uses(p.stack, sk))); });
+      const old = $(".sl-note, .sl-used", card);
+      if (old) { const t = document.createElement("div"); t.innerHTML = usedInHTML(g); old.replaceWith(t.firstElementChild); }
+    }
   }
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
@@ -1238,9 +1244,9 @@
     for (let k = 1; k <= steps; k++) setTimeout(() => { paper.style.setProperty("--rise", k * step * ART_PX + "px"); }, k * tick);
     const torn = steps * tick + 160;
     setTimeout(() => { paper.classList.add("tear"); FX.play("lift"); }, torn);
-    setTimeout(() => { paper.classList.add("off"); pr.classList.remove("on"); }, torn + tick);
+    setTimeout(() => { paper.classList.add(inRecords ? "drop" : "off"); pr.classList.remove("on"); }, torn + tick);
     if (!inRecords) setTimeout(() => goRoom(1, true), torn + tick + 60);
-    setTimeout(() => { landRecord(true); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
+    setTimeout(() => { landRecord(true, inRecords); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
     setTimeout(() => { paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
   }
   function scrollToRecord(how) {
@@ -1251,7 +1257,7 @@
     if (box) top = Math.max(top, docTop(box) + box.offsetHeight - (trayTopOpen() - 16) + 8);
     window.scrollTo({ top: top, behavior: how === "smooth" && !reduced() ? "smooth" : "auto" });
   }
-  function landRecord(animate) {
+  function landRecord(animate, fromAbove) {
     const r = receiptEl(), empty = $("#record-empty");
     ui.printed = true;
     if (empty) empty.remove();
@@ -1259,8 +1265,8 @@
     r.hidden = false;
     $$('.record-intro [data-act="print"]', $("#record")).forEach((b) => { b.textContent = "Print it again"; });
     renderMarks("record");
-    r.classList.remove("landing");
-    if (animate && !reduced()) { void r.offsetWidth; r.classList.add("landing"); FX.play("settle"); }
+    r.classList.remove("landing", "feeding-down");
+    if (animate && !reduced()) { void r.offsetWidth; r.classList.add(fromAbove ? "feeding-down" : "landing"); FX.play("settle"); }
     updateBar(); updatePill();
   }
   function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }
