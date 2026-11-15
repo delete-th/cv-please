@@ -177,7 +177,7 @@
       '<button class="btn-quiet" data-act="discard"' + (busy ? " disabled" : "") + ">Discard</button>" + (note ? '<span class="note" role="status">' + esc(note) + "</span>" : "");
   }
   function setOwner() { const o = $("#owner"); if (o) o.innerHTML = ownerBar(); }
-  function deniedLine() { return "Entry denied. The applicant is still available at " + state.profile.email + "."; }
+  function deniedLine() { return "Entry denied. Unconvinced? Investigate the applicant at the desk."; }
   function boothHTML() {
     const p = state.profile, qs = state.interview.map((q, i) => [q, i]).filter((x) => x[0].q && x[0].a);
     return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline" id="skyline" data-phase="' + dayPhase() + '">' + SPR.scene(PX, dayPhase()) + "</span>" +
