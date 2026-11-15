@@ -4455,7 +4455,7 @@ window.DEMOS = (function () {
     if (!pp || !it || isPhone()) return;
     const S = +pp.style.getPropertyValue("--pp") || 4, bx = (pp.classList.contains("dp") ? DP_BOX : PP_BOX)[f || 0], vw = window.innerWidth, vh = window.innerHeight;
     const W = (bx[2] - bx[0]) * S, H = (bx[3] - bx[1]) * S, above = (f || 0) === 0 ? 108 : 64, avail = vh - 72 - 16;
-    const top = Math.max(8, (avail - above - H) / 2) + above, left = (vw - (W + 164)) / 2;
+    const top = Math.max(8, (avail - above - H) / 2) + above, left = (vw - (W + (ui.introStep >= 1 ? 164 : 0))) / 2;
     pp.style.left = Math.round(left - bx[0] * S) + "px"; pp.style.top = Math.round(top - bx[1] * S) + "px";
     it.style.setProperty("--act-top", Math.round(top - 64) + "px");
     it.style.setProperty("--say-top", Math.round(top - above) + "px");
