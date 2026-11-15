@@ -877,6 +877,8 @@
     if (id) { ui.dwLast = id; markHandled(); say(id === "skills" ? "drawer" : "personal"); }
     FX.play("dwslide");
     layoutDrawer(true);
+    // the view pans, so anything pinned to the old position goes
+    setTimeout(hideTag, 20); setTimeout(hideTag, reduced() ? 0 : 300);
     if (!id) { hideNote(); if (ui.liftCard != null) liftCard(null); }
   }
   function closeDrawer(noFocus) {
@@ -1958,7 +1960,8 @@
   window.addEventListener("blur", hideTag);
   document.addEventListener("pointerover", (ev) => { if (ev.pointerType === "touch") return; const t = tagTarget(ev.target); if (t && t !== tagFor) showTag(t); });
   document.addEventListener("pointerout", (ev) => { const t = tagTarget(ev.target); if (t && !t.contains(ev.relatedTarget) && ev.pointerType !== "touch") hideTag(); });
-  document.addEventListener("focusin", (ev) => { const t = tagTarget(ev.target); if (t) showTag(t, true); });
+  // only keyboard focus shows a tag: a click also focuses, and that tag would outlive the click
+  document.addEventListener("focusin", (ev) => { const t = tagTarget(ev.target); if (t && t.matches(":focus-visible")) showTag(t, true); });
   document.addEventListener("focusout", (ev) => { if (tagTarget(ev.target)) hideTag(); });
   // touch: the first tap shows the name, the second opens; a tap anywhere else hides it
   document.addEventListener("pointerdown", (ev) => {
