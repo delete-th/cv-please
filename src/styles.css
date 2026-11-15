@@ -1564,3 +1564,14 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .dp-visa .stamp-box { position: absolute; left: calc(var(--a) * 6); right: calc(var(--a) * 6); top: auto; bottom: calc(var(--a) * 4); width: auto; height: calc(100% - var(--a) * 17); border: 2px dashed var(--gold-dark); color: var(--gold-dark); }
 /* the data page text sits a little lower on the page */
 .pp-data { padding-top: calc(var(--pp) * 2px); }
+/* the photo frame is drawn over the portrait: dark on the top and left, a step lighter on the right and bottom (the sprite's own colours) */
+:root { --frame-dark: #6c664d; --frame-mid: #938d74; }
+.passport .pp-photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset calc(var(--pp) * 1px) calc(var(--pp) * 1px) 0 var(--frame-dark), inset calc(var(--pp) * -1px) calc(var(--pp) * -1px) 0 var(--frame-mid); pointer-events: none; }
+:root { --photo-bg: #e0d1b1; }
+.passport .pp-photo { place-items: end center; background: var(--photo-bg); }
+
+/* the closed passport gives a small shake now and then to invite a click (no button) */
+.passport:not(.open)[data-frame="0"] .pp-frames, .passport.dp:not(.open)[data-frame="0"] .dp-cover { animation: pp-nudge 3.2s steps(1, end) 1s infinite; cursor: pointer; }
+.passport[data-frame="0"]:focus-visible { outline: 3px solid var(--cover-ink); outline-offset: 6px; }
+@keyframes pp-nudge { 0%, 84% { translate: 0 0; } 86% { translate: -4px 0; } 88% { translate: 4px 0; } 90% { translate: -4px 0; } 92% { translate: 4px 0; } 94%, 100% { translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .passport .pp-frames, .passport.dp .dp-cover { animation: none !important; } }

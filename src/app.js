@@ -1600,23 +1600,23 @@
     if (drawnPass()) { renderDrawnPassport(); return; }
     const L = passLayout(S);
     introRoot.innerHTML =
-      '<div class="intro" id="intro" role="dialog" aria-label="Passport" style="--canvas-top:' + L.canvas + "px;--words-top:" + L.words + 'px"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
-      '<div class="passport" id="passport" data-frame="0"" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + px(104) + ";height:" + px(128) + '">' +
+      '<div class="intro" id="intro" role="dialog" aria-label="Passport" style="--canvas-top:' + L.canvas + "px;--words-top:" + L.words + 'px"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Click the passport to open it.</p>' +
+      '<div class="passport" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press Enter to open it. Once open, press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + px(104) + ";height:" + px(128) + '">' +
       '<span class="pp-frames" id="pp-frames" aria-hidden="true" data-act="intro-next" style="background-image:url(' + ART["passport-seq-sheet"].src + ")" + '"></span>' +
       '<div class="pp-spread" id="pp-spread">' +
       '<div class="pp-visa visa stampable" data-stamp="visa" style="left:' + X(0) + ";top:" + Y(0) + ";width:" + px(74) + ";height:" + px(52) + '">' +
       '<div class="stamp-box ghost' + (ui.inked.visa ? " inked" : "") + '" aria-hidden="true" style="left:' + px(14) + ";top:" + px(9) + ";width:" + px(46) + ";height:" + px(39) + '"></div>' +
       '<p class="pp-visa-title" style="left:' + px(14) + ";top:" + px(48) + ";width:" + px(46) + ";height:" + px(5) + '">Entry visa</p><div class="marks" data-marks="visa"></div></div>' +
-      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(23) + ";height:" + px(29) + '">' + SPR.applicant("thea", Math.ceil(Math.max(23 * S / 55, 29 * S / 59)), portraitAlt) + "</div>" +
+      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(22) + ";height:" + px(28) + '">' + SPR.applicant("thea", Math.round(Math.max(22 * S / 55, 28 * S / 59)), portraitAlt) + "</div>" +
       '<div class="pp-data" style="left:' + X(4) + ";top:" + Y(63) + ";width:" + px(37) + ";height:" + px(35) + '"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + "</p>" +
       '<dl class="pp-rows">' + row("NAT", pv.nat || p.nationality) + row("OCC", pv.occ || p.occupation) + row("BASE", base) + row("GRAD", pv.grad || e.graduated) + "</dl></div>" + 
       '<p class="pp-code" aria-hidden="true" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + ";height:" + px(8) + '">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 30) + "</p></div></div>" +
-      '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
+      '<div class="intro-actions"><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     placePassport(0);
     document.documentElement.classList.add("locked");
     const g = $("#pills"); if (g) g.classList.add("solo");
-    $("#intro-btn").focus({ preventScroll: true });
+    $("#passport").focus({ preventScroll: true });
     updateBar();
   }
   // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
@@ -1634,8 +1634,8 @@
     const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
     ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
     introRoot.innerHTML =
-      '<div class="intro dp-intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
-      '<div class="passport dp" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + 80 * S + "px;height:" + 116 * S + 'px">' +
+      '<div class="intro dp-intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Click the passport to open it.</p>' +
+      '<div class="passport dp" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press Enter to open it. Once open, press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + 80 * S + "px;height:" + 116 * S + 'px">' +
       '<div class="dp-page dp-data"><div class="dp-in"><div class="dp-photo">' + SPR.applicant("thea", S >= 6 ? 2 : 1, portraitAlt) + "</div>" +
       '<div class="dp-id"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + '</p><dl class="pp-rows">' +
       row("NAT", pv.nat || p.nationality) + row("OCC", pv.occ || p.occupation) + row("BASE", pv.base || p.basedIn) + row("GRAD", pv.grad || e.graduated) + "</dl></div>" +
@@ -1644,12 +1644,12 @@
       '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp here</div><div class="marks" data-marks="visa"></div></div></div>' +
       '<span class="dp-spine" aria-hidden="true"></span>' +
       '<div class="dp-cover" data-act="intro-next" aria-hidden="true"><div class="dp-face"><span class="dp-emb">' + SPR.draw("emblem", Math.max(2, S - 2)) + '</span><b>Passport</b><span class="dp-name">' + esc(p.name) + "</span></div><i></i><i></i><i></i><i></i></div></div>" +
-      '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
+      '<div class="intro-actions"><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     placePassport(0);
     document.documentElement.classList.add("locked");
     const g = $("#pills"); if (g) g.classList.add("solo");
-    $("#intro-btn").focus({ preventScroll: true });
+    $("#passport").focus({ preventScroll: true });
     updateBar();
   }
   function passScale() { return isPhone() ? 3 : clamp(Math.floor((window.innerHeight - 300) / 113), 4, 6); }
@@ -1709,7 +1709,7 @@
     playPassport(1);
     ui.introStep = 1;
     $("#say").textContent = "";
-    $("#intro-btn").hidden = true;
+
     FX.play("rustle");
     setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); setTimeout(keepBoxClear, reduced() ? 0 : 220); }, reduced() ? 0 : 500);
   }
@@ -2154,6 +2154,7 @@
 
   document.addEventListener("keydown", (ev) => {
     if (!ui.contactOpen && !editing && ui.view === "desk" && !$("#intro") && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable], .f"))) hireEgg(ev);
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target.id === "passport" && ui.introStep === 0) { ev.preventDefault(); introNext(); return; }
     const po = ev.target.closest && ev.target.closest(".pobj");
     if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !isPhone() && ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
