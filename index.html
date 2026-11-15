@@ -1635,23 +1635,12 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 /* the pinboard sprite as a nine-slice at a whole-number scale: exact at full size, and it can narrow on a phone */
 .booth .pinboard { position: relative; right: auto !important; top: auto; display: block !important; box-sizing: border-box; width: calc(184px * var(--pb)); height: calc(82px * var(--pb)); border-style: solid; border-color: transparent; border-width: calc(5px * var(--pb)) calc(4px * var(--pb)) calc(6px * var(--pb)) calc(5px * var(--pb)); border-image-slice: 5 4 6 5 fill; border-image-repeat: repeat; border-image-width: calc(5px * var(--pb)) calc(4px * var(--pb)) calc(6px * var(--pb)) calc(5px * var(--pb)); image-rendering: pixelated; filter: var(--rest-shadow); line-height: 1; }
 .pbi { position: absolute; display: block; margin: 0; padding: 0; border: 0; background: none; color: var(--ink); text-align: left; text-decoration: none; rotate: var(--r, 0deg); cursor: default; }
-.pbi.pbi-pass { cursor: pointer; }
 .pbi:hover, .pbi:focus-visible { translate: 0 calc(-1px * var(--pb)); }
 .pbi:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: 3px; }
 .tack { position: absolute; z-index: 2; left: calc(50% - 1.5px * var(--pb)); top: calc(-1px * var(--pb)); width: calc(3px * var(--pb)); height: calc(3px * var(--pb)); box-shadow: calc(1px * var(--pb)) calc(1px * var(--pb)) 0 var(--shade); }
 .tack-red { background: var(--stamp-red); }
 .tack-green { background: var(--stamp-green); }
 .tack-ink { background: var(--cover-ink); }
-/* event passes: field card, ink outline, coloured band with a punched slot the pin goes through */
-.pbi-pass { width: 96px; padding-bottom: calc(3px * var(--pb)); background: var(--field); border: calc(1px * var(--pb)) solid var(--ink); }
-.pbi-pass .tack { top: calc(1px * var(--pb)); }
-.pbi-band { position: relative; display: block; height: calc(5px * var(--pb)); background: var(--band); border-bottom: calc(1px * var(--pb)) solid var(--ink); }
-.pbi-band i { position: absolute; left: calc(50% - 3px * var(--pb)); top: calc(1px * var(--pb)); width: calc(6px * var(--pb)); height: calc(2px * var(--pb)); background: var(--ink); }
-.pbi-green { --band: var(--stamp-green); }
-.pbi-cover { --band: var(--cover); }
-.pbi-red { --band: var(--stamp-red); }
-.pbi-name { display: block; padding: 5px 4px 0; font: 600 12px/1.15 var(--sans); }
-.pbi-year { display: block; padding: 3px 4px 0; font: 700 12px/1 var(--typed); color: var(--ink-soft); }
 /* the prize voucher: a ticket stub with a torn right edge */
 .pbi-ticket .pbi-tk { display: block; padding: calc(2px * var(--pb)) calc(6px * var(--pb)) calc(2px * var(--pb)) calc(5px * var(--pb)); background: var(--cover-ink) linear-gradient(var(--ink-soft), var(--ink-soft)) no-repeat calc(2px * var(--pb)) 0 / calc(1px * var(--pb)) 100%; font: 700 12px/1.2 var(--typed); white-space: nowrap;
   clip-path: polygon(0 0, calc(100% - 2px * var(--pb)) 0, 100% 12%, calc(100% - 2px * var(--pb)) 25%, 100% 37%, calc(100% - 2px * var(--pb)) 50%, 100% 62%, calc(100% - 2px * var(--pb)) 75%, 100% 87%, calc(100% - 2px * var(--pb)) 100%, 0 100%); }
@@ -1663,16 +1652,10 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .pbi-note { width: 150px; padding: calc(4px * var(--pb)) 8px 8px; background: var(--mark-hash); font: 400 13px/1.3 var(--sans); }
 .pbi-note b { display: block; font-weight: 600; }
 /* where things are pinned at 3x */
-.pb3 .pbi-pass[data-k="0"] { left: 22px; top: 30px; --r: -3deg; }
-.pb3 .pbi-pass[data-k="1"] { left: 132px; top: 20px; --r: 2deg; }
-.pb3 .pbi-pass[data-k="2"] { left: 242px; top: 34px; --r: -1.5deg; }
 .pb3 .pbi-ticket { left: 48px; top: 156px; --r: 2.5deg; }
 .pb3 .pbi-card { left: 352px; top: 22px; --r: 1.5deg; }
 .pb3 .pbi-note { left: 362px; top: 116px; --r: -2.5deg; }
 /* and at 2x */
-.pb2 .pbi-pass[data-k="0"] { left: 6px; top: 8px; --r: -2.5deg; }
-.pb2 .pbi-pass[data-k="1"] { left: 108px; top: 4px; --r: 1.5deg; }
-.pb2 .pbi-pass[data-k="2"] { left: 210px; top: 10px; --r: -1deg; }
 .pb2 .pbi-ticket { left: 4px; top: 104px; --r: 2deg; }
 .pb2 .pbi-card { left: 160px; top: 96px; width: 188px; padding: 4px 6px 4px; background-position: 0 4px; --r: -1deg; }
 .pb2 .pbi-card .tack { top: -2px; }
@@ -1740,6 +1723,20 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 /* the torn slip lies loose in the Records room */
 .room-record > .slip.loose { z-index: 6; }
 .sheet { filter: drop-shadow(3px 4px 0 var(--shade-rest)); }
+
+/* the pinboard without the event passes (the awards are on the Commendations paper) */
+.pb3 .pbi-card { left: 70px; top: 50px; width: 210px; --r: -1.5deg; }
+.pb3 .pbi-ticket { left: 318px; top: 64px; --r: 2.5deg; }
+.pb3 .pbi-note { left: 324px; top: 118px; --r: -2deg; }
+.pb2 .pbi-card { left: 18px; top: 26px; width: 184px; --r: -1.5deg; }
+.pb2 .pbi-ticket { left: 196px; top: 36px; --r: 2deg; }
+.pb2 .pbi-note { display: block; left: 206px; top: 76px; width: 136px; --r: -2deg; }
+.pb3 .pbi-card { left: 56px; top: 46px; width: 232px; }
+.pb3 .pbi-ticket { left: 332px; top: 132px; }
+.pb3 .pbi-note { left: 336px; top: 30px; }
+.pb2 .pbi-card { left: 14px; top: 26px; width: 172px; }
+.pb2 .pbi-ticket { left: 196px; top: 92px; }
+.pb2 .pbi-note { left: 206px; top: 14px; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -3167,25 +3164,17 @@ window.DEMOS = (function () {
       '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
-  // The pinboard: passes from the events Thea went to (each opens its case file), the prize voucher,
-  // an index card with the roles she is open to, and an optional "Currently" note.
+  // The pinboard: the prize voucher, an index card with the roles Thea is open to, and an optional "Currently" note.
+  // (The awards themselves live on the Commendations paper.)
   function pinboardHTML() {
     const p = state.profile, src = ART["pinboard-large"] ? ART["pinboard-large"].src : "";
-    const bands = ["green", "cover", "red"], pins = ["red", "ink", "green"];
-    const passes = state.projects.map((pr, i) => [pr, i]).filter((x) => x[0].event).slice(0, 3).map((x, k) => {
-      const pr = x[0], ev = String(pr.event), m = ev.match(/^(.*?)\s+((?:19|20)\d\d)\b/), name = m ? m[1] : ev.split(",")[0], year = m ? m[2] : "";
-      const won = state.awards.filter((a) => a.event && name.indexOf(a.event) === 0 && a.result).map((a) => a.result);
-      const tail = (ev.split(",")[1] || "").trim(), detail = won.length ? won.join(" and ") + ", for " + shortName(pr) + "." : "Built " + shortName(pr) + (tail ? " for the " + tail : "") + ".";
-      return '<button class="pbi pbi-pass pbi-' + bands[k % 3] + '" data-act="pin-case" data-id="case-' + x[1] + '" data-tag="' + esc(detail) + '" data-k="' + k + '" aria-label="' + esc(name + " " + year + ": open the " + shortName(pr) + " case file") + '">' +
-        '<span class="tack tack-' + pins[k % 3] + '" aria-hidden="true"></span><span class="pbi-band" aria-hidden="true"><i></i></span><span class="pbi-name">' + esc(name) + '</span><span class="pbi-year">' + esc(year) + "</span></button>";
-    }).join("");
     const prize = state.awards.map((a) => String(a.note || "").match(/prize was an? (.+?)\.?$/i)).filter(Boolean)[0];
     const prizeAward = state.awards.find((a) => /prize was/i.test(a.note || ""));
     const ticket = prize ? '<span class="pbi pbi-ticket" tabindex="0" data-tag="' + esc("Won with " + prizeAward.result + " at " + prizeAward.event + " " + prizeAward.year + ".") + '"><span class="tack tack-ink" aria-hidden="true"></span><span class="pbi-tk">' + esc(prize[1].replace(/^./, (c) => c.toUpperCase())) + "</span></span>" : "";
     const card = p.openTo ? '<span class="pbi pbi-card" tabindex="0" data-tag="' + esc(p.seeking || "") + '"><span class="tack tack-red" aria-hidden="true"></span><b>Open to:</b> ' + esc(p.openTo) + "</span>" : "";
     const now = String(p.currently || "").trim();
     const cur = now ? '<span class="pbi pbi-note" tabindex="0" data-tag="' + esc("Updated by Thea.") + '"><span class="tack tack-green" aria-hidden="true"></span><b>Currently</b> ' + esc(now) + "</span>" : "";
-    return '<div class="pinboard" role="group" aria-label="Pinboard" style="border-image-source: url(' + src + ')">' + passes + ticket + card + cur + "</div>";
+    return '<div class="pinboard" role="group" aria-label="Pinboard" style="border-image-source: url(' + src + ')">' + card + ticket + cur + "</div>";
   }
 
   // the visitor's local hour sets the sky: dawn, day, dusk or night
@@ -4944,11 +4933,6 @@ window.DEMOS = (function () {
     },
     "note-cancel"() { const f = $("#vnote"); if (f) f.hidden = true; const pad = $("#notepad"); if (pad) pad.focus({ preventScroll: true }); },
     tab(b) { const id = b.dataset.id; openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); },
-    "pin-case"(b) {
-      const id = b.dataset.id, go = () => { openCase(id); const el = paperEl(id); if (el) { if (isPhone()) el.scrollIntoView({ block: "nearest", inline: "center", behavior: behavior() }); el.focus({ preventScroll: true }); } };
-      hideTag();
-      if (!isPhone() && ui.room !== 0) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 460); } else go();
-    },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
     lamp() { toggleLamp(); },

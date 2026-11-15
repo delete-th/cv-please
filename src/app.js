@@ -197,25 +197,17 @@
       '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
-  // The pinboard: passes from the events Thea went to (each opens its case file), the prize voucher,
-  // an index card with the roles she is open to, and an optional "Currently" note.
+  // The pinboard: the prize voucher, an index card with the roles Thea is open to, and an optional "Currently" note.
+  // (The awards themselves live on the Commendations paper.)
   function pinboardHTML() {
     const p = state.profile, src = ART["pinboard-large"] ? ART["pinboard-large"].src : "";
-    const bands = ["green", "cover", "red"], pins = ["red", "ink", "green"];
-    const passes = state.projects.map((pr, i) => [pr, i]).filter((x) => x[0].event).slice(0, 3).map((x, k) => {
-      const pr = x[0], ev = String(pr.event), m = ev.match(/^(.*?)\s+((?:19|20)\d\d)\b/), name = m ? m[1] : ev.split(",")[0], year = m ? m[2] : "";
-      const won = state.awards.filter((a) => a.event && name.indexOf(a.event) === 0 && a.result).map((a) => a.result);
-      const tail = (ev.split(",")[1] || "").trim(), detail = won.length ? won.join(" and ") + ", for " + shortName(pr) + "." : "Built " + shortName(pr) + (tail ? " for the " + tail : "") + ".";
-      return '<button class="pbi pbi-pass pbi-' + bands[k % 3] + '" data-act="pin-case" data-id="case-' + x[1] + '" data-tag="' + esc(detail) + '" data-k="' + k + '" aria-label="' + esc(name + " " + year + ": open the " + shortName(pr) + " case file") + '">' +
-        '<span class="tack tack-' + pins[k % 3] + '" aria-hidden="true"></span><span class="pbi-band" aria-hidden="true"><i></i></span><span class="pbi-name">' + esc(name) + '</span><span class="pbi-year">' + esc(year) + "</span></button>";
-    }).join("");
     const prize = state.awards.map((a) => String(a.note || "").match(/prize was an? (.+?)\.?$/i)).filter(Boolean)[0];
     const prizeAward = state.awards.find((a) => /prize was/i.test(a.note || ""));
     const ticket = prize ? '<span class="pbi pbi-ticket" tabindex="0" data-tag="' + esc("Won with " + prizeAward.result + " at " + prizeAward.event + " " + prizeAward.year + ".") + '"><span class="tack tack-ink" aria-hidden="true"></span><span class="pbi-tk">' + esc(prize[1].replace(/^./, (c) => c.toUpperCase())) + "</span></span>" : "";
     const card = p.openTo ? '<span class="pbi pbi-card" tabindex="0" data-tag="' + esc(p.seeking || "") + '"><span class="tack tack-red" aria-hidden="true"></span><b>Open to:</b> ' + esc(p.openTo) + "</span>" : "";
     const now = String(p.currently || "").trim();
     const cur = now ? '<span class="pbi pbi-note" tabindex="0" data-tag="' + esc("Updated by Thea.") + '"><span class="tack tack-green" aria-hidden="true"></span><b>Currently</b> ' + esc(now) + "</span>" : "";
-    return '<div class="pinboard" role="group" aria-label="Pinboard" style="border-image-source: url(' + src + ')">' + passes + ticket + card + cur + "</div>";
+    return '<div class="pinboard" role="group" aria-label="Pinboard" style="border-image-source: url(' + src + ')">' + card + ticket + cur + "</div>";
   }
 
   // the visitor's local hour sets the sky: dawn, day, dusk or night
@@ -1974,11 +1966,6 @@
     },
     "note-cancel"() { const f = $("#vnote"); if (f) f.hidden = true; const pad = $("#notepad"); if (pad) pad.focus({ preventScroll: true }); },
     tab(b) { const id = b.dataset.id; openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); },
-    "pin-case"(b) {
-      const id = b.dataset.id, go = () => { openCase(id); const el = paperEl(id); if (el) { if (isPhone()) el.scrollIntoView({ block: "nearest", inline: "center", behavior: behavior() }); el.focus({ preventScroll: true }); } };
-      hideTag();
-      if (!isPhone() && ui.room !== 0) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 460); } else go();
-    },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
     lamp() { toggleLamp(); },
