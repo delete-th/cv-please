@@ -1841,3 +1841,5 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .rec-plant { position: absolute; z-index: 1; left: 48px; top: calc(100svh - 153px - 120px); line-height: 0; pointer-events: none; }
 .rec-plant .art { filter: var(--rest-shadow); }
 @media (max-width: 820px) { .rec-plant { display: none; } }
+/* booth height: between the tall and the short versions */
+@media (min-width: 821px) { .window { height: 158px; } }

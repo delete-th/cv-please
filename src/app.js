@@ -738,10 +738,10 @@
     bottle: { art: "cola-bottle", x: 19, y: 27, label: "Glass bottle", hint: "Press Enter to nudge it." },
     watch: { art: "watch", x: 35, y: 64, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
     sketchbook: { art: "sketchbook-closed", x: 146, y: 40, label: "Sketchbook", hint: "Press Enter to open it." },
-    usb: { art: "usb", x: 20, y: 110, label: "USB stick with a tape label", hint: "Press Enter to plug it in and open Thea's GitHub in a new tab." },
-    gum: { art: "gum", x: 78, y: 110, label: "Pack of stick gum", hint: "Press Enter to slide a stick out." },
-    mints: { art: "mints-3", x: 128, y: 106, label: "Tin of mints", hint: "Press Enter to take a mint." },
-    keycap: { art: "keycap-up", x: 162, y: 104, label: "Keycap fidget toy", hint: "Press Space or Enter to click it." },
+    usb: { art: "usb", x: 18, y: 114, label: "USB stick with a tape label", hint: "Press Enter to plug it in and open Thea's GitHub in a new tab." },
+    gum: { art: "gum", x: 81, y: 108, label: "Pack of stick gum", hint: "Press Enter to slide a stick out." },
+    mints: { art: "mints-3", x: 125, y: 108, label: "Tin of mints", hint: "Press Enter to take a mint." },
+    keycap: { art: "keycap-up", x: 165, y: 101, label: "Keycap fidget toy", hint: "Press Space or Enter to click it." },
   };
   const noteOf = (id) => ((state.effects || []).find((e) => e.id === id) || {}).note || "";
   function pobjHTML(id) {
@@ -1044,9 +1044,15 @@
     placePobj(el); drawHands();
   }
   function placePobj(el) {
-    const o = POBJ[el.dataset.p];
+    const id = el.dataset.p, o = POBJ[id];
     if (isPhone()) return;
-    const gm = dwGeom();
+    const gm = dwGeom(), at = (ui.pobjAt || {})[id];
+    if (at) {
+      const fw = (DW_FLOOR.w + gm.extra) * gm.sc, fh = DW_FLOOR.h * gm.sc;
+      el.style.left = clamp(Math.round(at[0] * gm.sc), 0, Math.max(0, fw - el.offsetWidth)) + "px";
+      el.style.top = clamp(Math.round(at[1] * gm.sc), 0, Math.max(0, fh - el.offsetHeight)) + "px";
+      return;
+    }
     el.style.left = (gm.mapX(o.x) - DW_FLOOR.x) * gm.sc + "px"; el.style.top = (o.y - DW_FLOOR.y) * gm.sc + "px";
   }
   function movePobj(el) {
@@ -2304,7 +2310,13 @@
     if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
     if (d.el.classList.contains("pobj")) {
       const home = $('#dw-big.open[data-dw="personal"] .dw-floor-personal');
-      if (home && inside(rectOf(home), ev.clientX, ev.clientY)) { pobjHome(d.el); FX.play("tap"); return; }
+      if (home && inside(rectOf(home), ev.clientX, ev.clientY)) {
+        // put down inside the drawer: it stays where it was let go
+        const r = rectOf(d.el), hr = rectOf(home), sc = dwGeom().sc;
+        pobjHome(d.el);
+        (ui.pobjAt = ui.pobjAt || {})[d.el.dataset.p] = [(r.left - hr.left) / sc, (r.top - hr.top) / sc];
+        placePobj(d.el); FX.play("tap"); return;
+      }
       // carried out of the drawer: it lands on the desk where it was let go
       if (d.inDrawer) { const r = rectOf(d.el), dk = rectOf($("#desk")); pobjToDesk(d.el, r.left - dk.left, r.top - dk.top); }
     }
