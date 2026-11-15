@@ -2,7 +2,7 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const app = $("#app"), introRoot = $("#intro-root"), fixedRoot = $("#fixed-root");
-  const SPR = window.SPR, DEMOS = window.DEMOS, FX = window.FX, PX = 3, SC = 3, ART = window.ART || {};
+  const SPR = window.SPR, DEMOS = window.DEMOS, FX = window.FX, PX = 3, SC = 3, BX = 4, ART = window.ART || {};
   const ORIGINAL = $("#cv-data").textContent;
   let state = JSON.parse(ORIGINAL);
 
@@ -68,7 +68,9 @@
   }
   function folderInner(i) {
     const p = state.projects[i];
-    return '<span class="folder-tab">' + esc(shortName(p)) + '</span><span class="clip">' + SPR.art("paperclip", SC) + "</span>" +
+    const filed = pst(("case-" + i)).inBox && !isPhone(), side = ["left", "mid", "right"][i % 3];
+    return SPR.art("folder-" + side, BX, "fold-art") + '<button class="folder-tab ft-' + side + '" data-act="tab" data-id="' + ("case-" + i) + '" tabindex="' + (filed ? 0 : -1) + '" aria-label="Open case file: ' + esc(p.name) + '"' + (filed ? "" : ' aria-hidden="true"') + ">" + esc(shortName(p)) +
+      '</button><span class="clip">' + SPR.art("paperclip", SC) + "</span>" +
       '<div class="folder-face">' + SPR.draw(p.icon || "paper", PX) + "<div><b>" + esc(shortName(p)) + '</b><span class="when">' + esc(p.dates) + "</span></div></div>" +
       (p.award ? '<span class="ink red mini-stamp">' + esc(p.award) + "</span>" : "") + '<span class="peek" aria-hidden="true">Open file</span>';
   }
@@ -129,7 +131,7 @@
     const cls = "paper p-" + kind + (st.open ? " open" : "") + (st.away ? " away" : "") + (i >= 0 && st.inBox && !st.open && !isPhone() ? " filed" : "") + (isPhone() ? "" : " packed") +
       (i >= 0 && ui.hot && uses(state.projects[i].stack, ui.hot) ? " hot" : "");
     const label = i >= 0 ? "Case file: " + state.projects[i].name : paperLabel(id);
-    return '<article class="' + cls + '" data-id="' + id + '" data-drag tabindex="0" aria-label="' + esc(label) + '"' +
+    return '<article class="' + cls + '" data-id="' + id + '" data-drag tabindex="' + (cls.includes(" filed") ? -1 : 0) + '" aria-label="' + esc(label) + '"' +
       (i >= 0 ? ' aria-expanded="' + st.open + '"' : "") + ' style="--tilt:' + st.tilt + "deg" + (i >= 0 ? ";--tab-x:" + ((i % 3) * 34 + 8) + "px" : "") + '">' + paperInner(id) + "</article>";
   }
   function skillsHTML() {
@@ -162,7 +164,7 @@
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
         '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") + "</div>" +
       '<div class="booth-side"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
-      '<button class="btn-quiet" data-act="sound" aria-pressed="' + FX.soundOn + '">' + (FX.soundOn ? "Sound on" : "Sound off") + "</button>" +
+      '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '" aria-label="Sound" title="Sound">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + "</button>" +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
       '</div><p class="aside" id="aside" aria-live="polite" hidden></p></header>';
   }
@@ -172,7 +174,8 @@
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
       '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
-      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", SC) + '</span><button class="box-all" data-act="all-back" aria-label="Put all folders back in the box">Put all back</button></div>' +
+      '<div class="filebox" id="filebox" data-act="all-back"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", BX) + "</span></div>" +
+      '<div class="filebox-front" id="filebox-front">' + SPR.art("filebox-front", BX) + '<button class="box-plate" data-act="all-back" aria-label="Put all files back"></button></div>' +
       '<div class="printer" id="printer"><div class="feed" id="feed" aria-hidden="true"></div><button class="printer-btn" data-act="print" aria-label="Print the entry record">' +
       SPR.art("printer", SC) + '<span class="led" aria-hidden="true"></span></button></div>' +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
@@ -281,10 +284,17 @@
   // the file box sits in the bottom-left corner; each folder has its own slot in it
   function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
   // inside the tray (art pixels 6..47 across, 3..33 down at 3x): one 12px row per folder, its tab on top
-  function slotPos(i) { const b = boxRect(); return [b.x + 18, b.y + 31 + i * SLOT]; }
+  function slotPos(i) { const b = boxRect(); return [b.x + 7 * BX, b.y + (3 + 6 * i) * BX]; }
+  // a folder in the box is reached by its tab; out on the desk, by the folder itself
+  function filedFocus(el, filed) {
+    el.tabIndex = filed ? -1 : 0;
+    const t = $(".folder-tab", el);
+    if (t) { t.tabIndex = filed ? 0 : -1; if (filed) t.removeAttribute("aria-hidden"); else t.setAttribute("aria-hidden", "true"); }
+  }
   function placeFurniture() {
     const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
     box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
+    const front = $("#filebox-front"); front.style.left = box.style.left; front.style.top = box.style.top;
     // the lamp is anchored to the desk's top-right corner in CSS; keep the printer below its arm and clear of the Stamps tab
     const right = u.w - 14, below = lamp.offsetHeight + 8;
     pr.style.left = right - pr.offsetWidth + "px"; pr.style.top = Math.min(below, u.bottom - pr.offsetHeight) + "px";
@@ -477,7 +487,7 @@
     const el = paperEl(id), st = pst(id), i = caseIndex(id);
     if (!st.inBox) return;
     st.inBox = false;
-    el.classList.remove("filed");
+    el.classList.remove("filed"); filedFocus(el, false);
     const u = usable(), out = st.outPos || [boxRect().x + 8 + (i % 3) * 18, Math.max(u.top + 4, boxRect().y - 150 + (i % 3) * 14)];
     st.x = out[0]; st.y = out[1];
     if (instant) still(el, () => setPos(el, st.x, st.y)); else { el.classList.add("moving"); setPos(el, st.x, st.y); FX.play("lift"); }
@@ -489,14 +499,19 @@
     if (st.open) closeCase(id, true);
     if (!st.inBox) st.outPos = [st.x, st.y];
     st.inBox = true;
-    el.classList.add("filed", "moving");
+    el.classList.add("filed", "moving"); filedFocus(el, true);
     const p = slotPos(i); st.x = p[0]; st.y = p[1];
     setPos(el, st.x, st.y);
     el.style.setProperty("--tilt", "0deg");
     el.style.zIndex = 20 + i;
     if (!quiet) FX.play("filebox");
   }
-  function putAllBack() { caseIds().forEach((id) => fileBack(id, true)); FX.play("filebox"); }
+  function putAllBack() {
+    const out = caseIds().filter((id) => !pst(id).inBox || pst(id).open);
+    if (!out.length) return;
+    out.forEach((id, k) => setTimeout(() => fileBack(id, true), reduced() ? 0 : k * 40));
+    FX.play("filebox");
+  }
   function putAway(id, prev) {
     if (caseIndex(id) >= 0) { fileBack(id); return; }
     const el = paperEl(id), st = pst(id);
@@ -857,7 +872,8 @@
     const sc = a.screen, cl = phone ? { x: 4, y: 19 } : a.close;
     dev.innerHTML = SPR.art(phone ? "phone" : "computer", s) + (phone ? "" : keyboardHTML(s)) +
       '<div class="cm-screen" style="left:' + sc.x * s + "px;top:" + sc.y * s + "px;width:" + sc.w * s + "px;height:" + sc.h * s + 'px"><div class="cm-content" id="cm-content">' + contactContent(phone) + "</div></div>" +
-      '<button class="cm-x" data-act="cm-close" aria-label="Close the contact screen" style="left:' + cl.x * s + "px;top:" + cl.y * s + 'px">X</button>';
+      (phone ? '<button class="cm-x" data-act="cm-close" aria-label="Close the contact screen" style="left:' + cl.x * s + "px;top:" + cl.y * s + 'px">X</button>'
+        : '<button class="cm-power" data-act="cm-close" aria-label="Turn off computer (close)" style="left:' + (a.power.x * s + s - 16) + "px;top:" + (a.power.y * s + s - 16) + "px;--led:" + 2 * s + 'px"><span class="tip" aria-hidden="true">Power off</span></button>');
     dev.style.width = a.w * s + "px"; dev.style.height = a.h * s + "px";
     box.hidden = false; ui.contactOpen = true;
     app.inert = true; introRoot.inert = true;
@@ -903,15 +919,29 @@
       if (i >= text.length) { clearInterval(typing); load.className = "br-load go"; setTimeout(() => { load.className = "br-load done"; }, 500); }
     }, 20);
   }
+  // Power off: the button presses for a frame, the picture folds to a line and then a dot, the screen goes dark,
+  // and the computer slides away. Escape and a click outside close it the same way.
   function closeContact() {
     const box = $("#contact");
-    if (!box || !ui.contactOpen) return;
+    if (!box || !ui.contactOpen || box.classList.contains("closing")) return;
     clearInterval(typing);
-    ui.contactOpen = false;
-    box.classList.remove("open"); box.hidden = true;
-    app.inert = false; introRoot.inert = false;
-    const back = $("#slip.loose") || contactReturn;
-    if (back) back.focus({ preventScroll: true });
+    const done = () => {
+      ui.contactOpen = false;
+      box.classList.remove("open", "closing", "off"); box.hidden = true;
+      app.inert = false; introRoot.inert = false;
+      const back = $("#slip.loose") || contactReturn;
+      if (back) back.focus({ preventScroll: true });
+    };
+    if (reduced()) { done(); return; }
+    const pw = $(".cm-power", box);
+    box.classList.add("closing");
+    if (pw) pw.classList.add("pressed");
+    FX.play("poweroff");
+    setTimeout(() => {
+      if (pw) pw.classList.remove("pressed");
+      box.classList.add("off");
+      setTimeout(() => { box.classList.remove("open"); setTimeout(done, 360); }, 300);
+    }, 60);
   }
 
   // ----- the lamp: base on the desk's top-right corner, shade over the counter strip only -----
@@ -1153,6 +1183,7 @@
       try { navigator.clipboard.writeText(state.profile.email).then(done, () => { if (note) note.textContent = state.profile.email; }); } catch (err) { if (note) note.textContent = state.profile.email; }
     },
     "all-back"() { putAllBack(); },
+    tab(b) { const id = b.dataset.id; openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
     lamp() { toggleLamp(); },
@@ -1165,7 +1196,7 @@
       if (!isPhone()) window.scrollTo({ top: docTop($("#scene")) + unpackEnd(), behavior: "auto" });
       const first = paperEl("id"); if (first) first.focus({ preventScroll: true });
     },
-    sound(b) { const on = FX.toggle(); b.textContent = on ? "Sound on" : "Sound off"; b.setAttribute("aria-pressed", String(on)); if (on) FX.play("tick"); },
+    sound(b) { const on = FX.toggle(); b.setAttribute("aria-pressed", String(on)); if (on) FX.play("tick"); },
     radio(b) { ui.radioOn = !ui.radioOn; b.textContent = ui.radioOn ? "Mute radio" : "Unmute radio"; b.setAttribute("aria-pressed", String(ui.radioOn)); if (!ui.radioOn) $("#aside").hidden = true; },
     ask(b) { ui.asked = +b.dataset.q; const el = $("#bubble"); el.hidden = false; el.textContent = state.interview[ui.asked].a; },
     "close-case"(b) { closeCase(b.dataset.id); },
@@ -1204,7 +1235,7 @@
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
-    if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) takeOut(folder.dataset.id); else openCase(folder.dataset.id); return; }
+    if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) putAllBack(); else openCase(folder.dataset.id); return; }
     const slipEl = ev.target.closest("#slip.loose");
     if (slipEl && !justDragged && !ev.target.closest("button, a")) openContact(slipEl);
   }, true);

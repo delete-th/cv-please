@@ -727,6 +727,70 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .passport .mark { scale: 1.5; }
 }
 
+/* ---------- part 9: shadows that follow each object's outline ---------- */
+:root { --shade-rest: rgba(20, 15, 10, 0.45); --shade-lift: rgba(20, 15, 10, 0.35); --rest-shadow: drop-shadow(2px 3px 1px var(--shade-rest)); --lift-shadow: drop-shadow(6px 10px 3px var(--shade-lift));
+  --shape-ring: drop-shadow(2px 0 0 var(--cover-ink)) drop-shadow(-2px 0 0 var(--cover-ink)) drop-shadow(0 2px 0 var(--cover-ink)) drop-shadow(0 -2px 0 var(--cover-ink)); }
+#printer { padding: 0; background: none; border: 0; box-shadow: none; }
+#printer::after { display: none; }
+.sticker, .printer-btn, .filebox, .filebox-front, .desk .lamp { background: none; border: 0; padding: 0; box-shadow: none; }
+.sticker .art, #printer .art, .filebox .art, .desk .lamp .art { filter: var(--rest-shadow); transition: filter 0.12s ease-out; }
+.stage.lamp-off .desk .lamp .art { filter: brightness(0.78) var(--rest-shadow); }
+.sticker { transition: scale 0.12s ease-out; }
+.sticker.held { box-shadow: none; scale: 1.03; rotate: 0deg; }
+.sticker.held .art { filter: var(--lift-shadow); }
+.sticker:hover .art { filter: var(--shape-ring) var(--rest-shadow); }
+.printer-btn:focus-visible { outline: none; }
+.printer-btn:hover .art, .printer-btn:focus-visible .art { filter: var(--shape-ring) var(--rest-shadow); }
+
+/* the file box: box, folders in their slots, and the front edge on top */
+.filebox { width: 240px; height: 252px; cursor: pointer; }
+.filebox .box-art { position: absolute; inset: 0; }
+.filebox.hot .box-art::after { display: none; }
+.filebox-front { position: absolute; z-index: 28; width: 240px; height: 252px; pointer-events: none; }
+.filebox-front .art { display: block; }
+.box-plate { position: absolute; left: 80px; top: 200px; width: 96px; height: 44px; padding: 0; border: 0; background: none; pointer-events: auto; cursor: pointer; }
+.box-plate:focus-visible { outline: none; }
+.desk:has(.box-plate:hover) .filebox .art, .desk:has(.box-plate:focus-visible) .filebox .art, .desk:has(.box-plate:hover) .filebox-front .art, .desk:has(.box-plate:focus-visible) .filebox-front .art,
+.filebox:hover .art, .desk:has(.filebox:hover) .filebox-front .art, .filebox.hot .art, .desk:has(.filebox.hot) .filebox-front .art { filter: var(--shape-ring) var(--rest-shadow); }
+.fold-art { display: none; }
+.p-case.filed { width: 184px; height: 60px; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; rotate: 0deg; scale: 1; }
+.p-case.filed .fold-art { position: absolute; left: 0; top: 0; display: block; filter: drop-shadow(0 -1px 0 var(--shade-rest)); }
+.p-case.filed .folder-tab { position: absolute; top: 4px; height: 20px; max-width: none; padding: 0 2px; overflow: hidden; background: none; color: var(--ink); border: 0; box-shadow: none; translate: none; font: 400 10px/20px var(--pixel); text-align: center; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.p-case.filed:nth-child(odd) .folder-tab { right: auto; }
+.p-case.filed .folder-tab.ft-left, .p-case.filed:nth-child(odd) .folder-tab.ft-left { left: 8px; width: 72px; }
+.p-case.filed .folder-tab.ft-mid, .p-case.filed:nth-child(odd) .folder-tab.ft-mid { left: 60px; width: 60px; }
+.p-case.filed .folder-tab.ft-right, .p-case.filed:nth-child(odd) .folder-tab.ft-right { left: 108px; width: 72px; }
+.p-case.filed .folder-tab:hover, .p-case.filed .folder-tab:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
+.p-case.filed .folder-tab:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: 1px; }
+.p-case.filed:hover .folder-tab { translate: none; }
+.p-case.filed.hot .folder-tab { background: var(--cover-ink); }
+.p-case:not(.filed) .folder-tab { cursor: inherit; }
+
+/* sound toggle as an icon */
+.sound-btn { display: grid; place-items: center; width: 44px; height: 36px; padding: 0; border: 0; background: none; color: var(--on-desk); }
+.sound-btn .spr { grid-area: 1 / 1; }
+.sound-btn[aria-pressed="true"] .spr:last-child, .sound-btn[aria-pressed="false"] .spr:first-child { visibility: hidden; }
+.sound-btn[aria-pressed="false"] .spr { opacity: 0.8; }
+.sound-btn:hover .spr { translate: 0 -1px; }
+.sound-btn:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: 2px; }
+
+/* the stamp tray lets the desk show through a little */
+:root { --tray-bg: rgba(47, 51, 41, 0.82); --power-hi: #c4483a; }
+.stamp-dock .bar-rail { background: var(--tray-bg); }
+
+/* the computer's red power button */
+.cm-power { position: absolute; z-index: 5; width: 32px; height: 32px; padding: 0; border: 0; background: none; }
+.cm-power::before { content: ""; position: absolute; left: calc(50% - var(--led) / 2); top: calc(50% - var(--led) / 2); width: var(--led); height: var(--led); background: transparent; }
+.cm-power:hover::before, .cm-power:focus-visible::before { background: var(--power-hi); }
+.cm-power.pressed::before { background: var(--red-dark); translate: 0 2px; }
+.cm-power:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: 2px; }
+.cm-power .tip { position: absolute; left: 50%; bottom: calc(100% + 6px); translate: -50% 0; display: none; padding: 3px 6px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); font: 400 20px/1 var(--pixel); white-space: nowrap; -webkit-font-smoothing: none; }
+.cm-power:hover .tip, .cm-power:focus-visible .tip { display: block; }
+.contact.off .cm-screen { background: var(--ink); }
+.contact.off .cm-content { transform-origin: 50% 50%; background: var(--screen-text); animation: crt-off 0.25s steps(4, end) forwards; }
+.contact.off .cm-content > * { visibility: hidden; }
+@keyframes crt-off { 0% { transform: none; } 25% { transform: scaleY(0.4); } 50% { transform: scaleY(0.02); } 75% { transform: scale(0.4, 0.02); } 99% { transform: scale(0.02, 0.02); opacity: 1; } 100% { transform: scale(0.02, 0.02); opacity: 0; } }
+
 /* ---------- phones and small tablets ---------- */
 .phone-hint { display: none; }
 @media (max-width: 820px) {
@@ -823,7 +887,7 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .pp-leaf { transition: none !important; }
 }
 @media (max-width: 820px) {
-  .filebox, .stage > .lamp, .record-view { display: none !important; }
+  .filebox, .filebox-front, .stage > .lamp, .record-view { display: none !important; }
   .printer { position: relative; left: auto !important; top: auto !important; flex: 0 0 auto; align-self: center; }
   .paper.p-record { position: relative; left: auto !important; top: auto !important; scale: 1; flex: 0 0 min(86%, 420px); }
   .slip.loose { position: relative; left: auto !important; top: auto !important; flex: 0 0 min(86%, 420px); }
@@ -857,6 +921,7 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stamp-dock .stampbar, .stamp-dock .stampbar.out, .stamp-dock.sliding, .pill.rising { transition: none !important; }
+  .contact.off .cm-content { animation: none; }
   .cm-key.down { transform: none; }
   .br-load.go i { animation: none; width: 100%; }
 }

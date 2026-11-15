@@ -91,6 +91,8 @@ window.SPR = (function () {
   S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
+  S.speakeron = ["....y......", "...yy....y.", "..yyy..y..y", "yyyyy...y.y", "yyyyy...y.y", "yyyyy...y.y", "..yyy..y..y", "...yy....y.", "....y......"];
+  S.speakeroff = ["....y......", "...yy......", "..yyy.y...y", "yyyyy..y.y.", "yyyyy...y..", "yyyyy..y.y.", "..yyy.y...y", "...yy......", "....y......"];
   S.corner = [".........k", "........kP", ".......kPP", "......kPPP", ".....kPPPP", "....kPPPPu", "...kPPPPuu", "..kPPPuuuu", ".kPPuuuuuu", "kkkkkkkkkk"];
 
 
