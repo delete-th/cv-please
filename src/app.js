@@ -1597,6 +1597,7 @@
     const S = passScale(), px = (v) => v * S + "px", X = (v) => px(15 + v), Y = (v) => px(2 + v);
     const pv = p.passport || {}, base = pv.base || String(p.basedIn || "").replace(/,?\s*relocating to\s*/i, " to ");
     const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
+    if (drawnPass()) { renderDrawnPassport(); return; }
     const L = passLayout(S);
     introRoot.innerHTML =
       '<div class="intro" id="intro" role="dialog" aria-label="Passport" style="--canvas-top:' + L.canvas + "px;--words-top:" + L.words + 'px"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
@@ -1620,13 +1621,44 @@
   }
   // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
   // 4x where the open page clears the tray (beside it on short screens), else 3x
+  const drawnPass = () => (state.profile.passportStyle || "sprite") === "drawn" && !isPhone();
+  // Canvas 112x80 art pixels: two 54x76 pages either side of the spine at x 56. The cover is 54x76 and hinged at the spine.
+  // Frames: 0 closed, 1 cover lifting, 2 cover edge-on, 3 cover over to the left (its lining showing), 4 open spread.
+  const DP_BOX = [[56, 2, 110, 78], [56, 2, 110, 78], [54, 2, 110, 78], [20, 2, 110, 78], [2, 2, 110, 78]];
+  const DP_HOLD = [0, 90, 90, 90, 110];
+  function drawnScale() { return clamp(Math.floor((window.innerHeight - 72 - 16 - 64 - 16) / 76), 4, 6); }
+  function renderDrawnPassport() {
+    const p = state.profile, e = state.education, S = drawnScale();
+    const parts = p.name.trim().split(/\s+/), surname = parts.length > 1 ? parts.pop() : "", given = parts.join(" ");
+    ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
+    introRoot.innerHTML =
+      '<div class="intro dp-intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
+      '<div class="passport dp" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + 112 * S + "px;height:" + 80 * S + 'px">' +
+      '<div class="dp-page dp-left"><div class="dp-in"><p class="dp-head"><span>Passport</span><span>' + mrz("P " + p.nationality.slice(0, 3), 5) + "</span></p>" +
+      '<div class="dp-body"><div class="dp-photo">' + SPR.applicant("thea", S >= 6 ? 2 : 1, portraitAlt) + '</div><dl class="fields">' +
+      field("Surname", surname) + field("Given name", given) + field("Nationality", p.nationality) + "</dl></div>" +
+      '<dl class="fields dp-more">' + field("Occupation", p.occupation) + field("Based in", p.basedIn) + field("Graduated", e.graduated) + "</dl>" +
+      '<p class="dp-mrz" aria-hidden="true">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 32) + "<br>" + mrz("BCS " + e.graduated + " UOW SIM", 32) + "</p></div></div>" +
+      '<div class="dp-page dp-right"><div class="dp-in visa stampable" data-stamp="visa"><h2>Entry visa</h2><dl class="visa-lines">' +
+      "<dt>Holder</dt><dd>" + esc(p.name) + "</dd><dt>Purpose</dt><dd>" + esc(p.seeking) + "</dd><dt>Issued</dt><dd>" + today + "</dd></dl>" +
+      '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="visa"></div></div></div>' +
+      '<span class="dp-spine" aria-hidden="true"></span>' +
+      '<div class="dp-cover" data-act="intro-next" aria-hidden="true"><span class="dp-emb">' + SPR.draw("emblem", Math.max(2, S - 2)) + '</span><b>Passport</b><span class="dp-name">' + esc(p.name) + "</span><i></i><i></i><i></i><i></i></div></div>" +
+      '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
+    renderMarks("visa");
+    placePassport(0);
+    document.documentElement.classList.add("locked");
+    const g = $("#pills"); if (g) g.classList.add("solo");
+    $("#intro-btn").focus({ preventScroll: true });
+    updateBar();
+  }
   function passScale() { return isPhone() ? 3 : clamp(Math.floor((window.innerHeight - 300) / 113), 4, 6); }
   // the visible part of each frame on the 104x128 canvas, so the book itself is what gets centred
   const PP_BOX = [[25, 50, 80, 124], [11, 43, 94, 128], [8, 46, 97, 128], [15, 60, 89, 115], [15, 60, 89, 115], [15, 60, 89, 115], [15, 28, 89, 115], [15, 2, 89, 115]];
   function placePassport(f) {
     const pp = $("#passport"), it = $("#intro");
     if (!pp || !it || isPhone()) return;
-    const S = +pp.style.getPropertyValue("--pp") || 4, bx = PP_BOX[f || 0], vw = window.innerWidth, vh = window.innerHeight;
+    const S = +pp.style.getPropertyValue("--pp") || 4, bx = (pp.classList.contains("dp") ? DP_BOX : PP_BOX)[f || 0], vw = window.innerWidth, vh = window.innerHeight;
     const W = (bx[2] - bx[0]) * S, H = (bx[3] - bx[1]) * S, above = (f || 0) === 0 ? 108 : 64, avail = vh - 72 - 16;
     const top = Math.max(8, (avail - above - H) / 2) + above, left = (vw - (W + 164)) / 2;
     pp.style.left = Math.round(left - bx[0] * S) + "px"; pp.style.top = Math.round(top - bx[1] * S) + "px";
@@ -1650,24 +1682,26 @@
   // the turn (frames 1-3) then the opening (4-7), in hard steps; closing plays it backwards
   const PP_HOLD = [0, 80, 80, 250, 90, 90, 90, 90];
   function setFrame(f) {
-    const pp = $("#passport"), fr = $("#pp-frames"); if (!pp || !fr) return;
-    pp.dataset.frame = f; fr.style.backgroundPosition = -104 * f * (+pp.style.getPropertyValue("--pp") || 4) + "px 0";
+    const pp = $("#passport"), fr = $("#pp-frames"); if (!pp) return;
+    pp.dataset.frame = f;
+    if (fr) fr.style.backgroundPosition = -104 * f * (+pp.style.getPropertyValue("--pp") || 4) + "px 0";
     placePassport(f);
   }
   function playPassport(dir) {
     const pp = $("#passport"); if (!pp) return;
-    const to = dir > 0 ? 7 : 0;
+    const dp = pp.classList.contains("dp"), last = dp ? 4 : 7, hold = dp ? DP_HOLD : PP_HOLD;
+    const to = dir > 0 ? last : 0;
     pp.classList.remove("open");
-    if (reduced()) { setFrame(to); pp.classList.toggle("open", to === 7); return; }
+    if (reduced()) { setFrame(to); pp.classList.toggle("open", to === last); return; }
     let f = +pp.dataset.frame;
-    FX.play("dwslide");
+    FX.play(dp ? "flip" : "dwslide");
     const tick = () => {
       f += dir; setFrame(f);
-      if (dir > 0 && f === 4) FX.play("flip");
-      if (f === to) { pp.classList.toggle("open", to === 7); return; }
-      setTimeout(tick, PP_HOLD[f]);
+      if (!dp && dir > 0 && f === 4) FX.play("flip");
+      if (f === to) { pp.classList.toggle("open", to === last); return; }
+      setTimeout(tick, hold[f]);
     };
-    setTimeout(tick, dir > 0 ? 0 : PP_HOLD[f]);
+    setTimeout(tick, dir > 0 ? 0 : hold[f]);
   }
   function introNext() {
     if (ui.introStep !== 0) return;

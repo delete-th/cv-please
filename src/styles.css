@@ -1517,3 +1517,41 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .stamp-dock .stampbar.side { transform: translateX(-48px); }
   .stamp-dock .stampbar.side.out { transform: none; }
 }
+
+/* ---------- the drawn passport: pages, spine and a hinged cover, all in hard pixel steps ---------- */
+.passport.dp { --a: calc(var(--pp) * 1px); filter: drop-shadow(3px 4px 1px var(--shade-rest)); }
+.dp-page { position: absolute; top: calc(var(--a) * 2); width: calc(var(--a) * 54); height: calc(var(--a) * 76); background: var(--field); box-shadow: inset 0 0 0 var(--a) var(--cover-edge), inset 0 calc(var(--a) * -2) 0 calc(var(--a) * 1) var(--paper-deep); overflow: hidden; }
+.dp-left { left: calc(var(--a) * 2); visibility: hidden; }
+.dp-right { left: calc(var(--a) * 56); }
+.passport.dp[data-frame="4"] .dp-left { visibility: visible; }
+.dp-spine { position: absolute; left: calc(var(--a) * 55); top: calc(var(--a) * 2); width: calc(var(--a) * 2); height: calc(var(--a) * 76); background: var(--rule); visibility: hidden; }
+.passport.dp[data-frame="3"] .dp-spine, .passport.dp[data-frame="4"] .dp-spine { visibility: visible; }
+.dp-in { position: relative; height: 100%; padding: calc(var(--a) * 4) calc(var(--a) * 4) calc(var(--a) * 3); visibility: hidden; color: var(--ink); }
+.passport.dp.open .dp-in { visibility: visible; }
+.dp-cover { position: absolute; z-index: 3; top: calc(var(--a) * 2); left: calc(var(--a) * 56); width: calc(var(--a) * 54); height: calc(var(--a) * 76); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--a) * 3); background: var(--cover); box-shadow: inset 0 0 0 var(--a) var(--cover-edge), inset calc(var(--a) * 2) 0 0 var(--cover-edge); color: var(--cover-ink); cursor: pointer; overflow: hidden; }
+.dp-cover b { font: 400 var(--t-title)/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; -webkit-font-smoothing: none; }
+.dp-cover .dp-name { font: 700 16px/1.2 var(--typed); }
+.dp-cover .dp-emb { line-height: 0; }
+.dp-cover i { position: absolute; width: calc(var(--a) * 3); height: calc(var(--a) * 3); background: var(--cover-ink); }
+.dp-cover i:nth-of-type(1) { left: calc(var(--a) * 3); top: calc(var(--a) * 3); }
+.dp-cover i:nth-of-type(2) { right: calc(var(--a) * 3); top: calc(var(--a) * 3); }
+.dp-cover i:nth-of-type(3) { left: calc(var(--a) * 3); bottom: calc(var(--a) * 3); }
+.dp-cover i:nth-of-type(4) { right: calc(var(--a) * 3); bottom: calc(var(--a) * 3); }
+/* 1: the cover lifts, foreshortened, its free edge catching the light */
+.passport.dp[data-frame="1"] .dp-cover { width: calc(var(--a) * 38); box-shadow: inset 0 0 0 var(--a) var(--cover-edge), inset calc(var(--a) * -3) 0 0 var(--green-light); }
+.passport.dp[data-frame="1"] .dp-cover > *, .passport.dp[data-frame="2"] .dp-cover > *, .passport.dp[data-frame="3"] .dp-cover > * { visibility: hidden; }
+/* 2: edge-on at the spine */
+.passport.dp[data-frame="2"] .dp-cover { left: calc(var(--a) * 54); width: calc(var(--a) * 4); background: var(--cover-edge); box-shadow: none; }
+/* 3: over to the left, the lining showing, still foreshortened */
+.passport.dp[data-frame="3"] .dp-cover { left: calc(var(--a) * 20); width: calc(var(--a) * 36); background: var(--manila); box-shadow: inset 0 0 0 var(--a) var(--cover-edge), inset calc(var(--a) * 3) 0 0 var(--manila-deep); }
+/* 4: open flat; the left page takes the cover's place */
+.passport.dp[data-frame="4"] .dp-cover { display: none; }
+/* page contents */
+.dp-head { display: flex; justify-content: space-between; margin: 0 0 8px; font: 400 var(--t-title)/1 var(--display); -webkit-font-smoothing: none; }
+.dp-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+.dp-photo { line-height: 0; border: 2px solid var(--ink); align-self: start; background: var(--paper); }
+.dp-more { margin-top: 8px; }
+.dp-mrz { position: absolute; left: calc(var(--a) * 4); right: calc(var(--a) * 4); bottom: calc(var(--a) * 3); margin: 0; padding-top: 4px; border-top: 1px dashed var(--rule); overflow: hidden; white-space: nowrap; font: 700 13px/1.35 var(--typed); }
+.dp-right h2 { margin: 0 0 8px; font: 400 var(--t-title)/1 var(--display); -webkit-font-smoothing: none; }
+.dp-right .visa-lines { display: block; }
+.dp-right .stamp-box { position: absolute; top: auto; right: calc(var(--a) * 4); bottom: calc(var(--a) * 4); }
