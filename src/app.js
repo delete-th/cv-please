@@ -70,8 +70,8 @@
       '<p class="dip-name">' + esc(p.name) + '</p><p class="dip-small dip-it">the degree of</p><p class="dip-degree">' + esc(name) + "</p>" +
       (honour ? '<p class="dip-honour">' + esc(honour.charAt(0).toUpperCase() + honour.slice(1)) + "</p>" : "") +
       '<p class="dip-small">' + esc(e.major) + "</p>" +
-      '<div class="dip-foot"><span class="dip-sign"><i aria-hidden="true">' + SPR.draw("squiggle", 1) + "</i><b>Vice-Chancellor</b></span>" +
-      '<span class="dip-conf">Conferred ' + esc(e.graduated) + '</span><span class="dip-sign"><i aria-hidden="true">' + SPR.draw("squiggle2", 1) + "</i><b>Dean of the Faculty</b></span></div>" +
+      '<div class="dip-foot"><span class="dip-sign"><i aria-hidden="true">' + SPR.draw("squiggle", 1) + "</i><b>Registrar</b></span>" +
+      '<span class="dip-conf">Conferred ' + esc(e.graduated) + '</span><span class="dip-sign"><i aria-hidden="true">' + SPR.draw("squiggle2", 1) + "</i><b>Dean</b></span></div>" +
       '<div class="stamp-box ghost' + (ui.inked.diploma ? " inked" : "") + '" aria-hidden="true"></div><div class="marks" data-marks="diploma"></div></div>';
   }
   // each award gets its pin, matched by the award's own words
@@ -139,8 +139,8 @@
     const p = state.projects[i], st = pst("case-" + i), pages = st.pages || [""], n = pages.length, page = Math.min(st.page, n - 1), id = "case-" + i;
     const nav = n > 1 ? '<span class="pg-nav"><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Previous page"' + (page === 0 ? " disabled" : "") + ">" + SPR.draw("left", 2) +
       '</button><span class="pg">Page ' + (page + 1) + " of " + n + '</span><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="1" aria-label="Next page"' + (page === n - 1 ? " disabled" : "") + ">" + SPR.draw("right", 2) + "</button></span>" : "";
-    return '<header class="paper-head"><h2>' + esc(shortName(p)) + "</h2>" + nav +
-      '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></header>' +
+    return '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' + nav +
+      '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></div></header>' +
       '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" +
       (n > 1 && page < n - 1 ? '<button class="corner" data-act="flip" data-id="' + id + '" aria-label="Turn to page ' + (page + 2) + '">' + SPR.draw("corner", PX) + "</button>" : "");
   }
@@ -276,21 +276,22 @@
   const FACE = SPR.STAMP_FACE;
   // panels in art pixels: resting and pressed; the pressed sprite stands on the same bottom-centre
   const STAMPS = {
-    approved: { rest: [4, 38, 32, 10], press: [5, 36, 31, 8], fs: [28, 26] },
-    denied: { rest: [4, 38, 32, 10], press: [5, 34, 30, 8], fs: [40, 38] },
+    approved: { rest: [4, 38, 32, 10], press: [5, 36, 31, 8], fs: [17, 17] },
+    denied: { rest: [4, 38, 32, 10], press: [5, 34, 30, 8], fs: [26, 24] },
   };
+  const ST = 2;
   function stampArt(kind) {
     const k = STAMPS[kind], a = ART["stamp-" + kind], b = ART["stamp-" + kind + "-pressed"], word = kind === "approved" ? "APPROVED" : "DENIED";
-    const layer = (cls, art, name, pnl, fs, dx, dy) => '<span class="' + cls + '" style="left:' + dx + "px;top:" + dy + 'px">' + SPR.art(name, SC) +
-      '<span class="word" style="left:' + pnl[0] * SC + "px;top:" + pnl[1] * SC + "px;width:" + pnl[2] * SC + "px;height:" + pnl[3] * SC + "px;font-size:" + fs + 'px">' + word + "</span></span>";
-    return '<span class="stamp-art" style="width:' + a.w * SC + "px;height:" + a.h * SC + 'px">' + layer("st-rest", a, "stamp-" + kind, k.rest, k.fs[0], 0, 0) +
-      layer("st-press", b, "stamp-" + kind + "-pressed", k.press, k.fs[1], Math.floor((a.w - b.w) * SC / 2), (a.h - b.h) * SC) + "</span>";
+    const layer = (cls, art, name, pnl, fs, dx, dy) => '<span class="' + cls + '" style="left:' + dx + "px;top:" + dy + 'px">' + SPR.art(name, ST) +
+      '<span class="word" style="left:' + pnl[0] * ST + "px;top:" + pnl[1] * ST + "px;width:" + pnl[2] * ST + "px;height:" + pnl[3] * ST + "px;font-size:" + fs + 'px">' + word + "</span></span>";
+    return '<span class="stamp-art" style="width:' + a.w * ST + "px;height:" + a.h * ST + 'px">' + layer("st-rest", a, "stamp-" + kind, k.rest, k.fs[0], 0, 0) +
+      layer("st-press", b, "stamp-" + kind + "-pressed", k.press, k.fs[1], Math.floor((a.w - b.w) * ST / 2), (a.h - b.h) * ST) + "</span>";
   }
   const stampArtOld = (kind) => '<span class="stamp-art">' + SPR.stamp(kind, 2) + '<span class="word" style="left:' + FACE.x * 2 + "px;top:" + FACE.y * 2 + "px;width:" + FACE.w * 2 + "px;height:" + FACE.h * 2 + 'px">' +
     (kind === "approved" ? "APPROVED" : "DENIED") + "</span></span>";
   function renderFixed() {
     const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys"><span class="inkpad" aria-hidden="true">' +
-      SPR.art(kind === "approved" ? "inkpad-green" : "inkpad-red", SC) + "</span>" + stampArt(kind) + "</button>";
+      SPR.art(kind === "approved" ? "inkpad-green" : "inkpad-red", 2) + "</span>" + stampArt(kind) + "</button>";
     fixedRoot.innerHTML = '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
       '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
@@ -385,8 +386,8 @@
     if (isPhone()) { ui.fit = 1; return; }
     const u = usable(), avail = u.bottom - u.top, el = (id) => paperEl(id);
     const mids = ["id", "diploma", "honours"].map(el), midH = Math.max.apply(null, mids.map((e, k) => e.offsetHeight + [8, 16, 0][k]));
-    const left = boxRect().w + 30, minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
-    ui.fit = 1;
+    const left = boxRect().w + 30, minW = mids[0].offsetWidth - 54 + mids[1].offsetWidth - 36 + mids[2].offsetWidth;
+    ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.75, 1);
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
   function landing(id, el) {
@@ -511,18 +512,45 @@
   // The diploma and commendations stay where they are and stay readable.
   function placeOpen(el) {
     if (isPhone()) return;
-    const u = usable(), st = pst(el.dataset.id), i = caseIndex(el.dataset.id), dip = paperEl("diploma");
-    const limit = dip && !pst("diploma").away ? dip.offsetLeft - 14 : u.w * 0.55;
-    const w = Math.round(clamp(limit - 16, 440, 760));
+    const u = usable(), st = pst(el.dataset.id), i = caseIndex(el.dataset.id), left = boxRect().x + boxRect().w + 24, right = u.w - LANE + 40;
+    const w = Math.round(clamp(right - left, 440, 900));
     el.style.width = w + "px"; el.style.height = u.bottom - 4 + "px";
-    st.x = 16; st.y = 4;
+    st.x = Math.round(left + Math.max(0, (right - left - w) / 2)); st.y = 4;
+    // keep clear of the intercom where it overhangs the desk's top edge
+    const ic = $("#intercom"), dk = $("#desk");
+    if (ic && dk) { const ir = rectOf(ic), dr = rectOf(dk); if (ir.right - dr.left > st.x && ir.left - dr.left < st.x + w && ir.bottom > dr.top) st.y = Math.round(ir.bottom - dr.top + 24); }
+    el.style.height = u.bottom - st.y + "px";
     setPos(el, st.x, st.y);
     st.pages = paginate(i, el); st.page = Math.min(st.page, st.pages.length - 1);
     el.innerHTML = caseInner(i);
+    slideAside(el);
+  }
+  // papers under an open file slide aside to the right, and come back when the last file closes
+  function slideAside(open) {
+    const r = { x: open.offsetLeft, w: open.offsetWidth }, u = usable();
+    ["id", "diploma", "honours"].forEach((id, k) => {
+      const e = paperEl(id), st = pst(id);
+      if (!e || st.away || st.open) return;
+      const w = e.offsetWidth * ui.fit;
+      if (st.x + w <= r.x || st.x >= r.x + r.w) return;
+      if (!st.aside) st.aside = [st.x, st.y];
+      st.x = Math.round(Math.min(u.w - 60, r.x + r.w - 40 + k * 18)); st.y = u.top + k * 36;
+      e.classList.add("moving"); setPos(e, st.x, st.y);
+    });
+  }
+  function slideBack() {
+    if (paperIds().some((id) => pst(id).open)) return;
+    ["id", "diploma", "honours"].forEach((id) => {
+      const e = paperEl(id), st = pst(id);
+      if (!e || !st.aside) return;
+      st.x = st.aside[0]; st.y = st.aside[1]; st.aside = null;
+      e.classList.add("moving"); setPos(e, st.x, st.y);
+    });
   }
   function openCase(id) {
     const el = paperEl(id), st = pst(id), i = caseIndex(id);
     if (!el || st.open) return;
+    hideTag();
     markHandled();
     if (st.inBox) takeOut(id, true);
     say("firstcase");
@@ -538,10 +566,12 @@
   function closeCase(id, quiet) {
     const el = paperEl(id), st = pst(id);
     if (!el || !st.open) return;
+    hideTag();
     st.open = false; st.page = 0; st.pages = null;
     el.classList.remove("open"); el.setAttribute("aria-expanded", "false"); el.style.width = ""; el.style.height = "";
     el.innerHTML = folderInner(caseIndex(id));
     if (!isPhone() && st.home && !st.inBox) { st.x = st.home[0]; st.y = st.home[1]; el.classList.add("moving"); setPos(el, st.x, st.y); }
+    if (!isPhone()) slideBack();
     if (!quiet) { FX.play("settle"); el.focus({ preventScroll: true }); }
   }
   function turn(part, swap) {
@@ -795,7 +825,7 @@
   function setDrawer(id) {
     const was = ui.dwOpen;
     if (was === id) return;
-    ui.dwOpen = id;
+    ui.dwOpen = id; hideTag();
     if (id) { markHandled(); say(id === "skills" ? "drawer" : "personal"); }
     FX.play("dwslide");
     layoutDrawer(true);
@@ -968,7 +998,7 @@
   function placeTray() {
     const dock = $("#stampdock"), bar = $("#stampbar");
     if (!dock || !bar) return;
-    const side = !!$("#intro") && window.innerHeight < 760 && !isPhone();
+    const side = false;
     bar.classList.toggle("side", side);
     if (side) {
       const d = rectOf(dock), pp = $("#passport"), pr = pp ? rectOf(pp) : null, w = bar.offsetWidth, h = bar.offsetHeight;
@@ -1564,17 +1594,18 @@
     const S = passScale(), px = (v) => v * S + "px", X = (v) => px(15 + v), Y = (v) => px(2 + v);
     const base = String(p.basedIn || "").replace(/,?\s*relocating to\s*/i, " to ");
     const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
+    const L = passLayout(S);
     introRoot.innerHTML =
-      '<div class="intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite" style="top:' + (56 + 117 * S) + 'px">Next applicant. Open the passport to begin.</p>' +
+      '<div class="intro" id="intro" role="dialog" aria-label="Passport" style="--canvas-top:' + L.canvas + "px;--words-top:" + L.words + 'px"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
       '<div class="passport" id="passport" data-frame="0"" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + px(104) + ";height:" + px(128) + '">' +
       '<span class="pp-frames" id="pp-frames" aria-hidden="true" data-act="intro-next" style="background-image:url(' + ART["passport-seq-sheet"].src + ")" + '"></span>' +
       '<div class="pp-spread" id="pp-spread">' +
       '<div class="pp-visa visa stampable" data-stamp="visa" style="left:' + X(0) + ";top:" + Y(0) + ";width:" + px(74) + ";height:" + px(52) + '">' +
       '<div class="stamp-box ghost' + (ui.inked.visa ? " inked" : "") + '" aria-hidden="true" style="left:' + px(14) + ";top:" + px(9) + ";width:" + px(46) + ";height:" + px(39) + '"></div>' +
       '<p class="pp-visa-title" style="left:' + px(14) + ";top:" + px(48) + ";width:" + px(46) + ";height:" + px(5) + '">Entry visa</p><div class="marks" data-marks="visa"></div></div>' +
-      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(23) + ";height:" + px(29) + '">' + SPR.applicant("thea", Math.max(1, Math.floor(Math.min(23 * S / 55, 29 * S / 59))), portraitAlt) + "</div>" +
+      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(23) + ";height:" + px(29) + '">' + SPR.applicant("thea", Math.ceil(Math.max(23 * S / 55, 29 * S / 59)), portraitAlt) + "</div>" +
       '<div class="pp-data" style="left:' + X(4) + ";top:" + Y(63) + ";width:" + px(37) + ";height:" + px(35) + '"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + "</p>" +
-      '<dl class="pp-rows">' + row("NAT", p.nationality) + row("OCC", p.occupation) + row("BASE", base) + row("GRAD", e.graduated) + "</dl></div>" +
+      '<dl class="pp-rows">' + row("NAT", p.nationality) + row("OCC", p.occupation) + row("BASE", base) + (S >= 4 ? row("GRAD", e.graduated) : "") + "</dl></div>" + (S < 4 ? '<dl class="pp-rows pp-grad" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + '">' + row("GRAD", e.graduated) + "</dl>" : "") +
       '<p class="pp-code" aria-hidden="true" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + ";height:" + px(8) + '">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 30) + "</p></div></div>" +
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
@@ -1585,9 +1616,16 @@
   }
   // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
   // 4x where the open page clears the tray (beside it on short screens), else 3x
-  function passScale() {
-    const vh = window.innerHeight, side = vh < 760 && !isPhone(), bottom = side ? vh - 72 : vh - 72 - ($("#stampbar") ? $("#stampbar").offsetHeight : 226) - 16;
-    return 12 + 44 + 128 * 4 <= bottom + 13 * 4 ? 4 : 3;
+  function passScale() { return isPhone() ? 3 : (passLayout(4).ok ? 4 : 3); }
+  // where the canvas goes: the closed book (art rows 50-124) centred with its words above it, but never so low
+  // that the open page (rows 2-115) would reach the open tray
+  function passLayout(S) {
+    const vh = window.innerHeight, trayTop = vh - 72 - ($("#stampbar") ? $("#stampbar").offsetHeight : 160);
+    const group = 24 + 20 + 44 + 20 + 74 * S, top0 = Math.max(8, (vh - 72 - group) / 2);
+    let canvas = top0 + 108 - 50 * S;
+    const maxCanvas = trayTop - 16 - 115 * S;
+    canvas = Math.min(canvas, maxCanvas);
+    return { ok: canvas + 2 * S >= 4, canvas: Math.round(canvas), words: Math.round(canvas + 50 * S - 108) };
   }
   function trayClear() { const bar = $("#stampbar"); return (bar ? bar.offsetHeight : 210) + 80; }
   // the turn (frames 1-3) then the opening (4-7), in hard steps; closing plays it backwards
@@ -1613,6 +1651,7 @@
   }
   function introNext() {
     if (ui.introStep !== 0) return;
+    const it = $("#intro"); if (it) it.classList.add("opened");
     playPassport(1);
     ui.introStep = 1;
     $("#say").textContent = "";
@@ -1749,13 +1788,15 @@
     if (now) go(); else tagTimer = setTimeout(go, 120);
   }
   function hideTag() { clearTimeout(tagTimer); tagFor = null; const t = $("#tag"); if (t) t.hidden = true; }
+  window.addEventListener("scroll", hideTag, { passive: true, capture: true });
+  window.addEventListener("blur", hideTag);
   document.addEventListener("pointerover", (ev) => { if (ev.pointerType === "touch") return; const t = tagTarget(ev.target); if (t && t !== tagFor) showTag(t); });
   document.addEventListener("pointerout", (ev) => { const t = tagTarget(ev.target); if (t && !t.contains(ev.relatedTarget) && ev.pointerType !== "touch") hideTag(); });
   document.addEventListener("focusin", (ev) => { const t = tagTarget(ev.target); if (t) showTag(t, true); });
   document.addEventListener("focusout", (ev) => { if (tagTarget(ev.target)) hideTag(); });
   // touch: the first tap shows the name, the second opens; a tap anywhere else hides it
   document.addEventListener("pointerdown", (ev) => {
-    if (ev.pointerType !== "touch") return;
+    if (ev.pointerType !== "touch") { hideTag(); return; }
     const t = tagTarget(ev.target);
     if (!t) { hideTag(); return; }
     if (tagFor !== t) { showTag(t, true); swallowClick = true; }
