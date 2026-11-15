@@ -137,11 +137,12 @@
   }
   function caseInner(i) {
     const p = state.projects[i], st = pst("case-" + i), pages = st.pages || [""], n = pages.length, page = Math.min(st.page, n - 1), id = "case-" + i;
-    const nav = n > 1 ? '<span class="pg-nav"><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Previous page"' + (page === 0 ? " disabled" : "") + ">" + SPR.draw("left", 2) +
-      '</button><span class="pg">Page ' + (page + 1) + " of " + n + '</span><button class="pg-btn" data-act="page" data-id="' + id + '" data-dir="1" aria-label="Next page"' + (page === n - 1 ? " disabled" : "") + ">" + SPR.draw("right", 2) + "</button></span>" : "";
-    return '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' + nav +
+    // page count and the way back sit at the bottom right, beside the corner that turns the page
+    const foot = n > 1 ? '<div class="pg-foot">' + (page > 0 ? '<button class="pg-back" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Back to page ' + page + '">Previous page</button>' : "") +
+      '<span class="pg">Page ' + (page + 1) + " of " + n + "</span></div>" : "";
+    return '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' +
       '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></div></header>' +
-      '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" +
+      '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" + foot +
       (n > 1 && page < n - 1 ? '<button class="corner" data-act="flip" data-id="' + id + '" aria-label="Turn to page ' + (page + 2) + '">' + SPR.draw("corner", PX) + "</button>" : "");
   }
   function paperInner(id) {
@@ -654,7 +655,7 @@
     finishSheet(id, sheet, dir, true);
   }
   function focusPageControl(el, dir) {
-    const b = $('.pg-btn[data-dir="' + dir + '"]:not([disabled])', el) || $(".pg-btn:not([disabled])", el) || $(".corner", el);
+    const b = (dir > 0 ? $(".corner", el) : $(".pg-back", el)) || $(".corner", el) || $(".pg-back", el);
     if (b) b.focus({ preventScroll: true });
   }
   function takeOut(id, instant) {

@@ -1737,3 +1737,10 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 @media (min-width: 821px) { .counter { padding-left: 374px; } }
 .counter-hint { font: italic 400 14px/1 var(--sans); letter-spacing: 0.01em; color: var(--on-desk-muted); -webkit-font-smoothing: auto; }
 .counter.ready .counter-hint { color: var(--ink); }
+/* case file paging: "Page 1 of 2" at the bottom right beside the turning corner, no arrow buttons */
+.pg-foot { position: absolute; right: 38px; bottom: 6px; z-index: 3; display: flex; gap: 14px; align-items: baseline; color: var(--ink-soft); pointer-events: none; }
+.pg-foot .pg { font: 400 18px/1 var(--display); -webkit-font-smoothing: none; }
+.pg-back { padding: 0; border: 0; background: none; color: var(--ink-soft); font: 600 13px/1 var(--sans); text-decoration: underline 1px; text-underline-offset: 3px; pointer-events: auto; cursor: pointer; }
+.pg-back:hover { color: var(--ink); }
+.pg-back:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.p-case.open:not(:has(.corner)) .pg-foot { right: 14px; }
