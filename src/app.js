@@ -1690,7 +1690,7 @@
       '<div class="pp-visa visa stampable" data-stamp="visa" style="left:' + X(0) + ";top:" + Y(0) + ";width:" + px(74) + ";height:" + px(52) + '">' +
       '<div class="stamp-box ghost' + (ui.inked.visa ? " inked" : "") + '" aria-hidden="true" style="left:' + px(14) + ";top:" + px(9) + ";width:" + px(46) + ";height:" + px(39) + '"></div>' +
       '<p class="pp-visa-title" style="left:' + px(14) + ";top:" + px(48) + ";width:" + px(46) + ";height:" + px(5) + '">Entry visa</p><div class="marks" data-marks="visa"></div></div>' +
-      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(22) + ";height:" + px(28) + '">' + SPR.applicant("thea", Math.round(Math.max(22 * S / 55, 28 * S / 59)), portraitAlt) + "</div>" +
+      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(22) + ";height:" + px(28) + '">' + SPR.applicant("thea", Math.ceil(28 * S / 59), portraitAlt) + "</div>" +
       '<div class="pp-data" style="left:' + X(4) + ";top:" + Y(63) + ";width:" + px(37) + ";height:" + px(35) + '"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + "</p>" +
       '<dl class="pp-rows">' + row("NAT", pv.nat || p.nationality) + row("OCC", pv.occ || p.occupation) + row("BASE", base) + row("GRAD", pv.grad || e.graduated) + "</dl></div>" + 
       '<p class="pp-code" aria-hidden="true" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + ";height:" + px(8) + '">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 30) + "</p></div></div>" +
