@@ -32,6 +32,7 @@ window.FX = (function () {
     if (snd.last[name] && now - snd.last[name] < gap) return;
     snd.last[name] = now;
     const c = ctx();
+    if (c && name === "flip") { paperFlip(c); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -45,6 +46,27 @@ window.FX = (function () {
     } else src.connect(g);
     g.connect(snd.gain);
     src.start();
+  }
+  function noise(c, secs, shape) {
+    const n = Math.max(1, Math.floor(c.sampleRate * secs)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) { const x = i / n; d[i] = (Math.random() * 2 - 1) * shape(x) * (Math.random() < 0.06 ? 1.8 : 1); }
+    return buf;
+  }
+  function paperFlip(c) {
+    const t0 = c.currentTime + 0.005, out = c.createGain(), pitch = 0.92 + Math.random() * 0.16;
+    out.gain.value = 0.55; out.connect(snd.gain);
+    const part = (buf, at, type, f0, f1, q, vol) => {
+      const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = buf; s.playbackRate.value = pitch;
+      fl.type = type; fl.Q.value = q; fl.frequency.setValueAtTime(f0 * pitch, at); fl.frequency.exponentialRampToValueAtTime(f1 * pitch, at + buf.duration);
+      g.gain.value = vol; s.connect(fl); fl.connect(g); g.connect(out); s.start(at);
+    };
+    // the corner lifting off the stack: a short crisp tick
+    part(noise(c, 0.035, (x) => (1 - x) * (1 - x)), t0, "highpass", 3800, 2600, 0.7, 0.9);
+    // the sheet travelling over: grainy, falling from bright to dull
+    part(noise(c, 0.24, (x) => Math.sin(Math.PI * Math.min(1, x * 1.6)) * (0.6 + 0.4 * Math.sin(x * 60))), t0 + 0.02, "bandpass", 3000, 900, 0.8, 1);
+    // laying down on the staple side: a soft low pat
+    part(noise(c, 0.07, (x) => (1 - x) * (1 - x) * (1 - x)), t0 + 0.24, "lowpass", 900, 400, 0.6, 0.8);
   }
   function toggle() {
     snd.on = !snd.on;

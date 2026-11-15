@@ -608,18 +608,47 @@
     if (dir > 0) body.innerHTML = st.pages[to];
     sheets.appendChild(sheet);
     el.classList.add("turning");
+    sheet._t = dir > 0 ? 0 : 1;
+    peel(sheet, sheet._t);
     return sheet;
+  }
+  // t = 0: the sheet lies flat; t = 1: it is folded all the way back over the staple. The fold line runs
+  // parallel to the bottom-left to top-right diagonal; the lifted corner is mirrored across it to show the back.
+  function peel(sheet, t) {
+    const W = sheet.offsetWidth, H = sheet.offsetHeight, front = $(".sheet-front", sheet), flap = $(".sheet-back", sheet);
+    const poly = (pts, ox, oy) => pts.length > 2 ? "polygon(" + pts.map((q) => Math.round(q[0] + ox) + "px " + Math.round(q[1] + oy) + "px").join(", ") + ")" : "polygon(0 0, 0 0, 0 0)";
+    sheet._t = t;
+    if (t <= 0) { front.style.clipPath = ""; flap.style.clipPath = "polygon(0 0, 0 0, 0 0)"; return; }
+    const a = t * 2 * W, b = t * 2 * H, f = (q) => (W - q[0]) / a + (H - q[1]) / b - 1;
+    const cut = (pts, sg) => {
+      const out = [];
+      pts.forEach((q, k) => {
+        const r = pts[(k + 1) % pts.length], fq = sg * f(q), fr = sg * f(r);
+        if (fq >= 0) out.push(q);
+        if ((fq >= 0) !== (fr >= 0)) { const m = fq / (fq - fr); out.push([q[0] + (r[0] - q[0]) * m, q[1] + (r[1] - q[1]) * m]); }
+      });
+      return out;
+    };
+    const box = [[0, 0], [W, 0], [W, H], [0, H]], A = [W - a, H], dx = a, dy = -b, L = dx * dx + dy * dy;
+    const mirror = (q) => { const u = ((q[0] - A[0]) * dx + (q[1] - A[1]) * dy) / L, fx = A[0] + u * dx, fy = A[1] + u * dy; return [2 * fx - q[0], 2 * fy - q[1]]; };
+    front.style.clipPath = poly(cut(box, 1), 0, 0);
+    flap.style.clipPath = poly(cut(box, -1).map(mirror), W, H);
+  }
+  // steps the peel to a target in short hard steps, like the rest of the desk's motion
+  function peelTo(sheet, target, done) {
+    const from = sheet._t || 0, n = Math.max(1, Math.round(Math.abs(target - from) * 8));
+    for (let k = 1; k <= n; k++) setTimeout(() => peel(sheet, from + (target - from) * k / n), k * 38);
+    setTimeout(done, n * 38 + 30);
   }
   function finishSheet(id, sheet, dir, complete) {
     const el = paperEl(id), st = pst(id), i = caseIndex(id), to = st.page + dir;
-    sheet.style.transform = "";
-    if (complete) sheet.classList.add("go");
-    setTimeout(() => {
+    const target = complete ? (dir > 0 ? 1 : 0) : (dir > 0 ? 0 : 1);
+    peelTo(sheet, target, () => {
       if (complete) st.page = to;
       el.classList.remove("turning");
       el.innerHTML = caseInner(i);
       focusPageControl(el, dir);
-    }, 320);
+    });
   }
   function flipCase(id, dir) {
     const el = paperEl(id), st = pst(id), i = caseIndex(id), n = (st.pages || [1]).length;
@@ -692,7 +721,8 @@
     const box = el.parentElement, s = el.classList.contains("paper") && !el.classList.contains("open") ? ui.fit : 1;
     const w = el.offsetWidth * s, h = el.offsetHeight * s;
     x = clamp(x, 0, Math.max(0, box.clientWidth - w));
-    y = clamp(y, 0, Math.max(0, box.clientHeight - Math.min(h, box.clientHeight)));
+    const bh = box.id === "record" ? Math.max(box.clientHeight, box.scrollHeight) : box.clientHeight;
+    y = clamp(y, 0, Math.max(0, bh - Math.min(h, bh)));
     setPos(el, x, y);
     if (el.classList.contains("paper")) { const st = pst(el.dataset.id); st.x = x; st.y = y; st.nudged = null; }
     else if (el.dataset.sticker) ui.stickers[el.dataset.sticker] = [x, y];
@@ -823,7 +853,7 @@
       art.src = stretchedDrawer(gm.cols); art.width = gm.w; art.height = gm.h;
       big.style.width = gm.w + "px"; big.style.height = gm.h + "px";
       // line the drawer up under the front that was pulled, kept on screen
-      const fr = ui.dwOpen && $("#dw-" + ui.dwOpen), dr2 = rectOf(desk);
+      const which = ui.dwOpen || ui.dwLast, fr = which && $("#dw-" + which), dr2 = rectOf(desk);
       const cx = fr ? rectOf(fr).left - dr2.left + fr.offsetWidth / 2 : window.innerWidth / 2;
       big.style.left = Math.round(clamp(cx - gm.w / 2, 8, window.innerWidth - gm.w - 8)) + "px";
       big.style.setProperty("--front-h", DW_FRONT * gm.sc + "px");
@@ -839,13 +869,17 @@
     big.dataset.dw = ui.dwOpen || "";
     $$(".dw-floor", big).forEach((f) => { const on = open && f.classList.contains("dw-floor-" + ui.dwOpen); f.hidden = !on; f.inert = !on; });
     pan.classList.toggle("sliding", !!animate);
-    pan.style.setProperty("--pan", open ? Math.max(0, stage.offsetHeight + gm.h + 84 - window.innerHeight) + "px" : "0px");
+    // closing: the drawer slides shut into the desk edge while the view stays put, then the view pans back up
+    clearTimeout(layoutDrawer.panTimer);
+    const panTo = open ? Math.max(0, stage.offsetHeight + gm.h + 84 - window.innerHeight) + "px" : "0px";
+    if (!open && animate && !reduced() && parseFloat(pan.style.getPropertyValue("--pan")) > 0) layoutDrawer.panTimer = setTimeout(() => pan.style.setProperty("--pan", "0px"), 270);
+    else pan.style.setProperty("--pan", panTo);
   }
   function setDrawer(id) {
     const was = ui.dwOpen;
     if (was === id) return;
     ui.dwOpen = id; hideTag();
-    if (id) { markHandled(); say(id === "skills" ? "drawer" : "personal"); }
+    if (id) { ui.dwLast = id; markHandled(); say(id === "skills" ? "drawer" : "personal"); }
     FX.play("dwslide");
     layoutDrawer(true);
     if (!id) { hideNote(); if (ui.liftCard != null) liftCard(null); }
@@ -1233,6 +1267,8 @@
     updateBar(); updatePill();
   }
   function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }
+  // once torn, the slip lies loose in the whole Records room (on a phone it stays in the column)
+  function slipHome() { return isPhone() ? $("#record-area") : $("#record"); }
   // Tearing off the slip: it comes away, slides to the middle of the screen and becomes the contact screen.
   function tearOff() {
     if (ui.slipTorn) return;
@@ -1242,8 +1278,9 @@
     slip.classList.add("loose");
     slip.dataset.drag = ""; slip.tabIndex = 0;
     slip.setAttribute("role", "button"); slip.setAttribute("aria-label", "Contact slip. Press Enter to open the contact screen.");
-    area.appendChild(slip);
-    if (!isPhone()) moveTo(slip, r.offsetLeft + r.offsetWidth + 28, Math.max(0, r.offsetTop + r.offsetHeight - slip.offsetHeight - 10));
+    const home = slipHome() || area, rr = rectOf(r);
+    home.appendChild(slip);
+    if (!isPhone()) { const hr = rectOf(home); moveTo(slip, rr.right - hr.left + home.scrollLeft + 28, Math.max(0, rr.bottom - hr.top + home.scrollTop - slip.offsetHeight - 10)); }
     setTear(0);
     if (reduced()) { openContact(slip); return; }
     const sr = rectOf(slip), dx = window.innerWidth / 2 - (sr.left + sr.width / 2), dy = window.innerHeight / 2 - (sr.top + sr.height / 2);
@@ -1558,7 +1595,7 @@
     placeStickers();
     renderPutAway();
     renderMarks("record"); renderMarks("id"); renderMarks("diploma");
-    if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
+    if (ui.slipTorn && !isPhone()) { const sl = $("#slip"), home = slipHome(); if (sl && home && sl.parentElement !== home) home.appendChild(sl); if (sl && ui.slipPos) setPos(sl, ui.slipPos[0], ui.slipPos[1]); }
     layoutDrawer(false);
     $$(".pobj").forEach(placePobj); drawHands(); fitPinboard();
     applyScene(true);
@@ -2086,7 +2123,7 @@
       if (dx > 6 && !sheetDrag.moved) { sheetDrag.moved = true; sheetDrag.sheet = startSheet(sheetDrag.id, 1); sheetDrag.sheet.classList.add("held-page"); FX.play("flip"); }
       if (!sheetDrag.moved) return;
       sheetDrag.p = clamp(dx / sheetDrag.w, 0, 1);
-      sheetDrag.sheet.style.transform = "rotateY(" + -Math.round(sheetDrag.p * 8) * 22.5 + "deg)";
+      peel(sheetDrag.sheet, Math.round(sheetDrag.p * 8) / 8);
       return;
     }
     if (pageDrag) {
