@@ -246,7 +246,7 @@
       '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
       '<span class="pr-paper" id="feed" aria-hidden="true"></span><span class="pr-front" aria-hidden="true">' + SPR.art("printer-front-off", 4, "pr-off") + SPR.art("printer-front-on", 4, "pr-on") + "</span></div>" +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
-      sticker("mug", "mug") + sticker("plant", "plant") + sticker("pen", "pen") +
+      sticker("mug", "mug") + sticker("pen", "pen") +
       '<button class="notepad" id="notepad" data-act="note" aria-label="Sticky notes: leave Thea a note"' + (ui.noteSent ? " hidden" : "") + ">" + SPR.art("sticky-pad", SC) + "</button>" +
       '<form class="vnote" id="vnote" hidden><label class="sr-only" for="vnote-text">Your note to Thea</label><textarea id="vnote-text" maxlength="280" rows="5" placeholder="Write a note for Thea"></textarea>' +
       '<p class="vn-count" id="vn-count" aria-live="polite">0 of 280</p><div class="vn-row"><a class="btn-main" id="vn-send" href="#">Leave note</a><button type="button" class="btn-quiet" data-act="note-cancel">Put it back</button></div></form>' +
@@ -275,7 +275,7 @@
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
       (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>";
-    return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
+    return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><span class="rec-plant" aria-hidden="true">' + SPR.art("plant", SC) + '</span><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
       "<p>The summary, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
       '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
@@ -1881,6 +1881,7 @@
       firstRun.timers.forEach(clearTimeout); firstRun = null;
       document.removeEventListener("pointerdown", finish, true); document.removeEventListener("keydown", finish, true);
       ui.boothForced = true; ui.forced = true; ui.stagger = 0; applyScene(true);
+      const dk = $("#desk"); if (dk) dk.classList.remove("slow-unpack");
       $$(".arriving").forEach((e) => e.classList.remove("arriving"));
     };
     if (reduced()) { firstRun = { timers: [] }; finish(); return; }
@@ -1890,9 +1891,10 @@
     $$("#filebox, #filebox-front, .dw").forEach((e) => e.classList.add("arriving", "hold"));
     at(60, () => { ui.boothForced = true; applyScene(); });
     at(520, () => { if (ui.lampOn) FX.play("lamp"); });
-    at(700, () => { ui.forced = true; ui.stagger = 60; applyScene(); ui.stagger = 0; });
-    at(1500, () => { $$(".arriving").forEach((e) => e.classList.remove("hold")); FX.play("dwslide"); });
-    at(2000, () => { $$(".arriving").forEach((e) => e.classList.remove("arriving")); firstRun.timers = []; finish(); });
+    const desk = $("#desk"); if (desk) desk.classList.add("slow-unpack");
+    at(1700, () => { ui.forced = true; ui.stagger = 240; applyScene(); ui.stagger = 0; });
+    at(3300, () => { $$(".arriving").forEach((e) => e.classList.remove("hold")); FX.play("dwslide"); });
+    at(3900, () => { $$(".arriving").forEach((e) => e.classList.remove("arriving")); if (desk) desk.classList.remove("slow-unpack"); firstRun.timers = []; finish(); });
   }
 
   // ----- idle details: mug steam, a blink at the window; paused when hidden, off with reduced motion -----

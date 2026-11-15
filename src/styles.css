@@ -1835,3 +1835,9 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .p-gum .g-stick { clip-path: inset(0 0 18px 74px); }
 }
 @media (prefers-reduced-motion: reduce) { .p-gum.slide .g-stick { animation: none; } }
+/* first visit: papers leave the folder at a gentler pace */
+.desk.slow-unpack .paper.moving { transition: left 0.7s ease-out, top 0.7s ease-out, opacity 0.4s ease-out, scale 0.7s ease-out, rotate 0.25s ease-out; }
+/* the plant now stands in the Records room, bottom left */
+.rec-plant { position: absolute; z-index: 1; left: 48px; top: calc(100svh - 153px - 120px); line-height: 0; pointer-events: none; }
+.rec-plant .art { filter: var(--rest-shadow); }
+@media (max-width: 820px) { .rec-plant { display: none; } }
