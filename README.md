@@ -21,6 +21,8 @@ All content lives in `src/data.json`. The page is assembled from:
 | `src/data.json` | CV content: profile, projects, awards, skills, strengths, board phrases, radio lines |
 | `src/app.js` | The desk, scroll scenes, stamp, paper handling, list view and amend mode |
 | `src/sprites.js` | Pixel art, drawn as SVG rects, plus the embedded portrait |
+| `src/art.js` | The desk objects (lamp, printer, mug, plant, file box, paperclip, pen, envelope, computer, phone) as data URIs. Swap an object by replacing its data URI |
+| `assets/desk/` | The source PNGs for those objects. `filebox-empty.png` is `filebox.png` with its drawn folders cleared, so the live folders can sit in it |
 | `assets/thea-portrait.png` | The 55x59 portrait. `src/sprites.js` carries a base64 copy, so update both if it changes |
 | `src/fx.js` | The sound player and the split-flap board |
 | `src/sounds.js` | The desk sound pack, embedded as small MP3s. Original sounds synthesized for this site, so there is no licence to credit |

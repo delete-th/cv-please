@@ -2,7 +2,7 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const app = $("#app"), introRoot = $("#intro-root"), fixedRoot = $("#fixed-root");
-  const SPR = window.SPR, DEMOS = window.DEMOS, FX = window.FX, PX = 3;
+  const SPR = window.SPR, DEMOS = window.DEMOS, FX = window.FX, PX = 3, SC = 3, ART = window.ART || {};
   const ORIGINAL = $("#cv-data").textContent;
   let state = JSON.parse(ORIGINAL);
 
@@ -13,7 +13,7 @@
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
-    lampOn: true, recordView: false, recPos: null, printing: false,
+    lampOn: true, printing: false, contactOpen: false,
   };
   let topZ = 40, board = null;
 
@@ -68,7 +68,7 @@
   }
   function folderInner(i) {
     const p = state.projects[i];
-    return '<span class="folder-tab">' + esc(shortName(p)) + '</span><span class="clip">' + SPR.draw("clip", PX) + "</span>" +
+    return '<span class="folder-tab">' + esc(shortName(p)) + '</span><span class="clip">' + SPR.art("paperclip", SC) + "</span>" +
       '<div class="folder-face">' + SPR.draw(p.icon || "paper", PX) + "<div><b>" + esc(shortName(p)) + '</b><span class="when">' + esc(p.dates) + "</span></div></div>" +
       (p.award ? '<span class="ink red mini-stamp">' + esc(p.award) + "</span>" : "") + '<span class="peek" aria-hidden="true">Open file</span>';
   }
@@ -168,16 +168,17 @@
   }
 
   function deskHTML() {
-    const sticker = (id) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.draw(id, PX) + "</span>";
+    const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
       '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
-      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.draw("filebox", PX) + '</span><button class="box-all" data-act="all-back">Put all back</button></div>' +
-      '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.draw("printer", PX) + '<span class="led" aria-hidden="true"></span></button></div>' +
-      '<div class="record-view" id="record-view" hidden><div class="rv-bar"><span class="rv-title">Entry record</span><button class="btn-quiet" data-act="record-down">Put it on the desk</button></div><div class="rv-scroll" id="rv-scroll"></div></div>' +
-      '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + '</span><span class="ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
-      sticker("cup") + sticker("plant") + sticker("laptop") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
-      '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.draw("envelope", PX) + '<span class="ink red env-stamp">Applicant file</span></div>' +
+      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", SC) + '</span><button class="box-all" data-act="all-back" aria-label="Put all folders back in the box">All back</button></div>' +
+      '<div class="printer" id="printer"><div class="feed" id="feed" aria-hidden="true"></div><button class="printer-btn" data-act="print" aria-label="Print the entry record">' +
+      SPR.art("printer", SC) + '<span class="led" aria-hidden="true"></span></button></div>' +
+      '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
+      sticker("mug", "mug") + sticker("plant", "plant") + sticker("pen", "pen") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
+      '<div class="lamp" id="lamp">' + SPR.art("lamp", SC) + '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div>' +
+      '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.art("envelope", SC) + '<span class="env-stamp">Applicant<br>file</span></div>' +
       '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">Scroll down and the applicant file unpacks itself.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
       '<div class="drawer" id="drawer"><div class="drawer-front"><button class="handle" id="handle" data-act="drawer" aria-expanded="false" aria-controls="drawer-box">' +
@@ -187,17 +188,21 @@
   // ----- entry record -----
   function recordHTML() {
     const p = state.profile, e = state.education, feat = state.projects.filter((x) => x.featured);
-    const slip = '<div class="slip" id="slip" tabindex="-1"><p class="s-title">Contact slip</p>' +
-      '<span class="email">' + esc(p.email) + '</span><div class="row"><button class="btn-quiet" data-act="copy">Copy address</button>' +
+    const slip = '<div class="slip' + (ui.slipTorn ? " loose" : "") + '" id="slip" tabindex="' + (ui.slipTorn ? 0 : -1) + '"' + (ui.slipTorn ? ' data-drag role="button" aria-label="Contact slip. Press Enter to open the contact screen."' : "") +
+      '><p class="s-title">Contact slip</p><span class="email">' + esc(p.email) + '</span><div class="row"><button class="btn-quiet" data-act="copy">Copy address</button>' +
       p.links.map((l) => (safeUrl(l.url) ? '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>" : "")).join("") + "</div></div>";
-    return '<article class="receipt" id="receipt" data-stamp-root data-rec tabindex="0" aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
+    const receipt = '<article class="receipt' + (ui.slipTorn ? " torn" : "") + '" id="receipt" data-stamp-root tabindex="0"' + (ui.printed ? "" : " hidden") + ' aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
       '<div class="rec stampable" data-stamp="record"><p class="r-title">Entry record</p><p>Desk 04 · ' + today + "</p>" +
       "<dl><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Seeking</dt><dd>" + esc(p.seeking) + "</dd><dt>Based in</dt><dd>" + esc(p.basedIn) + "</dd><dt>Education</dt><dd>" +
       esc(e.degree) + ", " + esc(e.graduated) + '</dd></dl><p class="r-h">Strengths</p><ul>' + state.strengths.filter(Boolean).map((s) => "<li>" + esc(s) + "</li>").join("") +
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
-      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>" +
-      (ui.slipTorn ? slip.replace('class="slip"', 'class="slip loose" data-drag') : "");
+      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>";
+    return '<section class="record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
+      "<p>The 60-second version, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
+      '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
+      '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk.</p>') +
+      receipt + (ui.slipTorn ? slip : "") + "</div></div></section>";
   }
 
   // ----- fixed controls: the stamp bar and the pill nav -----
@@ -213,6 +218,7 @@
       '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></aside>' +
       '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
+      '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
       '<nav class="pill" id="pill" aria-label="Areas"><button data-act="step" data-dir="-1" aria-label="Previous area">' + SPR.draw("left", PX) +
       '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav>";
   }
@@ -269,15 +275,19 @@
   // the ID card, diploma and commendations across the middle overlapping only by their margins,
   // a clear lane on the right, and the bottom strip kept for the drawer front and the pill nav.
   // On short screens the whole layout shrinks a little so every paper starts on the desk.
-  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 23;
+  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 12;
   const usable = () => { const d = $("#desk"); return { w: d.clientWidth, h: d.clientHeight, top: TOP, bottom: d.clientHeight - BOTTOM - 6 }; };
   // the file box sits in the bottom-left corner; each folder has its own slot in it
   function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
-  function slotPos(i) { const b = boxRect(); return [b.x + 12 + (i % 2) * 3, b.y + 34 + i * SLOT]; }
+  // inside the tray (art pixels 6..47 across, 3..33 down at 3x): one 12px row per folder, its tab on top
+  function slotPos(i) { const b = boxRect(); return [b.x + 18, b.y + 21 + i * SLOT]; }
   function placeFurniture() {
-    const u = usable(), box = $("#filebox"), pr = $("#printer");
+    const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
     box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
-    pr.style.left = u.w - LANE + 8 + "px"; pr.style.top = u.top + 96 + "px";
+    lamp.style.left = u.w - lamp.offsetWidth - 6 + "px"; lamp.style.top = "0px";
+    pr.style.left = u.w - pr.offsetWidth - 34 + "px"; pr.style.top = Math.min(u.top + lamp.offsetHeight - 18, u.bottom - pr.offsetHeight - 96) + "px";
+    env.style.left = Math.round(u.w * 0.3) + "px"; env.style.top = u.top + 16 + "px";
+    $("#unpack-hint").style.left = Math.round(u.w * 0.3) + env.offsetWidth + 24 + "px";
   }
   function computeFit() {
     if (isPhone()) { ui.fit = 1; return; }
@@ -315,15 +325,18 @@
     if (instant) still(el, go); else { el.classList.add("moving"); go(); }
   }
   function placeStickers() {
-    const u = usable(), w = u.w;
-    const spots = { cup: [w - LANE + 40, u.bottom - 70], plant: [w - LANE + 70, u.top + 230], laptop: [boxRect().w + 170, u.bottom - 52] };
+    const u = usable(), w = u.w, pr = $("#printer"), box = boxRect();
+    const spots = {
+      mug: [pr.offsetLeft + 6, pr.offsetTop + pr.offsetHeight + 8],
+      plant: [12, u.top + 4],
+      pen: [box.x + box.w + 18, u.bottom - 130],
+    };
     $$(".sticker", $("#desk")).forEach((el) => {
       const id = el.dataset.sticker, p = ui.stickers[id] || spots[id];
-      setPos(el, clamp(p[0], 0, w - 50), clamp(p[1], u.top, u.bottom - 48));
-      el.style.rotate = (rnd(id, "t") * 16 - 8).toFixed(0) + "deg";
+      setPos(el, clamp(p[0], 0, w - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
     });
-    const cup = ui.stickers.cup || spots.cup, ring = $(".cup-ring");
-    if (ring) setPos(ring, clamp(cup[0] - 40, 0, w - 50), clamp(cup[1] + 6, u.top, u.bottom - 40));
+    const mug = $('.sticker[data-sticker="mug"]'), ring = $(".cup-ring");
+    if (ring && mug) setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40));
   }
   function relayout() {
     if (isPhone() || !$("#desk")) return;
@@ -344,7 +357,7 @@
     if (isPhone()) return;
     relayout();
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
-    placeStickers(); placeLamp(); placeReceipt();
+    placeStickers(); checkLamp();
     layoutDrawer(false);
     applyScene(true);
   }
@@ -526,12 +539,11 @@
   function stampableAt(x, y) { return stampables().find((s) => inside(rectOf(s), x, y)) || null; }
   function stampableShown() {
     if ($("#intro")) return ui.introStep >= 1 && !ui.introDone;
-    if (ui.view !== "desk" || editing) return false;
-    if (ui.recordView) return true;
+    if (ui.view !== "desk" || editing || ui.contactOpen) return false;
     const r = receiptEl();
-    if (!r || !ui.printed || ui.printing) return false;
+    if (!r || r.hidden || !ui.printed) return false;
     const b = rectOf(r);
-    return b.bottom > 120 && b.top < window.innerHeight - 120 && b.right > 0 && b.left < window.innerWidth;
+    return b.bottom > 120 && b.top < window.innerHeight - 120;
   }
   function updateBar() {
     const bar = $("#stampbar");
@@ -648,130 +660,149 @@
     }, 400 + (kind === "approved" ? 1200 : 2400));
   }
 
-  // ----- the printer on the desk and the entry record it prints -----
+  // ----- the printer on the desk; the entry record lands in its own section below -----
   function receiptEl() { return $("#receipt"); }
-  function recordFits() {
-    const r = receiptEl(), u = usable();
-    return r && r.offsetHeight + 12 <= u.bottom - u.top;
-  }
-  function placeReceipt() {
-    const r = receiptEl();
-    if (!r || ui.recordView || isPhone() || r.parentElement !== $("#desk")) return;
-    const u = usable(), s = Math.min(1, (u.bottom - u.top) / r.offsetHeight);
-    r.style.setProperty("--rfit", s.toFixed(3));
-    const pos = ui.recPos || [u.w - LANE - 372, u.top + 4];
-    ui.recPos = [clamp(pos[0], 0, u.w - r.offsetWidth * s), clamp(pos[1], 0, Math.max(0, u.bottom - r.offsetHeight * s))];
-    setPos(r, ui.recPos[0], ui.recPos[1]);
-  }
-  function makeReceipt() {
-    if (receiptEl()) return receiptEl();
-    $("#desk").insertAdjacentHTML("beforeend", recordHTML());
-    const r = receiptEl();
-    r.classList.add("paper", "p-record");
-    r.dataset.drag = "";
-    renderMarks("record");
-    const slip = $("#slip.loose");
-    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.slipPos || [MID_X, TOP + 40])[0], (ui.slipPos || [MID_X, TOP + 40])[1]); }
-    return r;
-  }
-  function openRecordView() {
-    const r = makeReceipt(), view = $("#record-view");
-    ui.recordView = true;
-    r.style.left = ""; r.style.top = ""; r.style.removeProperty("--rfit");
-    $("#rv-scroll").appendChild(r);
-    view.hidden = false;
-    view.style.zIndex = 880;
-    r.focus({ preventScroll: true });
-    updateBar(); updatePill();
-  }
-  function closeRecordView() {
-    const r = receiptEl(), view = $("#record-view");
-    if (!ui.recordView || !r) return;
-    ui.recordView = false;
-    view.hidden = true;
-    $("#desk").appendChild(r);
-    const slip = $("#rv-scroll .slip.loose");
-    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.recPos || [MID_X, TOP])[0] - 40, TOP + 30); }
-    placeReceipt(); raise(r); FX.play("settle");
-    r.focus({ preventScroll: true });
-    updateBar(); updatePill();
-  }
-  // Click the printer: the light blinks, the record feeds out of the slot line by line, then it is a paper.
+  // The light blinks and a stub feeds out of the slot line by line. Then it tears off at the slot, slides off
+  // the bottom of the desk, and the page scrolls down to the entry record section where the full record lands.
   function printRecord() {
-    if (ui.printed) { if (!isPhone()) openRecordView(); else receiptEl().scrollIntoView({ behavior: behavior(), block: "start" }); return; }
     if (ui.printing) return;
-    ui.printing = true;
-    const pr = $("#printer"), r = makeReceipt();
-    pr.classList.add("busy");
+    const pr = $("#printer"), feed = $("#feed");
     say("record");
-    if (isPhone()) { pr.after(r); }
-    const full = r.offsetHeight, u = usable();
-    const finish = () => {
-      ui.printing = false; ui.printed = true; pr.classList.remove("busy"); r.classList.remove("feeding"); r.style.clipPath = "";
-      if (isPhone()) { r.scrollIntoView({ behavior: behavior(), block: "start" }); return; }
-      if (recordFits()) { ui.recPos = [r.offsetLeft, r.offsetTop]; placeReceipt(); raise(r); updateBar(); }
-      else openRecordView();
-    };
-    if (isPhone() || reduced()) { FX.play("print"); finish(); return; }
-    // feed from the printer's slot: start hidden above the slot and reveal one line at a time
-    const slotX = pr.offsetLeft + pr.offsetWidth / 2, slotY = pr.offsetTop + pr.offsetHeight - 14;
-    r.classList.add("feeding");
-    setPos(r, Math.round(clamp(slotX - r.offsetWidth / 2, 0, u.w - r.offsetWidth)), Math.round(slotY));
-    raise(r);
+    if (isPhone() || reduced() || !pr || !feed) { FX.play("print"); landRecord(false); scrollToRecord("auto"); return; }
+    ui.printing = true;
+    pr.classList.add("busy");
     FX.play("print");
-    const steps = 16;
-    for (let k = 0; k <= steps; k++) setTimeout(() => {
-      const shown = Math.round(full * k / steps);
-      r.style.clipPath = "inset(0 0 " + (full - shown) + "px 0)";
-      if (k === steps) setTimeout(finish, 120);
-    }, k * 100);
+    const steps = 10, max = 108;
+    feed.classList.remove("torn");
+    for (let k = 1; k <= steps; k++) setTimeout(() => { feed.style.setProperty("--feed", Math.round(max * k / steps) + "px"); }, k * 110);
+    setTimeout(() => {
+      pr.classList.remove("busy");
+      FX.play("lift");
+      feed.classList.add("torn");
+      scrollToRecord("smooth");
+      setTimeout(() => { landRecord(true); }, 520);
+      setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 900);
+    }, steps * 110 + 120);
+  }
+  function scrollToRecord(how) { const r = $("#record"); if (r) window.scrollTo({ top: docTop(r), behavior: how === "smooth" && !reduced() ? "smooth" : "auto" }); }
+  function landRecord(animate) {
+    const r = receiptEl(), empty = $("#record-empty");
+    ui.printed = true;
+    if (empty) empty.remove();
+    if (!r) return;
+    r.hidden = false;
+    $$('[data-act="print"]', $("#record")).forEach((b) => { b.textContent = "Print it again"; });
+    renderMarks("record");
+    r.classList.remove("landing");
+    if (animate && !reduced()) { void r.offsetWidth; r.classList.add("landing"); FX.play("settle"); }
+    updateBar(); updatePill();
   }
   function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }
+  // Tearing off the slip: it comes away, slides to the middle of the screen and becomes the contact screen.
   function tearOff() {
     if (ui.slipTorn) return;
-    const slip = $("#slip"), r = receiptEl();
+    const slip = $("#slip"), r = receiptEl(), area = $("#record-area");
     ui.slipTorn = true; FX.play("lift");
     r.classList.add("torn"); $("#perf").remove();
     slip.classList.add("loose");
-    slip.dataset.drag = "";
-    if (ui.recordView) $("#rv-scroll").appendChild(slip);
-    else if (isPhone()) r.after(slip);
-    else { $("#desk").appendChild(slip); moveTo(slip, r.offsetLeft - 60, r.offsetTop + 40); raise(slip); }
+    slip.dataset.drag = ""; slip.tabIndex = 0;
+    slip.setAttribute("role", "button"); slip.setAttribute("aria-label", "Contact slip. Press Enter to open the contact screen.");
+    area.appendChild(slip);
+    if (!isPhone()) moveTo(slip, r.offsetLeft + r.offsetWidth + 28, Math.max(0, r.offsetTop + r.offsetHeight - slip.offsetHeight - 10));
     setTear(0);
-    slip.focus({ preventScroll: true });
+    if (reduced()) { openContact(slip); return; }
+    const sr = rectOf(slip), dx = window.innerWidth / 2 - (sr.left + sr.width / 2), dy = window.innerHeight / 2 - (sr.top + sr.height / 2);
+    slip.style.transition = "transform 0.28s ease-out"; slip.style.transform = "translate(" + dx + "px," + dy + "px)";
+    setTimeout(() => { openContact(slip); slip.style.transition = "none"; slip.style.transform = ""; void slip.offsetWidth; slip.style.transition = ""; }, 300);
   }
   function tearAll() {
     if (reduced()) { tearOff(); return; }
     [0.35, 0.7, 1].forEach((v, i) => setTimeout(() => { setTear(v); if (v === 1) tearOff(); }, i * 60));
   }
 
-  // ----- the lamp: its base on the desk, its arm and shade reaching up over the counter and the booth -----
-  function placeLamp() {
-    const lamp = $("#lamp"), desk = $("#desk");
-    if (!lamp || !desk || isPhone()) return;
-    lamp.style.left = desk.offsetLeft + desk.clientWidth - 236 + "px";
-    lamp.style.top = desk.offsetTop - 104 + "px";
+  // ----- the contact screen: a retro computer (or phone) with a mail form on its screen -----
+  let contactReturn = null;
+  function mailto() {
+    const p = state.profile, subj = $("#cm-subject"), msg = $("#cm-msg");
+    return "mailto:" + p.email + "?subject=" + encodeURIComponent(subj ? subj.value : "Hello from your portfolio") + (msg && msg.value ? "&body=" + encodeURIComponent(msg.value) : "");
   }
+  function contactContent(phone) {
+    const p = state.profile, links = p.links.filter((l) => safeUrl(l.url));
+    const mark = (l) => '<a class="cm-mark" href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>";
+    if (phone) {
+      return '<p class="cm-title" id="cm-title">Contact</p><div class="cm-grid"><a class="cm-big" id="cm-send" href="' + esc(mailto()) + '">Email me</a>' +
+        '<button class="cm-big" data-act="cm-copy">Copy address</button>' + links.map((l) => mark(l).replace('class="cm-mark"', 'class="cm-big"')).join("") + '</div><p class="cm-note" id="cm-note" aria-live="polite"></p>';
+    }
+    return '<p class="cm-title" id="cm-title">New message</p>' +
+      '<div class="cm-row"><span class="cm-lab">To:</span><span class="cm-val">' + esc(p.email) + '</span><button class="cm-btn" data-act="cm-copy">Copy address</button></div>' +
+      '<label class="cm-row" for="cm-subject"><span class="cm-lab">Subject:</span><input id="cm-subject" class="cm-in" value="Hello from your portfolio" autocomplete="off"></label>' +
+      '<label class="cm-lab cm-block" for="cm-msg">Message:</label><textarea id="cm-msg" class="cm-in" rows="3"></textarea>' +
+      '<div class="cm-row"><a class="cm-btn cm-send" id="cm-send" href="' + esc(mailto()) + '">Send</a><span class="cm-note" id="cm-note" aria-live="polite"></span></div>' +
+      '<div class="cm-row cm-marks"><span class="cm-lab">Look me up:</span>' + links.map(mark).join("") + "</div>";
+  }
+  function openContact(from) {
+    const box = $("#contact"), dev = $("#cm-device"), phone = isPhone(), a = ART[phone ? "phone" : "computer"];
+    if (!box || !a) return;
+    contactReturn = from || document.activeElement;
+    const s = Math.max(phone ? 3 : 4, Math.min(phone ? 8 : 9, Math.floor(Math.min(window.innerWidth * 0.92 / a.w, window.innerHeight * 0.9 / a.h))));
+    const sc = a.screen, cl = phone ? { x: 4, y: 19 } : a.close;
+    dev.innerHTML = SPR.art(phone ? "phone" : "computer", s) +
+      '<div class="cm-screen" style="left:' + sc.x * s + "px;top:" + sc.y * s + "px;width:" + sc.w * s + "px;height:" + sc.h * s + 'px"><div class="cm-content" id="cm-content">' + contactContent(phone) + "</div></div>" +
+      '<button class="cm-x" data-act="cm-close" aria-label="Close the contact screen" style="left:' + cl.x * s + "px;top:" + cl.y * s + 'px">X</button>';
+    dev.style.width = a.w * s + "px"; dev.style.height = a.h * s + "px";
+    box.hidden = false; ui.contactOpen = true;
+    app.inert = true; introRoot.inert = true;
+    fitContact(sc.w * s, sc.h * s);
+    void dev.offsetWidth; box.classList.add("open");
+    FX.play("hum");
+    const first = $("#cm-subject", dev) || $(".cm-big", dev);
+    setTimeout(() => { if (first) first.focus({ preventScroll: true }); }, reduced() ? 0 : 200);
+  }
+  // Content larger than the screen is scaled down, never the computer itself.
+  function fitContact(w, h) {
+    const c = $("#cm-content");
+    c.style.transform = ""; c.style.width = w + "px";
+    const k = Math.min(1, h / c.scrollHeight);
+    if (k < 1) { c.style.width = w / k + "px"; const k2 = Math.min(1, h / c.scrollHeight); c.style.transform = "scale(" + k2 + ")"; }
+  }
+  function closeContact() {
+    const box = $("#contact");
+    if (!box || !ui.contactOpen) return;
+    ui.contactOpen = false;
+    box.classList.remove("open"); box.hidden = true;
+    app.inert = false; introRoot.inert = false;
+    const back = $("#slip.loose") || contactReturn;
+    if (back) back.focus({ preventScroll: true });
+  }
+
+  // ----- the lamp: base on the desk's top-right corner, shade over the counter strip only -----
   function setLampVisible(on) { const st = $("#stage"); if (st) st.classList.toggle("lamp-ready", on); }
   function toggleLamp() { ui.lampOn = !ui.lampOn; $("#stage").classList.toggle("lamp-off", !ui.lampOn); FX.play("lamp"); $("#lamp-switch").setAttribute("aria-pressed", String(ui.lampOn)); }
+  // Open or held papers pass over the lamp; when one overlaps it, the lamp fades back.
+  function checkLamp() {
+    const lamp = $("#lamp");
+    if (!lamp) return;
+    const r = rectOf(lamp);
+    const over = $$("#desk .paper.open, #desk .paper.held").some((p) => { const b = rectOf(p); return b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom; });
+    lamp.classList.toggle("faded", over);
+  }
 
   // ----- pill nav -----
   const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"]];
   function currentArea() {
     if (ui.view !== "desk" || !$("#scene")) return 0;
-    if (ui.recordView) return 2;
-    if (isPhone()) { const r = receiptEl(); if (r && rectOf(r).top < window.innerHeight * 0.5) return 2; return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0; }
+    if (rectOf($("#record")).top < window.innerHeight * 0.55) return 2;
+    if (isPhone()) return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0;
     return -rectOf($("#scene")).top >= BOOT - 10 ? 1 : 0;
   }
   function goArea(i) {
     const id = AREAS[i][0], sc = $("#scene");
-    if (id !== "record" && ui.recordView) closeRecordView();
     if (id === "booth") window.scrollTo({ top: isPhone() ? 0 : docTop(sc), behavior: behavior() });
     else if (id === "desk") window.scrollTo({ top: isPhone() ? docTop($("#desk")) - 8 : docTop(sc) + unpackEnd(), behavior: behavior() });
     else {
-      // bring the desk into view, then let the printer print (or show the record if it already has)
+      // the desk has to be in view for the printer to print, so bring it up first
       if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
-      window.scrollTo({ top: isPhone() ? docTop($("#printer")) - 8 : docTop(sc) + unpackEnd(), behavior: "auto" });
+      if (!isPhone()) window.scrollTo({ top: docTop(sc) + unpackEnd(), behavior: "auto" });
       printRecord();
     }
   }
@@ -864,18 +895,18 @@
 
   function renderDesk() {
     app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage' + (ui.lampOn ? "" : " lamp-off") + '" id="stage">' + boothHTML() + deskHTML() +
-      '<div class="lamp" id="lamp"><span class="lamp-art" aria-hidden="true"><span class="off">' + SPR.lamp(false, PX) + '</span><span class="on">' + SPR.lamp(true, PX) + "</span></span>" +
-      '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div></div></section></main>';
+      "</div></section>" + recordHTML() + "</main>";
     board = FX.board($("#board"), state.profile.board, 20);
     sizeScene();
     if (!isPhone()) placeFurniture();
     computeFit();
-    placeStickers(); placeLamp();
+    placeStickers();
     renderPutAway();
+    renderMarks("record");
+    if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
     layoutDrawer(false);
     applyScene(true);
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
-    if (ui.printed) { const r = makeReceipt(); if (isPhone()) $("#printer").after(r); else if (ui.recordView) { ui.recordView = false; openRecordView(); } else placeReceipt(); }
     updatePill(); updateBar();
   }
   function render() {
@@ -973,7 +1004,11 @@
     "flip-pass": flipPass,
     bar() { const open = $("#stampbar").classList.contains("out"); ui.barPinned = !open; updateBar(); },
     print() { printRecord(); },
-    "record-down"() { closeRecordView(); },
+    "cm-close"() { closeContact(); },
+    "cm-copy"(b) {
+      const note = $("#cm-note"), done = () => { if (note) note.textContent = "Copied"; b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy address"; if (note) note.textContent = ""; }, 1600); };
+      try { navigator.clipboard.writeText(state.profile.email).then(done, () => { if (note) note.textContent = state.profile.email; }); } catch (err) { if (note) note.textContent = state.profile.email; }
+    },
     "all-back"() { putAllBack(); },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
@@ -1025,8 +1060,8 @@
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
     if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) takeOut(folder.dataset.id); else openCase(folder.dataset.id); return; }
-    const rec = ev.target.closest("#desk > .receipt");
-    if (rec && !justDragged && !ui.printing && !isPhone() && !ev.target.closest("button, a, .perf")) openRecordView();
+    const slipEl = ev.target.closest("#slip.loose");
+    if (slipEl && !justDragged && !ev.target.closest("button, a")) openContact(slipEl);
   }, true);
 
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
@@ -1123,6 +1158,7 @@
       if (drag.el.classList.contains("paper")) markHandled();
     }
     moveTo(drag.el, drag.ox + dx, drag.oy + dy);
+    if (drag.el.classList.contains("paper")) checkLamp();
     const ct = $("#counter"), isCase = drag.el.classList.contains("p-case"), fb = $("#filebox");
     if (ct && drag.el.classList.contains("paper") && !isCase && !drag.el.classList.contains("p-record")) {
       const r = rectOf(ct); ct.classList.add("show-hint"); ct.classList.toggle("ready", ev.clientY < r.bottom && ev.clientY > r.top - 40);
@@ -1168,7 +1204,7 @@
     const ct = $("#counter"), fb = $("#filebox");
     if (ct) ct.classList.remove("show-hint");
     if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
-    if (d.el.classList.contains("p-record")) { ui.recPos = [d.el.offsetLeft, d.el.offsetTop]; FX.play("settle"); return; }
+    checkLamp();
     if (d.el.classList.contains("paper")) {
       pst(d.el.dataset.id).tilt = tilt;
       if (ct && ct.classList.contains("ready")) { ct.classList.remove("ready"); putAway(d.el.dataset.id, { x: d.ox, y: Math.max(d.oy, TOP) }); return; }
@@ -1181,6 +1217,17 @@
   document.addEventListener("dragstart", (ev) => { if (ev.target.closest && ev.target.closest("[data-drag], .stamp-btn, [data-stamp-root]")) ev.preventDefault(); });
 
   document.addEventListener("keydown", (ev) => {
+    if (ui.contactOpen) {
+      if (ev.key === "Escape") { ev.preventDefault(); closeContact(); return; }
+      if (ev.key === "Tab") {
+        const f = $$("#contact a[href], #contact button, #contact input, #contact textarea").filter((e) => e.offsetParent);
+        const i = f.indexOf(document.activeElement);
+        if (ev.shiftKey && (i <= 0)) { ev.preventDefault(); f[f.length - 1].focus(); }
+        else if (!ev.shiftKey && i === f.length - 1) { ev.preventDefault(); f[0].focus(); }
+      }
+      return;
+    }
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches("#slip.loose")) { ev.preventDefault(); openContact(ev.target); return; }
     const t = ev.target, typing = t.closest && t.closest(".f, input, textarea, [contenteditable]");
     if (ev.key === "Enter" && t.closest && t.closest(".f")) ev.preventDefault();
     if (typing || ev.ctrlKey || ev.metaKey || ev.altKey) return;
@@ -1208,7 +1255,7 @@
     }
     if (ev.key === "Escape") {
       if (held) { springBack(); return; }
-      if (ui.recordView) { closeRecordView(); return; }
+
       if ($("#intro")) { closeIntro(); return; }
       if (ui.drawer > 0.5) { setDrawer(0); $("#handle").focus(); return; }
       const open = paperIds().filter((id) => pst(id).open);
@@ -1229,6 +1276,9 @@
     if ((ev.key === "b" || ev.key === "B") && el.matches(".p-case")) { ev.preventDefault(); fileBack(el.dataset.id); return; }
     const step = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[ev.key];
     if (step) { ev.preventDefault(); markHandled(); raise(el); moveTo(el, el.offsetLeft + step[0], el.offsetTop + step[1]); }
+  });
+  document.addEventListener("input", (ev) => {
+    if (ev.target.closest && ev.target.closest("#contact")) { const a = $("#cm-send"); if (a) a.href = mailto(); }
   });
   app.addEventListener("input", (ev) => {
     const el = ev.target.closest("[data-k]");
@@ -1264,7 +1314,7 @@
       "<title>CV Please</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n" +
       '<link rel="stylesheet" href="' + $("#fonts").getAttribute("href") + '" id="fonts">\n' +
       "<style id=\"page-style\">" + $("#page-style").textContent + "</style>\n<div id=\"app\"></div>\n<div id=\"intro-root\"></div>\n<div id=\"fixed-root\"></div>\n" +
-      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("sprites") + block("sounds") + block("fx") + block("demos") + block("main") + "</body></html>";
+      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("art") + block("sprites") + block("sounds") + block("fx") + block("demos") + block("main") + "</body></html>";
   }
   async function save() {
     if (!artifact || busy || !dirty) return;

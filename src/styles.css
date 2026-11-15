@@ -567,6 +567,74 @@ html::-webkit-scrollbar-button { display: none; }
 .pg-btn:disabled { opacity: 0.35; cursor: default; }
 .pg-btn .spr { filter: brightness(0.25); }
 
+
+/* ---------- part 7: Thea's desk art, printer hand-off, contact screen ---------- */
+:root { --sprite-scale: 3; --screen-text: #b9dcae; --fb-hi: #e5cc8e; --fb-folder: #bba167; --fb-ink: #1d1e0f; --fb-shade: #4e3d24; }
+.art { image-rendering: pixelated; }
+.pill { z-index: 75; }
+
+/* layers, back to front: booth, counter strip, desk, lamp, papers, held or open paper, stamp bar, pill */
+.desk .lamp { position: absolute; z-index: 8; display: block; pointer-events: none; transition: opacity 0.15s steps(2, end); }
+.desk .lamp.faded { opacity: 0.4; }
+.stage.lamp-off .desk .lamp .art { filter: brightness(0.78); }
+.desk .lamp .lamp-switch { position: absolute; left: 114px; top: 105px; width: 15px; height: 21px; padding: 0; border: 0; background: none; pointer-events: auto; cursor: pointer; }
+.desk .pool { right: 150px; top: 132px; }
+
+.filebox { width: 162px; height: 138px; }
+.box-all { left: 47px; top: 117px; bottom: auto; width: 71px; height: 18px; display: grid; place-items: center; padding: 0; color: var(--fb-ink); font: 400 10px/1 var(--pixel); text-decoration: none; }
+.box-all:hover { text-decoration: underline; }
+.p-case.filed { width: 126px; height: 9px; padding: 0; background: var(--fb-folder); border: 0; border-top: 3px solid var(--fb-hi); border-bottom: 3px solid var(--fb-shade); box-shadow: none; }
+.p-case.filed .folder-tab { top: -12px; left: 0; right: auto; height: 12px; max-width: 126px; padding: 2px 4px 0; background: var(--fb-hi); color: var(--fb-ink); border: 0; box-shadow: inset 0 -3px 0 var(--fb-folder); font: 400 10px/1 var(--pixel); }
+.p-case.filed:nth-child(odd) .folder-tab { left: auto; right: 0; }
+.p-case.filed.hot .folder-tab { background: var(--cover-ink); }
+
+.printer { width: 102px; height: 102px; z-index: 9; }
+.printer .led { left: 81px; top: 51px; width: 6px; height: 3px; background: transparent; }
+.printer.busy .led { animation: blink7 0.3s steps(1) infinite; }
+@keyframes blink7 { 50% { background: var(--ink); } }
+.stage:has(.receipt) .printer .led { background: transparent; }
+.feed { position: absolute; left: 30px; bottom: 72px; z-index: 1; width: 42px; height: var(--feed, 0px); background: repeating-linear-gradient(to bottom, var(--field) 0 6px, var(--rule) 6px 9px, var(--field) 9px 12px); border: 3px solid var(--fb-ink); border-bottom: 0; pointer-events: none; }
+.feed[style*="--feed: 0px"], .feed:not([style]) { border: 0; }
+.feed.torn { transition: transform 0.5s ease-in; transform: translateY(700px); }
+
+.envelope { z-index: 2; }
+.env-stamp { position: absolute; left: 69px; top: 114px; bottom: auto; width: 66px; height: 24px; display: grid; place-items: center; padding: 0; color: var(--stamp-red); background: none; font: 400 10px/1.1 var(--pixel); text-align: center; rotate: -3deg; -webkit-font-smoothing: none; }
+.unpack-hint { top: 72px; }
+.p-case .clip { right: -12px; top: 30px; }
+
+/* the record section */
+.record-area { position: relative; min-height: 420px; }
+.record-empty { padding: 18px 0; font: 400 16px/1.5 var(--sans); color: var(--on-desk); }
+.record-intro .btn-quiet { margin-top: 14px; color: var(--on-desk); }
+.receipt { box-shadow: var(--px) var(--px) 0 var(--shade); }
+.receipt.landing { animation: land7 0.36s steps(4, end); }
+@keyframes land7 { from { translate: 0 -160px; opacity: 0; } }
+.slip.loose { cursor: pointer; }
+
+/* the contact screen */
+.contact { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; }
+.cm-back { position: absolute; inset: 0; background: rgba(20, 15, 10, 0.62); }
+.cm-device { position: relative; transform: translateY(110vh); transition: transform 0.35s ease-out; }
+.contact.open .cm-device { transform: none; }
+.cm-screen { position: absolute; overflow: hidden; }
+.cm-content { padding: 8px 10px; transform-origin: 0 0; color: var(--screen-text); font: 400 13px/1.35 var(--typed); }
+.cm-title { margin-bottom: 4px; font: 400 20px/1 var(--pixel); -webkit-font-smoothing: none; }
+.cm-row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 6px; }
+.cm-lab { font: 400 10px/1.2 var(--pixel); -webkit-font-smoothing: none; }
+.cm-block { display: block; margin-top: 6px; }
+.cm-val { font: 700 13px/1.3 var(--typed); }
+.cm-in { display: block; width: 100%; padding: 3px 5px; border: 1px dashed var(--screen-text); background: transparent; color: var(--screen-text); font: 400 13px/1.3 var(--typed); resize: none; }
+.cm-row .cm-in { flex: 1; min-width: 0; width: auto; }
+.cm-btn, .cm-mark, .cm-big { display: inline-block; padding: 3px 8px 2px; border: 1px solid var(--screen-text); background: none; color: var(--screen-text); font: 400 10px/1.3 var(--pixel); text-decoration: none; -webkit-font-smoothing: none; }
+.cm-send { background: var(--screen-text); color: var(--ink); }
+.cm-mark::before { content: "> "; }
+.cm-note { font: 400 10px/1.3 var(--pixel); }
+.cm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.cm-big { display: grid; place-items: center; min-height: 40px; padding: 4px; text-align: center; }
+.contact :focus-visible { outline: 2px solid var(--screen-text); outline-offset: 2px; }
+.cm-x { position: absolute; z-index: 2; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 2px solid var(--ink); background: var(--paper-deep); color: var(--ink); font: 400 20px/1 var(--pixel); }
+.cm-x:focus-visible { outline: 3px solid var(--cover-ink); }
+
 /* ---------- phones and small tablets ---------- */
 .phone-hint { display: none; }
 @media (max-width: 820px) {
@@ -676,3 +744,12 @@ html::-webkit-scrollbar-button { display: none; }
 /* the desk and stage never scroll inside themselves, even when something in them takes focus */
 .stage, .desk { overflow: clip; }
 @media (max-width: 820px) { .desk { overflow-x: auto; overflow-y: visible; } .stage { overflow: visible; } }
+@media (max-width: 820px) {
+  .desk .lamp, .feed { display: none !important; }
+  .record-area { min-height: 0; }
+  .printer { width: auto; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-device, .feed.torn, .desk .lamp { transition: none !important; }
+  .receipt.landing, .printer.busy .led { animation: none !important; }
+}

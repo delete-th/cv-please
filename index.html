@@ -571,6 +571,74 @@ html::-webkit-scrollbar-button { display: none; }
 .pg-btn:disabled { opacity: 0.35; cursor: default; }
 .pg-btn .spr { filter: brightness(0.25); }
 
+
+/* ---------- part 7: Thea's desk art, printer hand-off, contact screen ---------- */
+:root { --sprite-scale: 3; --screen-text: #b9dcae; --fb-hi: #e5cc8e; --fb-folder: #bba167; --fb-ink: #1d1e0f; --fb-shade: #4e3d24; }
+.art { image-rendering: pixelated; }
+.pill { z-index: 75; }
+
+/* layers, back to front: booth, counter strip, desk, lamp, papers, held or open paper, stamp bar, pill */
+.desk .lamp { position: absolute; z-index: 8; display: block; pointer-events: none; transition: opacity 0.15s steps(2, end); }
+.desk .lamp.faded { opacity: 0.4; }
+.stage.lamp-off .desk .lamp .art { filter: brightness(0.78); }
+.desk .lamp .lamp-switch { position: absolute; left: 114px; top: 105px; width: 15px; height: 21px; padding: 0; border: 0; background: none; pointer-events: auto; cursor: pointer; }
+.desk .pool { right: 150px; top: 132px; }
+
+.filebox { width: 162px; height: 138px; }
+.box-all { left: 47px; top: 117px; bottom: auto; width: 71px; height: 18px; display: grid; place-items: center; padding: 0; color: var(--fb-ink); font: 400 10px/1 var(--pixel); text-decoration: none; }
+.box-all:hover { text-decoration: underline; }
+.p-case.filed { width: 126px; height: 9px; padding: 0; background: var(--fb-folder); border: 0; border-top: 3px solid var(--fb-hi); border-bottom: 3px solid var(--fb-shade); box-shadow: none; }
+.p-case.filed .folder-tab { top: -12px; left: 0; right: auto; height: 12px; max-width: 126px; padding: 2px 4px 0; background: var(--fb-hi); color: var(--fb-ink); border: 0; box-shadow: inset 0 -3px 0 var(--fb-folder); font: 400 10px/1 var(--pixel); }
+.p-case.filed:nth-child(odd) .folder-tab { left: auto; right: 0; }
+.p-case.filed.hot .folder-tab { background: var(--cover-ink); }
+
+.printer { width: 102px; height: 102px; z-index: 9; }
+.printer .led { left: 81px; top: 51px; width: 6px; height: 3px; background: transparent; }
+.printer.busy .led { animation: blink7 0.3s steps(1) infinite; }
+@keyframes blink7 { 50% { background: var(--ink); } }
+.stage:has(.receipt) .printer .led { background: transparent; }
+.feed { position: absolute; left: 30px; bottom: 72px; z-index: 1; width: 42px; height: var(--feed, 0px); background: repeating-linear-gradient(to bottom, var(--field) 0 6px, var(--rule) 6px 9px, var(--field) 9px 12px); border: 3px solid var(--fb-ink); border-bottom: 0; pointer-events: none; }
+.feed[style*="--feed: 0px"], .feed:not([style]) { border: 0; }
+.feed.torn { transition: transform 0.5s ease-in; transform: translateY(700px); }
+
+.envelope { z-index: 2; }
+.env-stamp { position: absolute; left: 69px; top: 114px; bottom: auto; width: 66px; height: 24px; display: grid; place-items: center; padding: 0; color: var(--stamp-red); background: none; font: 400 10px/1.1 var(--pixel); text-align: center; rotate: -3deg; -webkit-font-smoothing: none; }
+.unpack-hint { top: 72px; }
+.p-case .clip { right: -12px; top: 30px; }
+
+/* the record section */
+.record-area { position: relative; min-height: 420px; }
+.record-empty { padding: 18px 0; font: 400 16px/1.5 var(--sans); color: var(--on-desk); }
+.record-intro .btn-quiet { margin-top: 14px; color: var(--on-desk); }
+.receipt { box-shadow: var(--px) var(--px) 0 var(--shade); }
+.receipt.landing { animation: land7 0.36s steps(4, end); }
+@keyframes land7 { from { translate: 0 -160px; opacity: 0; } }
+.slip.loose { cursor: pointer; }
+
+/* the contact screen */
+.contact { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; }
+.cm-back { position: absolute; inset: 0; background: rgba(20, 15, 10, 0.62); }
+.cm-device { position: relative; transform: translateY(110vh); transition: transform 0.35s ease-out; }
+.contact.open .cm-device { transform: none; }
+.cm-screen { position: absolute; overflow: hidden; }
+.cm-content { padding: 8px 10px; transform-origin: 0 0; color: var(--screen-text); font: 400 13px/1.35 var(--typed); }
+.cm-title { margin-bottom: 4px; font: 400 20px/1 var(--pixel); -webkit-font-smoothing: none; }
+.cm-row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 6px; }
+.cm-lab { font: 400 10px/1.2 var(--pixel); -webkit-font-smoothing: none; }
+.cm-block { display: block; margin-top: 6px; }
+.cm-val { font: 700 13px/1.3 var(--typed); }
+.cm-in { display: block; width: 100%; padding: 3px 5px; border: 1px dashed var(--screen-text); background: transparent; color: var(--screen-text); font: 400 13px/1.3 var(--typed); resize: none; }
+.cm-row .cm-in { flex: 1; min-width: 0; width: auto; }
+.cm-btn, .cm-mark, .cm-big { display: inline-block; padding: 3px 8px 2px; border: 1px solid var(--screen-text); background: none; color: var(--screen-text); font: 400 10px/1.3 var(--pixel); text-decoration: none; -webkit-font-smoothing: none; }
+.cm-send { background: var(--screen-text); color: var(--ink); }
+.cm-mark::before { content: "> "; }
+.cm-note { font: 400 10px/1.3 var(--pixel); }
+.cm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.cm-big { display: grid; place-items: center; min-height: 40px; padding: 4px; text-align: center; }
+.contact :focus-visible { outline: 2px solid var(--screen-text); outline-offset: 2px; }
+.cm-x { position: absolute; z-index: 2; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 2px solid var(--ink); background: var(--paper-deep); color: var(--ink); font: 400 20px/1 var(--pixel); }
+.cm-x:focus-visible { outline: 3px solid var(--cover-ink); }
+
 /* ---------- phones and small tablets ---------- */
 .phone-hint { display: none; }
 @media (max-width: 820px) {
@@ -680,6 +748,15 @@ html::-webkit-scrollbar-button { display: none; }
 /* the desk and stage never scroll inside themselves, even when something in them takes focus */
 .stage, .desk { overflow: clip; }
 @media (max-width: 820px) { .desk { overflow-x: auto; overflow-y: visible; } .stage { overflow: visible; } }
+@media (max-width: 820px) {
+  .desk .lamp, .feed { display: none !important; }
+  .record-area { min-height: 0; }
+  .printer { width: auto; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-device, .feed.torn, .desk .lamp { transition: none !important; }
+  .receipt.landing, .printer.busy .led { animation: none !important; }
+}
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -1036,6 +1113,112 @@ html::-webkit-scrollbar-button { display: none; }
   }
  ]
 }</script>
+<script id="art">// Thea's desk sprites (transparent PNGs on a clean pixel grid). Swap any object by replacing its data URI.
+// The file box has its drawn folders cleared, so live folders can sit in it and leave it empty when taken out.
+window.ART = {
+"lamp": {
+"w": 54,
+"h": 51,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAAzCAYAAADciPtuAAADb0lEQVR4Xs2avYsUQRDFZ1f/B289BTMzEU1MDNRUzMXQTDMFAxMxNREDzRQ0MbtATNXAxESRywQDwa/zXxBh5bW88U1td0/37U53P1h2uduP/s2rqqmumdmfA7+7HG1vLZa+93/f+znL+Z6pdTD1Bwh06OhWd+TYYfexb19+9B/f7hbLluBmMcfUHQD9+rrXnT57anAsFA7/h1oA9DqmQAR5//aDg1MpVGuahxYEIOvOxUvnepgQFNwK5WFJrYBhUQp04fyZwXoUToUwhKOEqg03AFMoACkUYF++eONYAGeheDAYrlevX64K1xcPC0W9ev2uf43wQ0U8eeL4AOzxw+eD/GMRYcGpUUxWQtGGngpQgPu4+2nwdwJAgIJbcJCnhRpyjqW4FaqGdAcwcA7PFA8AKmpp1wZg6paGYExwkHAQ3NMcrAU3t1UwVwg3wPABSBYZiPmI0CxZKV2O2bxKdYvSXGK+1YYbFA8A5UK1ChfsPNYVnUNBoXslw3IyMBYS5JbmXSm4OcrwvbuPouevFPl6R+QeS31puEkdU+EAloTrwdZxLeSWVUk4B6ZdQaylypWv4ygFNwhFuJarVLdKh2UPRtdyQjIGNdYfTu3cysyDbc+tO9fcQQ6dsNeBUuH3tL/cVG/pHeZoT0dA6OmTHW+ksqWCSzZnUzQFXPKUSgFVcHS/QFM6FwWzPxw6+pvaa23SuWSwUuI2iq2X5pytrLE1NQcGWecg3Z3j9VguF2upcmRPBQShuKmNbVybc8wultsfzlKwBeLoAcCh/E6+KFFCDEHdkaPicmYJKDv54oGwgE2EIhaHB1yJjex8U2hCW6erhyIXxFCzM0uI50m+hzmno3hOy+hcE6EYg1LZIsK2Di7joWPAqqGooz+fUypWQq2MFAF1xFcVDLLXAUK6feOKFyqkamA5bkG7n/9fFtaQs6JrTeRYijS/7JVVXyWt5liOtPrpaxYNn5p0jOUdIogFGlOzjj24f9M9FDJFrJBVwbiI1Mo4Jh1XVAtFd3dBt1ji/OUDe7bz73p3rlAx8d3VwCh1TU/SDEFbAUOyw6UmekXexgTnxjoQnwhFt/Ceqjmm2m++Waeo6o5B3IdBPNnG3PPBqFtQE2AWTqVdRcgdC9UUGOHwnFowYnfbNeOYSu+N9CkG1FSOhbTO3ax/AbGBfqh3MxrhAAAAAElFTkSuQmCC",
+"switch": {
+"x": 38,
+"y": 35,
+"w": 5,
+"h": 7
+}
+},
+"printer": {
+"w": 34,
+"h": 34,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAiCAYAAAA6RwvCAAACEklEQVR4XsWXsUoDQRCG7yQPIDHEwlQiaqqghYW9ASWFYBPsfAFbayvxKewkjWAhCrG3sDBYRUWsbJSY3jTKf8cck73d2Um8Oz9Ikcvezn//TGbnwlFpFGiozVd/NOtM3j8+Q819Jc0iiOjfX2mWjlHfaKnvmVGvnIJ2u6V2MuSpkeyHI5c3Xauc3e2mU6bkCk9bkhoScXJ8GG362H9LNu904rRIASXgjAn2REwSM1YjyytLKREcmyMQZ17XCEasl+fXZHtVsRKuAJrAPiIhsIjckHDViCtt0nqAmLUgTo/oSPf2Lhh+Db2O+EA9lOfKQXNr07lUFFKplKMbuRjC97S84CGC9nJRQlqwkOD/Fi5ikuZkggdxCUFspEd0ZDAYRguzAHtJREK42kZ9MXEF1w/2d7LQkXKaQAw4Jjqyvrbq3CBrcj1rNFDK/k0I3OZM1Fn/Au9JtrPH29A0SI2KQEHWT/fir73v1LaiEE0ALWgD/aOLaHnDchrn7giNED4KcQSHGy9OiDPrJHdHiIfek7+zusiqRjAAmWOGKSz3PkIpgBj62Cikj9j6hulISsjZ+bWYS150fDNc99WB2U05YXVhVjUm5gXOGjS73GvEB40gqdT4BpisMCe26E2PpngSYS7KGh4H/yRM8UlqihIB6EG5+4kQacDNAxoRieQl3JzmiwAPb333xQ/m1G57p5kG376/GGTnrtHC924AAAAASUVORK5CYII=",
+"led": {
+"x": 27,
+"y": 17,
+"w": 2,
+"h": 1
+},
+"slot": {
+"x": 10,
+"y": 10,
+"w": 14
+}
+},
+"mug": {
+"w": 36,
+"h": 29,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAdCAYAAADCdc79AAACdklEQVR4XrWXv0odQRTGZ2/yBrEKgiDeQi4WqdJcC+X6ACKEgBCwCZFgnSpISGUtYrAJCIEgiA+QS1Jok8pCgkXSBMTKF0iayDf6LWfOntk9d+/ND5b7Z2Znvj3nm5mzxd8Hf0ITvZnH/5r6gB+/rwtPvzoe1jVKIQvTU+Hw+LPZ/cXa8/h/L9wJH0dYYUVICwE5MZKDD3th/+NJ+VcbYRVBUszmxmp4+ep1MunPX5fx97fh1/i5NFgO3bn5pM+Tp4PWohJBUsz592FFyLP1LTNlR592K6KQxourm5G9VQqiGO0V+bQA7RpODPSD8H5v+jpycKSIXkFqOBhEoA1Xf2WxIgjtFIp7mFaA6EXDO1dqFMTO9AsGZHowkSXCgqJkauEvK6o5ygjh6UmdmLMvp9nBJDrVXkpBMjr0iowMhHjEyGgwdbSBJ20ddLKio8W0QaaOc2A+6+L4MUJWdCYFo4T9CkAYVqK8pI+TVfb+zbuKDk+a6uAGys2TwkIIOPfi2Sejlz3L2gqRe1IbkghJvEt9kmDzzAr6n9z7CkaulDVJyrA8uX+0TZmGnqG5rfOw4iGUDfJUhw9G2V2J9g8moplpbmliwpIFKSu6s49i2Hgo6mPDQ87I8qCVp78FD98OvyBKQNY2nhXj6YOxZSmCOfVFkaWpZaUnn6xuwro2XYYATwmSrDJGCbBsAJjYunJIMbqsbSK77JE66ymb0PdwtXqiAxorRuIpJ7SYNmVstqZmYaaLfA96RXmjA5KNETeyZoFn+p7ZBXw/k2YfRUySMo31bvZ2Z7vydoF9C1UC2vQuPKqYWkHAU+FZtBFCzDdXC4+4cYSQW/WBefFtAtMFAAAAAElFTkSuQmCC"
+},
+"plant": {
+"w": 54,
+"h": 51,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAAzCAYAAADciPtuAAAEyElEQVR4Xr1ZPWtUURTcaCpttTHBIIqdYJNakNR+lP6J+Fv0T6RUUkvAOgiCnSgSSWxMq6CNMquzzJ7MOfe+zXsZEMnue/eeOWfOx7279vvyr9lFYmvz+h/ud3T8fW2qvS9NtbADSW0/2Z5/rSTHxoURi6RIbipMTgyEIqmTz6dzPiA3VdTWp/KYSu3GvVuzBw/vL7YCsTtbm7NPR8eL58bOt8kjFkkpQG4qSU5OTCNVYWxJjirFHuPeHrw/ww9R/fbhy/z9sSR5hlhlXLYp33l09cpsZ+Pa3PDdj19nz54/tUHauP3vGeYY/gYxvM+1zktwUMQq0i/v3iylFkFSCjhlZzabvTk5LfcCWsQtMUiDXgVQxeBRhyGEnAwd9n/8XHwcbQEOXx82nWiJRVL4Wz/TxSE5ADJSgzIZOrCvcS1XKfEMbOCzLVhiXATgYpGYbg4PKqmhoBqy0q/2ZMqJOFPuod34cstTzqBMdlnksygpKaKVX0B3H2uRQy5UcMWCyEhRMasgJeYSlOSczmMkeiSDPZxDsjzqzS/A5hhCXZV2wG3CRtsDvh8dEtddJb+aUsyi1ou9F69SCSKiMVpVRPidNvEKa9UJGlFzfSSLGOAkGAm4KtiSGd5hz0RbaBWQ5uSBBfGvmsIzMpAZos7vM6n2kFL0jF5lxABETZuvel89jyOIQqsgJe2IVdU0OkynHDbzLHJNKcJYlUBEnDDYv7J+peQyUllF1SEbeHzwLr0MakpRvVSNTYiQa6ZEVTEzIhGYbvZlhNstjjldEcvAaLVIaQ5pvlXFJkaccAO5k2MaMe1jLq9UglWk1Hiuw/+ropNBB3KSdGe48qCZVUI1CDmF4382Mmkv5HutltByFEGSrt8uEYvXZC2ADO809NZJZQO4IuHIKbIW4CSKAICcXi0scoykVGIxCtwMRmXnLbwTPUhizihtBUORVV7k3BIxZywLg4LEMDK1wMklmw2BscmB2Hy65+gUgfzJJEFSTmaEjmP0rluPudySpwPWi2uCz+LYEu//skarOROrXESUytjkWDx0HzrpkjueRFIuN6pIVaAx0csoPlUbULg7GABrUtbzqqhG6l1fXCyTZZRQNWXEygcjOWdCNXv/b8O0kTvHElnDnhPDiyRU9RAnJUdKN82Mal01EDxdtBCnj6U+NqQxOk9p5Bm1ytuUTzwZZMCsSmBurM5kS3ceLSOq8DPyraN+lHeGmMOc7HFb3HPV15zuFT03sArNNec0RKo3b/mbAFFFC5gTG2pwPL4AKLNxrAIZ5kivGhz06IR7/R6kEYseQVvQDXguIlyeIBqMWk/+ukkm/jbQyi1ivRVSBbxFSWBDHs8dNEIualriM0RS1X4R3TfBcEBMWvdLSzUyQfL4vqcKxrV7JUh0EyOi1xy5Coiekxw/Q/46UnRqr8IGEeOiLe/1lHwQ4ejG4SBe1gDYaygpYBAxAhtl5Fz1y6b2GL1Y0lclBTTvFR3ib86UJ85z8XDKVuIkq4YDfIZOWyVSxErECCUII9wdCYi18pBEELExSK0cMYUeeyIxkHJ5o4hEiN4ikeFcEXMESY4S1MHVwc195yW1cvFwGMMYrDHGOsCgIbgH8TjjIhIxFhnFaFKMBWUKY4fgL6D5icz/8nJwAAAAAElFTkSuQmCC"
+},
+"paperclip": {
+"w": 9,
+"h": 16,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAQCAYAAADESFVDAAAAu0lEQVR4XmP8xfyTAQbkpUX+wzkMDAwPn75hBNEsyAq2bliJrIZBPkDkP1ghyCRJOd7/585t+x8Z6fMfxAZhELtnWiWYjaIIJADShKwRJMYEckdxRQ7DvhOHUaxCBkwgjpOFLcPZw5fB4iBNkyY3oHgArAgEDhw9yIDucBiAK8IHyFeUl9sADkTyrfMOCMfqNHi0IMcVBoBFCShaYFECE4PFACMoCmChDgpUGABZDUsFYEWwkEa2BqYABACaJmaKZAvjQAAAAABJRU5ErkJggg=="
+},
+"pen": {
+"w": 45,
+"h": 44,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAsCAYAAADxRjE/AAACDklEQVR4XtWZL0sEQRjGZ/Wi7UAMcoKgVRC1LPgdTILFLCaTwWwwmcQsiGLyOwhX1GIxnGCQS4IfQMvJM/LIOLvr7s2fnfd+xb1JP1+eefednexr+lNJpjffHdHvbfiR4XlKmjAkKYq/t6fb6rV/ppbXl37/gY4kaUhCEPTynwqvbGzq3yc7q+oQ66o7ElNpCj/d36nryytdWbCY7+u158FQ7a7N6rVMQqYpDNmj874WozQYPLyo471cXTy+6+fk0nXCBLIAmzFpps1IoMJmdU1MYawnkWZ3wKZDXrcObhoLJ2l5vsJJpIFrhUlr8TArzC7RNMM2rfZpVNhXuLV42G3NtcKklT5tDj2+wq20PApXyfKNxxdHIcAlRM10DOGomTYjUYX9pmtKlJbHOZhjJSY1Ox6uwlEqzQpTGGCQp6RLhm2Cdg8Is6KQxDOGd8zCgGPnOJsu6kY0hQHlMQwRrvGs50qQ7mEL27DCqL6vMPCOR51wiAzbeFU6hbBX90gl7CydUhiM/XKpEzb7cYhNV0Zj6VhzhAuNNqIk4UaZliZcKy1R+F9pqcKV0pKFS6WlCxekJ0G4diPa+Jw2QlLo0/Ypg0gR/lNpflDBMSn08Sg0ep427zrw2YqEOh6FpvI1jqsCEmvwcaVjfp9glXm3IU2W6CmP34sBIyFVGGhpXiEAybIkm1uY0ZeMkyBLvgGjKZqbzLu+fgAAAABJRU5ErkJggg=="
+},
+"envelope": {
+"w": 50,
+"h": 54,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAA2CAYAAACFrsqnAAADWUlEQVR4Xt2avWsUQRjG9ySNhcVhcQRNccZaLMQmWJ6FhU0EQbCwsxFUMOLfIGhhY2chWuk/4JVioylEW2MKBUkhV9ikU57XvJNnJjO7c7szx+z9YMHg7M77zPsxXzfYX9mvxqPh36rH7O7NBoPVU8dFxPbr+0Ep25++yv+tnzlt2gxPDqOkz37PpF1Te22n7Hz/af6NfkPvX7jxRNqJkAcXz1bX715tNMztrATevXxfPf74rToGYyDi0cNXR+yC4fyUBDyG5/LNS2LWihp3fvWEsbPEkWc47BTxiIJcKF1ECOOR9Y1xsFEXJndemNenz251+ZTg8wawPJIaiEAhwTNZG1miUmOEcGlNgYoAn3/9kRzsKibkDcsjqNOpxQBUxOmPPSMmJbBXxYlHdFKBmKaJa15Q1lPnBgSoiNtPp2KSmdkZnuXbVjFNcoQTQGhh4kohigsIvg+Pm5ldQWcMOoaX2gjiDpW2QtxvoYCwzVJ+dXZUuBT7jAExBqEN3n9+byIhEPMOCPWJ7+x82JU2bDMGX4TwiLui8LILjJpnfmgqIkhYjXXF16/mhg8zIYZgI7RCcCcsCu52ByLEPMbHYAnBx+tGr07U2zdfxMWaY5qEQAcgtfFMo0diPbV57Vy1edAYccxFAyKBhk8obLpgCWmK5RhRJsY3xo1x37a/VjnSBtdA3SLMU7nmJduiEVVN1lZro2RrrTosIXWLsjbAE3i2tq7I67x564LuDhkjJLUIRc8CsAJOhS+3WletWPQsAN5IKcbFCq2UVQQlFiVYwwsisLiLXabEwFF0uNWlM6sU4Hu6xjIl2bPc6YqKyRpaEJPSAwxvqoC1seobvIjMNo8sGq8QX50unSNCNHlSJ39uvB7pkwjrFEUPG5r2IyVjLVH65AlFbc520rhoej2PMEszj2RbouBKLCfuaU02ISD2aCgFElp1N7ol4vP20uSIEZI7pnNjeaSPYqwlCq4McAKPp49izMaKgZhcJyo5yVp+c+IOdlYhiwxTEeILpa4brFyTIduKU3+9XTtcxh9cabmUlC+uLXzgFzUhliDGtQEDz2fJ0b9FcX8Ilpq6UA4NJF/a/s8RijX+O8eOMWSUj1Bbtldvw8wPBtzjTFdcKbBdfMU3WJYfZ/4DLFOnoVuruhMAAAAASUVORK5CYII=",
+"label": {
+"x": 23,
+"y": 38,
+"w": 22,
+"h": 8
+}
+},
+"computer": {
+"w": 64,
+"h": 66,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABCCAYAAADnodDVAAAE6ElEQVR4Xu1bTUgVURR+T6SIVoEWaAsJjFwFkQTlQnBZYptwGUWirYpKaWEg5CL6I1dpSdFS2hTWUnBRQWiLVoZCuMigfNDKdfFd+qYzd+7M3Dvv+Zw7rw/Ed2bmnnvPd8+5P2fulLeat0pp6Njf8jvtmTxi/WelnNauchoBNH5pfiaia2PjW5r+uqG9/WCoru7+YSWnkZBIgC/GS0gibEhoiusiH43XQa9NCmGjB7DAvZsX4/jxCqN3nsWGQywBppj3GQgH03gQCQH0ftGMB+DNplBoNvVqnkb3WqGzo92oKnYQbBQYPUDH2vpG6f7svFec3LjUH9vrElYEwPi9rfuMBGxt/lLX4+7bADqqKW8C2jwzOZJavRUBcfi6svrvVmUztbJEVFH+UNfhkOqutpbS8t+OSUMmAmD4gZbWSMX1BtsBD/pR2VTtgfEucB4E2evSZV0rrRVgMNuBDgl5pCUyeQBdThquk7DyvWLZhOoBEjgWucLZA4oGJw9IY7meva5DhUKGgdTJA5LifieNl3BthxMBeQcGwjQv1eFEQJxyV9bzBCcCiojMBLDXfe59IDMBgO/GOxGwU6u97YaTB9R6x5YHOBFQRC9wIqCI+E+AS68uf15zedwLWBOAKe/40U4vjHKBNQEqzdTIHlBUWHsAQqDh1wF5hus2mLD2AF8WQa4DtTUBQF5JYO8jNe4KJwKILOnn7UI1xjvtBgmmxEECKs8ae9VC1s2e198Q2cA6K8y9P8IAf5TRkJ3yCOQAAflGCO1yCVVrAvQxIKhEvYrKzwpRdo4NrAjAW9bh8WnrF455wJvnk1YHPawIAKDQJ9iecrEmwFahbzASgBMhcWdqfMGnsSnV1Ce7dqsQhk0mGAnAubp6nRFcXPpS6u0+UlNeofOY0Ajjcc2E0DlBeUDy8et3NW1UHsDpWp4XjHjAq+lbijGXudQHKC8b6AlOjRIBAex9Hjb2fQxIAmylFwQhULQTokmz1tmR20EYxE6Di+8/qnHAdPRFXtOXniZZX0WmLVdtdJrakKR36Fxf5JsCIJYAGI91/tCVwZA3YUUor9nIAMvgeZMsz/TZ6MQxOE5vy7PzSkbGyjSjJA3oKgTg/qf7TpYmrp5XjYP7XJuaMx5glIcamSiVqTLcR1KCvYFEKu9znS51cDfJMoBJh37fJT0HfTg52nvqhNI/8ehF6e3CBxUGgQfARQjMAigkewWEPBTeABllWM7mvqwDzwOsgzLroJxUBxc38iTr5YGeyPinH/OFl4AAIEiIyE9NTIsGfd9fC1nq0HMLplyDXqecqdKmbRkGspxxDOBen71AQJbbTV1++nIhxH6aDOjPUKdep5STYLOAk53dhPhnYoEg0/gPl5IyyJm7ez2IQchwW8QkfiPmmUKH++I3/uDq/M1xQV5DecY1n6csdSZloNhetJntZvzr5ZBEge3KA0ynquUGAgMIwXgCCcCZC+OKUSnzNwc0bqVxHc/LrTUaJmXcB6iTMnUOjj0IlcGAzZlFHxhlu3WAoNGV1VK5tW1P5BMZVBqXXkZvyHv1kAHWSe+RMc82JK0D+FpPko3viGIJ8A0gyObdpU6AcRD0LftTDTK9FygSlAdg3d9o4FpHeQC/rGwkcCWoBkEYrq8Fig6+TQo2QzAYG6JGAHsfm6FQQqQRjCeYEfoD8K8EiM6zvZkAAAAASUVORK5CYII=",
+"screen": {
+"x": 14,
+"y": 13,
+"w": 36,
+"h": 24
+},
+"close": {
+"x": 55,
+"y": 3
+}
+},
+"phone": {
+"w": 34,
+"h": 90,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAABaCAYAAADdNoRuAAAE7ElEQVR4Xu1aPWgUQRTeaCobOcHCFCdaGgyCFopYiVhYaKGECCKCYHe22ljYxNZUWokIimihhaWViI2CRGKpmCIWgmIj6U6+Cd/w9t2bn/25zQXywZG77M6bb97/zO7U+s71ogv0Z3pDPc/q2p8p/m+qCyIk8Xzptpv3/cqPYunhU/edZKa70AYwe/SQI/Dr999i+dt393vl01c//Y6uiBAgYaFzInMHD0wGkRA618jEENn2kVx07iMh03SaWS1kZ1arRtTBwqVzxd49u91QZleZWYMpXhIY3LhcZ24P1JVnL964tB5KaCXT6NXHCGBVXKEF6zo1QUAjUdOQwMnZ/Y00oYGiN1dspHjttF4j1EaMBARVhbWYV++WnRiYixpxRDSJhTPHi9W1n+7m2OTsKTQsk2pCIAMiAMh4IpYmLBJvP34uebsFOOXpY0dGLkkyWiulqJE3hjSBCaxJcgCZnOPCqTlPBpiGWRDjVZDSSkgjNLVcMObuv+gNvUYQWkTKKZtoxSIDjNSaFIk2AfMQnRe9EDaNiNZ8sNakHLIuQo5cIkKWMlFhYBtgpeVfnQJGNEISbREgKA9E8NFVuOQjMoQBhinZNw1bCV30gj6iVYff8Jum0FvNyuHbBokYvGlkctEYBwnZJpqZtQsSFrxGWJaJcWghyzQWuiST5SNdYNNqjcY2EV1CtjUS9BGdR7rGZJomtqluC7rGmNUX+w3u+NjAtAUtL9mhoTkCGXZqoRXUhdzaSr90jRG6JbZuaAfQu1ob6Tagz03YqU1jJ94vekMQAcNYXyIBgdzNS+QsQG45qfGRVnF+sOjkxgTCbB9eLhWD+bMjSjpxcVA6L5PgFoULkHvuEhHcgAkICI1tqHmGQvRn9rlnMliMXIjcI1E+ZEuMaEQKl4O0hjQJAP8DGUsLkIXr1jggugnnQAhhFOktRwi4D5q4c/W8JxFDiQhsxgmvfXniPyAElYeOqiTkiuGI0BD+9+/WffcJIbiveXT4ih8DUvydyr56c00Su+7d9PLgQ/pwaMQ0uIGR0wQgTB+TJJIawUDaH5FC1sgrUjsEco7WDnMLxuM7IsN6smkdlZmmQXLDB+EcSlohf2G4c1FSu8kjcBzoITxzIwJIHX/nggvNeu4rnyoQVUjnIEjEMom2bZ17LP8AzONNVESZ6gnWEUCXAwChevfxa1/JrXukDAmzVdx4fLGRjjGQ3xkBAFO2vA6wmpKElgMZliZr96zMoJKcRqiuWAgSsQ5+GYpwXivpYQw3TsxFBAljnHU+559O5DiizAPwI6uNlHKse3QuoZkqmUaeBIaezUlY94TGmeFbN2qA64sPNj9q4JwyauAXVuRVjppYFc6JGomYLCDqI1iRDE8pLCVYRo2Us3WiJtV5AZ1EjaymExk10utDtUbWG6vW4DrvSdYaK6QAOJdVT3LqSJXI8lGjN1CsNamokdd1fZKRtfVrjdVJpaJGj2lca0IdWCcdmnRWfJd1Qno8kdOhpWTIx2nOWeV7pRbqRk0KDHXMn+zQcqKG0aGjRkaejBoLpTdqZPdk5ZWqHVpMhuze/IssAHZ77CVzuq+m0ERKprF60HHA6mV9q+hOF2d6Q0lmHJrRD55LLztJ8MUn3fI3IaUnl9HCuc13FeWLcW2+IyC1rVNG9KXJtt5TlAjlrKxjiTYQIkD8BwnzCjEJAotoAAAAAElFTkSuQmCC",
+"screen": {
+"x": 7,
+"y": 27,
+"w": 21,
+"h": 17
+}
+},
+"filebox": {
+"w": 54,
+"h": 46,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAAuCAYAAABjwOorAAABfUlEQVR42u2aPUvDQBjH/wk3OTnYDIXQIaCjaXEOgh+g4GdwlX6W4upnEPIBhOIsqY4KGUogQ+pghwrtEge5kFes5Sx5ntx/O3JJ7nf33POSHMBUxlZssobTt1LKMGGcGBUwCTUZj/AweyMDc315BgCY+kEBTjTdcHJ8RGq1hoMe5otl1jbLF7nI5Oo8CmCea5MFKY+9GyvGSY1e8ePziycYNXffLa9IPZXKS7KYnIJznoG/u6ccnOsYdBxrs55eoorFibpOOo61RPk6rHtJcB29NkUNdgB37/StlNO3juGgBwdWKpqyDmr1mIxlnmtjvlgW45iMYTqOaTANpsE0mAajCEY5AS6PvbaCjlZrRKs12VqsAjYZj/gkwQBwfnHKa4P5wQ/Y3f0jv7LlUDa/S7nRajC5V/OVwm/yXBtTP1AKJ+Qsq56x25urnfqp3gbSYsz8oQ8uCuPEEP/18Nfn9z+ZoWoZW7HJ/impMsd9HIjKd4dxYlSOHHEwQwD4BhfYfFrL9xrHAAAAAElFTkSuQmCC",
+"inside": {
+"x": 6,
+"y": 3,
+"w": 42,
+"h": 31
+},
+"plate": {
+"x": 20,
+"y": 39,
+"w": 15,
+"h": 6
+}
+}
+};
+</script>
 <script id="sprites">// Pixel sprites. Each sprite is a grid of palette letters, drawn as crisp SVG rects and scaled by whole numbers.
 window.SPR = (function () {
   const PAL = {
@@ -1123,146 +1306,20 @@ window.SPR = (function () {
     ".kBkkkkkkkBBBByyBbk.", ".kBkKbKbKkBBByYYybk.", ".kBkbKbKbkBBBByyBbk.", ".kBkKbKbKkBBBBBBBbk.", ".kBkkkkkkkBkkBkkBbk.",
     ".kBBBBBBBBBBBBBBBbk.", ".kbbbbbbbbbbbbbbbbk.", "..kkkkkkkkkkkkkkkk..", "...kk..........kk...",
   ];
-  S.lamp = [
-    ".......kkkkkk.......", ".....kkccccccKk.....", "....kcGcccccccCk....", "...kcGccccccccCCk...", "..kcccccccccccCCCk..",
-    "..kkkkkkkkkkkkkkkk..", "......kLLLLLLk......", ".......kkkkkk.......", ".........kk.........", "........kWk.........",
-    ".......kWk..........", "......kWk...........", ".....kWk............", ".....kWk............", "......kWk...........",
-    ".......kWk..........", "........kWk.........", ".....kkkkkkkkk......", "....kbBBBBBBBbk.....", "...kbBBBBBBBBBbk....",
-    "...kkkkkkkkkkkkkk...",
-  ];
-  S.cup = [
-    "................", "....kkkkkkkk....", "...kffffffffk...", "...kfwwwwwwfkkk.", "...kffffffffk..k", "...kffffffffk..k",
-    "...kffffffffk..k", "...kffffffffkkk.", "...kffffffffk...", "...kfffffffuk...", "....kffffffk....", "....kkkkkkkk....",
-    "..kkkkkkkkkkkk..", "...kuuuuuuuuk...", "....kkkkkkkk....", "................",
-  ];
-  S.plant = [
-    ".......k........", "......kGk..k....", "..k...kGk.kGk...", ".kGk..kgk.kgk...", ".kgGk.kgkkgk....", "..kggkkgkgk..k..",
-    "...kgggggk..kGk.", "....kggggkkkgk..", ".....kggggggk...", "....kkkkkkkkkk..", "....krrrrrrrRk..", ".....krrrrrRk...",
-    ".....krrrrrRk...", "......krrrRk....", "......kkkkkk....", "................",
-  ];
-  S.laptop = ["..kkkkkkkkkkkk.."].concat(["oooooooooo", "ogggoooooo", "ooogggggoo", "oggooooooo", "oooooggggo", "oooooooooo"].map((s) => "..k" + s + "k.."))
-    .concat(["..kkkkkkkkkkkk..", ".kBBBBBBBBBBBBk.", "kBbBbBbBbBbBbBBk", "kbbbbbbbbbbbbbbk", ".kkkkkkkkkkkkkk."]);
-  S.clip = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K...K", "K..KKK.", ".K.....", "..KKKK."];
   S.handle = ["..kkkkkkkkkkkk..", ".kyyyyyyyyyyyyk.", "kyYkkkkkkkkkkYyk", "kYk..........kYk", "kk............kk"];
   S.left = ["...y.", "..yy.", ".yyy.", "yyyy.", ".yyy.", "..yy.", "...y."];
   S.right = S.left.map((r) => r.split("").reverse().join(""));
   S.corner = [".........k", "........kP", ".......kPP", "......kPPP", ".....kPPPP", "....kPPPPu", "...kPPPPuu", "..kPPPuuuu", ".kPPuuuuuu", "kkkkkkkkkk"];
 
-  // A manila envelope with its flap open, drawn from simple geometry.
-  S.envelope = (function () {
-    const W = 60, H = 40, g = [];
-    for (let y = 0; y < H; y++) {
-      let row = "";
-      for (let x = 0; x < W; x++) {
-        const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
-        let ch = edge ? "k" : y > H - 5 ? "M" : x === 1 || y === 1 ? "p" : "m";
-        const lx = 1 + (y - 1) * 1.45, rx = W - 2 - (y - 1) * 1.45;
-        if (!edge && y < 21 && x >= lx && x <= rx) ch = Math.abs(x - lx) < 1.5 || Math.abs(x - rx) < 1.5 ? "k" : "M";
-        row += ch;
-      }
-      g.push(row);
-    }
-    return g;
-  })();
 
 
-  // ----- desk furniture, all seen from above with light from the top left -----
-  function grid(w, h) { return Array.from({ length: h }, () => Array(w).fill(".")); }
-  function rows(g) { return g.map((r) => r.join("")); }
-  function disc(g, cx, cy, rx, ry, ch) {
-    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[0].length; x++) {
-      const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2;
-      if (d <= 1) g[y][x] = typeof ch === "function" ? ch(x, y, d) : ch;
-    }
+
+  // Thea's desk objects: PNGs on a clean pixel grid, always drawn at a whole-number scale.
+  function art(name, scale, cls, alt) {
+    const a = (window.ART || {})[name];
+    if (!a) return "";
+    return '<img class="spr art art-' + name + " " + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ' draggable="false">';
   }
-  function rect(g, x0, y0, w, h, ch) { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (g[y] && g[y][x] !== undefined) g[y][x] = ch; }
-  function thick(g, x0, y0, x1, y1, ch, r) {
-    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
-    for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); rect(g, x - r, y - r, r * 2 + 1, r * 2 + 1, ch); }
-  }
-
-  // The file box: an open wooden tray. Inner walls on the top and left are in shadow, the front lip is thick.
-  S.filebox = (function () {
-    const W = 87, H = 67, g = grid(W, H);
-    rect(g, 0, 0, W, H, "k");
-    rect(g, 1, 1, W - 2, H - 2, "W");
-    rect(g, 1, 1, W - 2, 1, "s"); rect(g, 1, 1, 1, H - 2, "s");
-    rect(g, 4, 4, W - 8, H - 13, "k");
-    rect(g, 5, 5, W - 10, H - 15, "w");
-    rect(g, 5, 5, W - 10, 3, "d"); rect(g, 5, 5, 3, H - 15, "d");
-    for (let y = 12; y < H - 12; y += 6) rect(g, 9, y, W - 16, 1, "d");
-    rect(g, 1, H - 9, W - 2, 1, "k");
-    rect(g, 1, H - 8, W - 2, 1, "s");
-    return rows(g);
-  })();
-
-  // The printer: a squat box with a paper tray at the back and the output slot at the front.
-  S.printer = (function () {
-    const W = 50, H = 34, g = grid(W, H);
-    rect(g, 10, 0, 30, 7, "k"); rect(g, 11, 1, 28, 6, "f");
-    rect(g, 0, 5, W, H - 5, "k");
-    rect(g, 1, 6, W - 2, H - 7, "b");
-    rect(g, 1, 6, W - 2, 2, "B"); rect(g, 1, 6, 2, H - 7, "B");
-    rect(g, 4, 11, W - 8, 13, "o");
-    rect(g, 5, 12, W - 10, 11, "b");
-    rect(g, 6, 13, 10, 1, "B");
-    rect(g, 7, H - 6, W - 14, 2, "k");
-    rect(g, 42, 26, 3, 2, "o"); rect(g, 37, 26, 3, 2, "o");
-    return rows(g);
-  })();
-
-  // The desk lamp: a heavy round base on the desk, a jointed arm, and a shade reaching up and over the counter.
-  S.biglamp = (function () {
-    const W = 72, H = 80, g = grid(W, H);
-    disc(g, 54, 68, 14, 9.5, "k");
-    disc(g, 54, 68, 13, 8.5, (x, y) => (x + y < 54 + 68 - 6 ? "B" : x + y > 54 + 68 + 6 ? "o" : "b"));
-    disc(g, 52, 64, 4, 3, "k"); disc(g, 52, 64, 3, 2, "B");
-    thick(g, 52, 63, 40, 36, "k", 2); thick(g, 40, 36, 24, 18, "k", 2);
-    thick(g, 52, 63, 40, 36, "B", 1); thick(g, 40, 36, 24, 18, "B", 1);
-    disc(g, 40, 36, 3.5, 3.5, "k"); disc(g, 40, 36, 2, 2, "b");
-    disc(g, 18, 14, 17, 12, "k");
-    disc(g, 18, 14, 16, 11, (x, y) => (x + y < 18 + 14 - 8 ? "G" : x + y > 18 + 14 + 8 ? "C" : "c"));
-    disc(g, 13, 19, 9, 5.5, "k");
-    disc(g, 13, 19, 8, 4.5, "L");
-    disc(g, 11, 18, 3, 1.6, "Z");
-    return rows(g);
-  })();
-
-  // A mug seen from above: rim, coffee with a highlight, and the handle as a small loop.
-  S.cup = (function () {
-    const W = 22, H = 18, g = grid(W, H);
-    rect(g, 15, 6, 6, 6, "k"); rect(g, 16, 7, 4, 4, "f"); rect(g, 17, 8, 2, 2, ".");
-    disc(g, 9, 9, 8.5, 8.5, "k");
-    disc(g, 9, 9, 7.5, 7.5, (x, y) => (x + y < 14 ? "f" : "P"));
-    disc(g, 9, 9, 5.5, 5.5, "k");
-    disc(g, 9, 9, 4.8, 4.8, (x, y) => (x + y > 20 ? "d" : "w"));
-    rect(g, 6, 6, 2, 1, "s"); rect(g, 6, 7, 1, 1, "s");
-    return rows(g);
-  })();
-
-  // A potted plant from above: round pot and soil, leaves spreading out over the rim.
-  S.plant = (function () {
-    const W = 26, H = 26, g = grid(W, H), cx = 13, cy = 13;
-    disc(g, cx, cy, 8, 8, "k"); disc(g, cx, cy, 7, 7, "r"); disc(g, cx, cy, 5.5, 5.5, "R"); disc(g, cx, cy, 4.5, 4.5, "d");
-    [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
-      const a = i * (Math.PI * 2 / 7) + 0.3, ex = cx + Math.cos(a) * 9.5, ey = cy + Math.sin(a) * 9.5;
-      const mx = cx + Math.cos(a) * 5.5, my = cy + Math.sin(a) * 5.5;
-      disc(g, mx, my, 3.6, 3.6, "k"); disc(g, ex, ey, 2.8, 2.8, "k");
-      disc(g, mx, my, 2.6, 2.6, i % 2 ? "g" : "G"); disc(g, ex, ey, 1.8, 1.8, i % 2 ? "g" : "G");
-    });
-    disc(g, cx, cy, 2, 2, "G");
-    return rows(g);
-  })();
-
-  // A small laptop from above: the open lid is a thin dark strip, the keyboard below it.
-  S.laptop = (function () {
-    const W = 24, H = 18, g = grid(W, H);
-    rect(g, 0, 0, W, 4, "k"); rect(g, 1, 1, W - 2, 2, "o");
-    rect(g, 0, 4, W, H - 4, "k"); rect(g, 1, 5, W - 2, H - 6, "b"); rect(g, 1, 5, W - 2, 1, "B");
-    for (let y = 7; y < 12; y += 2) for (let x = 3; x < W - 3; x += 2) g[y][x] = "B";
-    rect(g, 8, 13, 8, 3, "B"); rect(g, 9, 14, 6, 1, "o");
-    return rows(g);
-  })();
 
   function rects(rows, map) {
     let out = "";
@@ -1325,7 +1382,6 @@ window.SPR = (function () {
     const a = APPLICANTS[id] || APPLICANTS.thea;
     return '<img class="spr ' + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ">";
   }
-  function lamp(on, scale) { return draw("biglamp", scale, "", { L: on ? "cover-ink" : "rule", Z: on ? "field" : "rule" }); }
 
   // The warm pool the desk lamp throws on the wood: stepped rings, with a dithered outer edge.
   function pool(scale) {
@@ -1409,7 +1465,7 @@ window.SPR = (function () {
     root.setProperty("--worn-size", 16 * scale + "px");
   }
 
-  return { draw: draw, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, lamp: lamp, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
+  return { draw: draw, art: art, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
 })();
 </script>
 <script id="sounds">// The desk sound pack, synthesized for this page from filtered noise and damped partials (original, no licence to credit).
@@ -1424,7 +1480,8 @@ window.SOUNDS = {
 "filebox": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAADAAACA8AKSkpKSkpKSk9PT09PT09PVBQUFBQUFBQZGRkZGRkZGRkd3d3d3d3d3eLi4uLi4uLi56enp6enp6enrKysrKysrKyxcXFxcXFxcXZ2dnZ2dnZ2dns7Ozs7Ozs7P//////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQCWwAAAAAAAAgP4JtHfgAAAAAAAAAAAAAAAAD/82DEABkJcp3lQTAAqIAALHgBMAAAADGAAAAACcREd7/u7vxGHgAIhzyd77u///4j+//F32iI9wYhERj2QIHAffDGJwQWD7y/UD58QBgoCAY4Ph9QJg+oEDhDUCYP9YPvYUOVLBB38P/z8QOlwfeUDCqopmZTVo9JlwkkICSUVjeVUUQqGsHq9RJnWVCsYz7XY8sPxEDwRxYGgqD/82LEKipsDvb7j0AABBMHAaEQ8RYCAXGKA8WEexOgjmA4EbXnjB5yHXQdOIx/ZnmMeoftJMkwONouqlN0MlMbY+m3F0mGsbmx1BlXX/rEtPUl1DFRCRnQpp6m/88JFdp6dvu9qvcTT3fFU6qdPVbk1/p1ffx1cJdcGUjzKe7jknhGmf2ioKJ0d64iCkWTIiCQKbCk4IpIrtdGyyzF//NixBAfE6bqwckYATmiVSbUSRSbBJGWunAQCCDC2UltVbvFrhhZQEmDEQm4pkani430CHCiWalMj4S6exn6t5lXSHg/rLh29bCk/qqttqJ5Em8/sknYZ5wzzLcmOdkJY85ZWNs6X1b+ef+Web5UeTIF5V9c37ougxXMpJwWDD3EJ7PIrNRMDzZiYlA2rjXNOupIpmNpvEw6CuerAv/zYsQjIut62eAxhr1I8vupM109bIfizn10CLmoxLmEIx1YylUI7Nx5YFMKARwcQMORjjOkyJAdUQQFWBYtlFjxsBZjfMMtDRjF5NV3yNw1QjvfpERxFhNGqxMkYY4cmbSF1SBzlUONli9/RSEmXKOhP/EPVgKwBDLdZUqzTZMPOS1AxyQIwS66LI3VJIRJxz8vDgZpI2QbIrMQO1H/82DEJyDj/tYAMMV94kSlOxgWcjI+X4ktQY3WCYgKquo4WVwrZxjUGgEy1Uhku0iFWFqfu3mWypYb1JDJg1KtYRCsGR/0p0iEwVmcDNIRfDbmzci1nJZoaX86N93YuTHZ/O10yxdkFLja1sgxxa0BuOAR5Rh4PSHlITZo44xSHZpNmn1g3epS2W4Ka6qrJgY14w6HazjFNGVrrKz/82LEMh1xhtIAMZAFZq7MQchl/yOYsFxK2xyEGHbucVVd/jHCydCX5YLp7WJY2N/oN8J+2Yuvqv6wqCxvdk4vMw1bjIA/zd7u6Zpb/59Frir9xmRCQoATGoXR8Fhbh6JO28onCbB2Po5A1cTsDkoJmWk9Esbn/QtY4GZVv8CjBntJabTtzjHnWJkyekcYGUIuxJUpo/T7P+XvcmOP//NixEwcexLKKBGGGMLueral6/w0jd9s+Z5HI2Ta5mPIvIxCoXjXpGKOcXhtOHQYLYCZAEa6ATAQAcRBAEzjC5IpA8FTskk5KEp5KNrIXRJeWXVbM1Iwd12X1lW+YCgs2HvKXuXRMWmFTY1ZZreM2X6uL0ub1Jlk/FxPlOOV8uw+/+WhC324vv7vAH61/sfzfiv/5b/p6D8b7v/TP//zYsRqG2EKwiBJhon0n/6VyWJQkBRrnQRrS6Z8NWZ0G7hykhJh+VwLeMpcWQZzGHeel+YC01RFAcr02nGxpL7JHzX3NZ2nK2W2e8z5NyWliQOTI4fCrj07DsRQ67MrGGqm6bnB2NhUJXxZColnkIZdJHgV3x+FQqg0/Yx28c2kBLe9LYtwLrUA1gmyAoCKgiGGbCkpooHhAWXTDWL/82DEjB2hCrrI7kwoUj6PQqWhI2EiJg4AmwsidakjbVUmJqqXjez5RokBkiCwnBYkBQqJALxb4qAgmGToFZUSArAKmsChUMhJq0hICizUAUKB41ixIKgIJhl1TP4LEQWJPs+MJDpoeKkh/v1EgKRcBZy3b/8YAmQAmTkHVXFUSXkAjK0nouhFLCJFaEAhoGhKMOh0SjDxEqo8HSr/82LEpB342nmM1wwEo8GyqjwaEqjxIQjDzREo8dLKe3hoRZ2txItnue4dEz4dK9CzodR/Ev3/7VqeS6PrPUxBTUUzLjEwMFVVVVVVVQcuebZGa4BwFtkOhXYMwAagCAgIg2kskqlMm+KAEIUBChjC2jNFaI3NpDhuACCzD43KmaNOEgQsQLAwIsEHR0tlI1axlBAxUExQWEgeNOFh//NixLwXOEZQXtPSIGFhKKioJ/ULNxVn/qFxX6xVkWFhZn6xX1s9YqKin+sVFUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zYsTgHEENVMrBhuhVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=",
 "print": "data:audio/mpeg;base64,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7sp1aP/zYsRcNtQWybGYYABsLTn2js4o84pU0Qvu/A+u8zXxK021cXdW7DTbjXL22EqEtQnzqFxmkHWpREcOsIkJC/oaH76LEKE4ojUOrooufjtdlla1Vqx1GtW9S/xUlZRxzOtRaxv3y385ms2rFN/vlqT1Fx08tW9PWbutalddc3E333y9q2m/tNwUbvSH1QgIFoF9kCCtPW24j3U8iNb/82DEEB1JdtYLzxgBFn+JXmby6jybjAxJGE3tzAqlDSkTF2KXsasYzTI3z2XX7OLKvxtRNBA2lK2bMm0lpNlCtAs40beLxZsST2wsVWKiSQ/JZtk6ll3sce352V+EnjfOY9tTrv56rrvmx2i6b7f4uN0qgAD0gClAzgveqy2LpoOCNwoVeWOE0hjQ0pJo60GZjA3zFIcEIYfPVIH/82LEKRqhxslKekZQ1EiCbhFpZT/Tl5tJc2M50/qefKVIzPlexBOJR6LQfuSZKl1PPA0trheCKT7ZwaoKCQBUIpQ6Gbdtj2sO+vy2d3aqQqkb1TxYKTBiEgRBJk6JINhFEmJSjAlpXKcgiJ5AWqQ5lJNpizndDVxjTvp83Y2YfuYBRChwLMPFRUcAh5F88JzDnioCB0PFzhm9hE0m//NixE4b2QrEysJMLMiJ7SoxT0WvQlVzkI7nx5XcKsRqP2RzztD1UHZRZrsWsZUIUNO8OPhiKvLD8IiLktdfWEVqCSzOpVSSSXD7OBexqglQ6BcheBW2RZkkjbUIr0+PBrIrpMWYewKCFo6GAnZKKjkoerXMRKyOrTr1XqvP2Kgys9DKu93SZJrJ1+pqH62ulOrPRb6Po/dIItGtD//zYsRuHmM2tKLBhNBW4sof7g6ubrQqudWSDqSQ/QaROiDHzARJOlEpVaqbMS5Ol61tnhQ4bK9kasJMPZKG8kdaiTIvhLDiRLUyKKVa6O935qOVTt2Z47IsFQSWKPCghEl5asFQVOiIOFQUnRXjTIsLBwKJJCrSp1RYSrvvCR4mS1i7ozo1WeHegenrs7q1EEAM/Q7yNb/09no1W/3/82DEhB1hTqQLTzAARNOTuv8LyAzgJJTr5uJ8Pq2VzEcI4AnupXj1GSSgJ0MHV/jiNxwmQ7gWokvr/z5IrRQJEco1Ej//+OUxJIzHxAzHiZJuXib////j1pE10aRiJ6s1TSR/////6y6gZG5oXTIexkXjI4XhxGJdNUZxTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/82LEnR8zbmApmWgAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NixG8AAANIAcAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==",
 "tick": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAowAhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLC////////////////////////////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQDpAAAAAAAAAKM802EmAAAAAAAAAAAAAAAAAD/82DEAB4jnspBQRgASik1AQxjGO4BuMYxjr5L/7u7oiEX//u7u6IiIiIju7u56AYGBgYGBgYGBgAAAIieju7n+jn//UQvrn/7u7uiIiJ/7u7u/+iIn//oiO7u7u7oiIXXdEQv///d3REREREd3P9Ed3dw4GBiwAAAAAQgIYIAgGPEgIHJBcBaNx+HBKJQQEBAggFiQG54BIFa0sH/82LEFiXDbt5dkaACtEPqVlYDwQGFIAKQpsJt5NhikXItkuF0ROJLBjVJImjLwyyShRKoey5jS/LxNCEw5I5pQIb//iUSWQEBhtECMxlSN///IKPoUiLJKpMl01HJJwc5Sf///+QEyLxe3OjKksTJVMpdNf////9SyGkOIsQYsk6giTIypDhxFFJyGpsfTEFNRTMuMTAwVVVVVVVV//NixA8AAANIAcAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==",
-"lamp": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAABQAAA8UAWVlZWVlZWVlZWVlZWVlZWVlZWYODg4ODg4ODg4ODg4ODg4ODg4ODrKysrKysrKysrKysrKysrKysrKzW1tbW1tbW1tbW1tbW1tbW1tbW1v//////////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQC+QAAAAAAAAPFM750zAAAAAAAAAAAAAAAAAD/82DEABzj1sXgGEfgclaQviIXxPRETru7u7iERP66J6IiI7u7u56IiJ+6BAAAAABE9ERERCP/93REREQv/0REPiIiIh8AAZDG/+5ARD4iIiI7hwMW7/6Iie6IiIn+7u7u7oiIiIiP6J9dERERER///d3d3d3RPru7gAACAIeCAYWFMiLEFAQFVVVVmZmZmZVVVUtlUKAiVVVbjMz/82LEGxzBJsqpQxgBf/+zMfqqqqqzN1QoCAsFBR3/4KCgx3goKFBQV8YKO+KFBX//Dv+LwK6DBQU/4vAoKO+KCgoUN/4IK7///8GCngrv/+gwUFBQUCgv+EgoKCiugoKCkgoKCvp3OBZGFgPJMhJfMucLJ39CqU/c0fuLxUC5EQDV/EWcYXHhIPBWBuEWBMLYXJ//MkizNh6NRAkh//NixDgfvA7EAYJQATuawgf/57nnuTozboPCZTB8Mh0hUs6F///Yxb9rHufYeiqPC5zqcpYekg+QfL////eejW1lyBiRvUwuPjipxrKxMF0NxZUUDDU4D9m6qijVVUoyqqqqqSlLQyiIdNKUtDGmNKVA8AwqxhIPGiIdMpWqIgKAIs/UodDrqHQ6KlmMXMY0pXKUrUMblKX/9DGM9f/zYsRJH4PSgiHDKAEpZS0MY1DGlLMJFKX1K/UpSlepSsgkHi0MY3mM///L5Q6HTKUupQ66lL+UvKHQ6bEFcFG8CkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/82DEWwAAA0gAAAAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo="
+"lamp": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAABQAAA8UAWVlZWVlZWVlZWVlZWVlZWVlZWYODg4ODg4ODg4ODg4ODg4ODg4ODrKysrKysrKysrKysrKysrKysrKzW1tbW1tbW1tbW1tbW1tbW1tbW1v//////////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQC+QAAAAAAAAPFM750zAAAAAAAAAAAAAAAAAD/82DEABzj1sXgGEfgclaQviIXxPRETru7u7iERP66J6IiI7u7u56IiJ+6BAAAAABE9ERERCP/93REREQv/0REPiIiIh8AAZDG/+5ARD4iIiI7hwMW7/6Iie6IiIn+7u7u7oiIiIiP6J9dERERER///d3d3d3RPru7gAACAIeCAYWFMiLEFAQFVVVVmZmZmZVVVUtlUKAiVVVbjMz/82LEGxzBJsqpQxgBf/+zMfqqqqqzN1QoCAsFBR3/4KCgx3goKFBQV8YKO+KFBX//Dv+LwK6DBQU/4vAoKO+KCgoUN/4IK7///8GCngrv/+gwUFBQUCgv+EgoKCiugoKCkgoKCvp3OBZGFgPJMhJfMucLJ39CqU/c0fuLxUC5EQDV/EWcYXHhIPBWBuEWBMLYXJ//MkizNh6NRAkh//NixDgfvA7EAYJQATuawgf/57nnuTozboPCZTB8Mh0hUs6F///Yxb9rHufYeiqPC5zqcpYekg+QfL////eejW1lyBiRvUwuPjipxrKxMF0NxZUUDDU4D9m6qijVVUoyqqqqqSlLQyiIdNKUtDGmNKVA8AwqxhIPGiIdMpWqIgKAIs/UodDrqHQ6KlmMXMY0pXKUrUMblKX/9DGM9f/zYsRJH4PSgiHDKAEpZS0MY1DGlLMJFKX1K/UpSlepSsgkHi0MY3mM///L5Q6HTKUupQ66lL+UvKHQ6bEFcFG8CkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/82DEWwAAA0gAAAAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo=",
+"hum": "data:audio/mpeg;base64,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"
 };
 </script>
 <script id="fx">// Sounds (off until the visitor turns them on) and the split-flap board in the booth window.
@@ -1648,7 +1705,7 @@ window.DEMOS = (function () {
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const app = $("#app"), introRoot = $("#intro-root"), fixedRoot = $("#fixed-root");
-  const SPR = window.SPR, DEMOS = window.DEMOS, FX = window.FX, PX = 3;
+  const SPR = window.SPR, DEMOS = window.DEMOS, FX = window.FX, PX = 3, SC = 3, ART = window.ART || {};
   const ORIGINAL = $("#cv-data").textContent;
   let state = JSON.parse(ORIGINAL);
 
@@ -1659,7 +1716,7 @@ window.DEMOS = (function () {
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
-    lampOn: true, recordView: false, recPos: null, printing: false,
+    lampOn: true, printing: false, contactOpen: false,
   };
   let topZ = 40, board = null;
 
@@ -1714,7 +1771,7 @@ window.DEMOS = (function () {
   }
   function folderInner(i) {
     const p = state.projects[i];
-    return '<span class="folder-tab">' + esc(shortName(p)) + '</span><span class="clip">' + SPR.draw("clip", PX) + "</span>" +
+    return '<span class="folder-tab">' + esc(shortName(p)) + '</span><span class="clip">' + SPR.art("paperclip", SC) + "</span>" +
       '<div class="folder-face">' + SPR.draw(p.icon || "paper", PX) + "<div><b>" + esc(shortName(p)) + '</b><span class="when">' + esc(p.dates) + "</span></div></div>" +
       (p.award ? '<span class="ink red mini-stamp">' + esc(p.award) + "</span>" : "") + '<span class="peek" aria-hidden="true">Open file</span>';
   }
@@ -1814,16 +1871,17 @@ window.DEMOS = (function () {
   }
 
   function deskHTML() {
-    const sticker = (id) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.draw(id, PX) + "</span>";
+    const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
       '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
-      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.draw("filebox", PX) + '</span><button class="box-all" data-act="all-back">Put all back</button></div>' +
-      '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.draw("printer", PX) + '<span class="led" aria-hidden="true"></span></button></div>' +
-      '<div class="record-view" id="record-view" hidden><div class="rv-bar"><span class="rv-title">Entry record</span><button class="btn-quiet" data-act="record-down">Put it on the desk</button></div><div class="rv-scroll" id="rv-scroll"></div></div>' +
-      '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + '</span><span class="ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
-      sticker("cup") + sticker("plant") + sticker("laptop") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
-      '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.draw("envelope", PX) + '<span class="ink red env-stamp">Applicant file</span></div>' +
+      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", SC) + '</span><button class="box-all" data-act="all-back" aria-label="Put all folders back in the box">All back</button></div>' +
+      '<div class="printer" id="printer"><div class="feed" id="feed" aria-hidden="true"></div><button class="printer-btn" data-act="print" aria-label="Print the entry record">' +
+      SPR.art("printer", SC) + '<span class="led" aria-hidden="true"></span></button></div>' +
+      '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
+      sticker("mug", "mug") + sticker("plant", "plant") + sticker("pen", "pen") + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
+      '<div class="lamp" id="lamp">' + SPR.art("lamp", SC) + '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div>' +
+      '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.art("envelope", SC) + '<span class="env-stamp">Applicant<br>file</span></div>' +
       '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">Scroll down and the applicant file unpacks itself.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
       '<div class="drawer" id="drawer"><div class="drawer-front"><button class="handle" id="handle" data-act="drawer" aria-expanded="false" aria-controls="drawer-box">' +
@@ -1833,17 +1891,21 @@ window.DEMOS = (function () {
   // ----- entry record -----
   function recordHTML() {
     const p = state.profile, e = state.education, feat = state.projects.filter((x) => x.featured);
-    const slip = '<div class="slip" id="slip" tabindex="-1"><p class="s-title">Contact slip</p>' +
-      '<span class="email">' + esc(p.email) + '</span><div class="row"><button class="btn-quiet" data-act="copy">Copy address</button>' +
+    const slip = '<div class="slip' + (ui.slipTorn ? " loose" : "") + '" id="slip" tabindex="' + (ui.slipTorn ? 0 : -1) + '"' + (ui.slipTorn ? ' data-drag role="button" aria-label="Contact slip. Press Enter to open the contact screen."' : "") +
+      '><p class="s-title">Contact slip</p><span class="email">' + esc(p.email) + '</span><div class="row"><button class="btn-quiet" data-act="copy">Copy address</button>' +
       p.links.map((l) => (safeUrl(l.url) ? '<a href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>" : "")).join("") + "</div></div>";
-    return '<article class="receipt" id="receipt" data-stamp-root data-rec tabindex="0" aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
+    const receipt = '<article class="receipt' + (ui.slipTorn ? " torn" : "") + '" id="receipt" data-stamp-root tabindex="0"' + (ui.printed ? "" : " hidden") + ' aria-label="Entry record. Press A to stamp it approved or D to stamp it denied.">' +
       '<div class="rec stampable" data-stamp="record"><p class="r-title">Entry record</p><p>Desk 04 · ' + today + "</p>" +
       "<dl><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Seeking</dt><dd>" + esc(p.seeking) + "</dd><dt>Based in</dt><dd>" + esc(p.basedIn) + "</dd><dt>Education</dt><dd>" +
       esc(e.degree) + ", " + esc(e.graduated) + '</dd></dl><p class="r-h">Strengths</p><ul>' + state.strengths.filter(Boolean).map((s) => "<li>" + esc(s) + "</li>").join("") +
       '</ul><p class="r-h">Top projects</p><ul>' + feat.map((x) => "<li>" + esc(shortName(x)) + ", " + esc(x.award || x.role) + "</li>").join("") +
       '</ul><div class="stamp-box' + (ui.inked.record ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="record"></div></div>' +
-      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>" +
-      (ui.slipTorn ? slip.replace('class="slip"', 'class="slip loose" data-drag') : "");
+      (ui.slipTorn ? "" : '<button class="perf" id="perf" data-act="tear" aria-label="Tear off the contact slip"><span class="lab">Tear here</span></button>' + slip) + "</article>";
+    return '<section class="record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
+      "<p>The 60-second version, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
+      '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
+      '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk.</p>') +
+      receipt + (ui.slipTorn ? slip : "") + "</div></div></section>";
   }
 
   // ----- fixed controls: the stamp bar and the pill nav -----
@@ -1859,6 +1921,7 @@ window.DEMOS = (function () {
       '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></aside>' +
       '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
+      '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
       '<nav class="pill" id="pill" aria-label="Areas"><button data-act="step" data-dir="-1" aria-label="Previous area">' + SPR.draw("left", PX) +
       '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav>";
   }
@@ -1915,15 +1978,19 @@ window.DEMOS = (function () {
   // the ID card, diploma and commendations across the middle overlapping only by their margins,
   // a clear lane on the right, and the bottom strip kept for the drawer front and the pill nav.
   // On short screens the whole layout shrinks a little so every paper starts on the desk.
-  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 23;
+  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 12;
   const usable = () => { const d = $("#desk"); return { w: d.clientWidth, h: d.clientHeight, top: TOP, bottom: d.clientHeight - BOTTOM - 6 }; };
   // the file box sits in the bottom-left corner; each folder has its own slot in it
   function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
-  function slotPos(i) { const b = boxRect(); return [b.x + 12 + (i % 2) * 3, b.y + 34 + i * SLOT]; }
+  // inside the tray (art pixels 6..47 across, 3..33 down at 3x): one 12px row per folder, its tab on top
+  function slotPos(i) { const b = boxRect(); return [b.x + 18, b.y + 21 + i * SLOT]; }
   function placeFurniture() {
-    const u = usable(), box = $("#filebox"), pr = $("#printer");
+    const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
     box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
-    pr.style.left = u.w - LANE + 8 + "px"; pr.style.top = u.top + 96 + "px";
+    lamp.style.left = u.w - lamp.offsetWidth - 6 + "px"; lamp.style.top = "0px";
+    pr.style.left = u.w - pr.offsetWidth - 34 + "px"; pr.style.top = Math.min(u.top + lamp.offsetHeight - 18, u.bottom - pr.offsetHeight - 96) + "px";
+    env.style.left = Math.round(u.w * 0.3) + "px"; env.style.top = u.top + 16 + "px";
+    $("#unpack-hint").style.left = Math.round(u.w * 0.3) + env.offsetWidth + 24 + "px";
   }
   function computeFit() {
     if (isPhone()) { ui.fit = 1; return; }
@@ -1961,15 +2028,18 @@ window.DEMOS = (function () {
     if (instant) still(el, go); else { el.classList.add("moving"); go(); }
   }
   function placeStickers() {
-    const u = usable(), w = u.w;
-    const spots = { cup: [w - LANE + 40, u.bottom - 70], plant: [w - LANE + 70, u.top + 230], laptop: [boxRect().w + 170, u.bottom - 52] };
+    const u = usable(), w = u.w, pr = $("#printer"), box = boxRect();
+    const spots = {
+      mug: [pr.offsetLeft + 6, pr.offsetTop + pr.offsetHeight + 8],
+      plant: [12, u.top + 4],
+      pen: [box.x + box.w + 18, u.bottom - 130],
+    };
     $$(".sticker", $("#desk")).forEach((el) => {
       const id = el.dataset.sticker, p = ui.stickers[id] || spots[id];
-      setPos(el, clamp(p[0], 0, w - 50), clamp(p[1], u.top, u.bottom - 48));
-      el.style.rotate = (rnd(id, "t") * 16 - 8).toFixed(0) + "deg";
+      setPos(el, clamp(p[0], 0, w - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
     });
-    const cup = ui.stickers.cup || spots.cup, ring = $(".cup-ring");
-    if (ring) setPos(ring, clamp(cup[0] - 40, 0, w - 50), clamp(cup[1] + 6, u.top, u.bottom - 40));
+    const mug = $('.sticker[data-sticker="mug"]'), ring = $(".cup-ring");
+    if (ring && mug) setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40));
   }
   function relayout() {
     if (isPhone() || !$("#desk")) return;
@@ -1990,7 +2060,7 @@ window.DEMOS = (function () {
     if (isPhone()) return;
     relayout();
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
-    placeStickers(); placeLamp(); placeReceipt();
+    placeStickers(); checkLamp();
     layoutDrawer(false);
     applyScene(true);
   }
@@ -2172,12 +2242,11 @@ window.DEMOS = (function () {
   function stampableAt(x, y) { return stampables().find((s) => inside(rectOf(s), x, y)) || null; }
   function stampableShown() {
     if ($("#intro")) return ui.introStep >= 1 && !ui.introDone;
-    if (ui.view !== "desk" || editing) return false;
-    if (ui.recordView) return true;
+    if (ui.view !== "desk" || editing || ui.contactOpen) return false;
     const r = receiptEl();
-    if (!r || !ui.printed || ui.printing) return false;
+    if (!r || r.hidden || !ui.printed) return false;
     const b = rectOf(r);
-    return b.bottom > 120 && b.top < window.innerHeight - 120 && b.right > 0 && b.left < window.innerWidth;
+    return b.bottom > 120 && b.top < window.innerHeight - 120;
   }
   function updateBar() {
     const bar = $("#stampbar");
@@ -2294,130 +2363,149 @@ window.DEMOS = (function () {
     }, 400 + (kind === "approved" ? 1200 : 2400));
   }
 
-  // ----- the printer on the desk and the entry record it prints -----
+  // ----- the printer on the desk; the entry record lands in its own section below -----
   function receiptEl() { return $("#receipt"); }
-  function recordFits() {
-    const r = receiptEl(), u = usable();
-    return r && r.offsetHeight + 12 <= u.bottom - u.top;
-  }
-  function placeReceipt() {
-    const r = receiptEl();
-    if (!r || ui.recordView || isPhone() || r.parentElement !== $("#desk")) return;
-    const u = usable(), s = Math.min(1, (u.bottom - u.top) / r.offsetHeight);
-    r.style.setProperty("--rfit", s.toFixed(3));
-    const pos = ui.recPos || [u.w - LANE - 372, u.top + 4];
-    ui.recPos = [clamp(pos[0], 0, u.w - r.offsetWidth * s), clamp(pos[1], 0, Math.max(0, u.bottom - r.offsetHeight * s))];
-    setPos(r, ui.recPos[0], ui.recPos[1]);
-  }
-  function makeReceipt() {
-    if (receiptEl()) return receiptEl();
-    $("#desk").insertAdjacentHTML("beforeend", recordHTML());
-    const r = receiptEl();
-    r.classList.add("paper", "p-record");
-    r.dataset.drag = "";
-    renderMarks("record");
-    const slip = $("#slip.loose");
-    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.slipPos || [MID_X, TOP + 40])[0], (ui.slipPos || [MID_X, TOP + 40])[1]); }
-    return r;
-  }
-  function openRecordView() {
-    const r = makeReceipt(), view = $("#record-view");
-    ui.recordView = true;
-    r.style.left = ""; r.style.top = ""; r.style.removeProperty("--rfit");
-    $("#rv-scroll").appendChild(r);
-    view.hidden = false;
-    view.style.zIndex = 880;
-    r.focus({ preventScroll: true });
-    updateBar(); updatePill();
-  }
-  function closeRecordView() {
-    const r = receiptEl(), view = $("#record-view");
-    if (!ui.recordView || !r) return;
-    ui.recordView = false;
-    view.hidden = true;
-    $("#desk").appendChild(r);
-    const slip = $("#rv-scroll .slip.loose");
-    if (slip) { $("#desk").appendChild(slip); moveTo(slip, (ui.recPos || [MID_X, TOP])[0] - 40, TOP + 30); }
-    placeReceipt(); raise(r); FX.play("settle");
-    r.focus({ preventScroll: true });
-    updateBar(); updatePill();
-  }
-  // Click the printer: the light blinks, the record feeds out of the slot line by line, then it is a paper.
+  // The light blinks and a stub feeds out of the slot line by line. Then it tears off at the slot, slides off
+  // the bottom of the desk, and the page scrolls down to the entry record section where the full record lands.
   function printRecord() {
-    if (ui.printed) { if (!isPhone()) openRecordView(); else receiptEl().scrollIntoView({ behavior: behavior(), block: "start" }); return; }
     if (ui.printing) return;
-    ui.printing = true;
-    const pr = $("#printer"), r = makeReceipt();
-    pr.classList.add("busy");
+    const pr = $("#printer"), feed = $("#feed");
     say("record");
-    if (isPhone()) { pr.after(r); }
-    const full = r.offsetHeight, u = usable();
-    const finish = () => {
-      ui.printing = false; ui.printed = true; pr.classList.remove("busy"); r.classList.remove("feeding"); r.style.clipPath = "";
-      if (isPhone()) { r.scrollIntoView({ behavior: behavior(), block: "start" }); return; }
-      if (recordFits()) { ui.recPos = [r.offsetLeft, r.offsetTop]; placeReceipt(); raise(r); updateBar(); }
-      else openRecordView();
-    };
-    if (isPhone() || reduced()) { FX.play("print"); finish(); return; }
-    // feed from the printer's slot: start hidden above the slot and reveal one line at a time
-    const slotX = pr.offsetLeft + pr.offsetWidth / 2, slotY = pr.offsetTop + pr.offsetHeight - 14;
-    r.classList.add("feeding");
-    setPos(r, Math.round(clamp(slotX - r.offsetWidth / 2, 0, u.w - r.offsetWidth)), Math.round(slotY));
-    raise(r);
+    if (isPhone() || reduced() || !pr || !feed) { FX.play("print"); landRecord(false); scrollToRecord("auto"); return; }
+    ui.printing = true;
+    pr.classList.add("busy");
     FX.play("print");
-    const steps = 16;
-    for (let k = 0; k <= steps; k++) setTimeout(() => {
-      const shown = Math.round(full * k / steps);
-      r.style.clipPath = "inset(0 0 " + (full - shown) + "px 0)";
-      if (k === steps) setTimeout(finish, 120);
-    }, k * 100);
+    const steps = 10, max = 108;
+    feed.classList.remove("torn");
+    for (let k = 1; k <= steps; k++) setTimeout(() => { feed.style.setProperty("--feed", Math.round(max * k / steps) + "px"); }, k * 110);
+    setTimeout(() => {
+      pr.classList.remove("busy");
+      FX.play("lift");
+      feed.classList.add("torn");
+      scrollToRecord("smooth");
+      setTimeout(() => { landRecord(true); }, 520);
+      setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 900);
+    }, steps * 110 + 120);
+  }
+  function scrollToRecord(how) { const r = $("#record"); if (r) window.scrollTo({ top: docTop(r), behavior: how === "smooth" && !reduced() ? "smooth" : "auto" }); }
+  function landRecord(animate) {
+    const r = receiptEl(), empty = $("#record-empty");
+    ui.printed = true;
+    if (empty) empty.remove();
+    if (!r) return;
+    r.hidden = false;
+    $$('[data-act="print"]', $("#record")).forEach((b) => { b.textContent = "Print it again"; });
+    renderMarks("record");
+    r.classList.remove("landing");
+    if (animate && !reduced()) { void r.offsetWidth; r.classList.add("landing"); FX.play("settle"); }
+    updateBar(); updatePill();
   }
   function setTear(v) { ui.torn = v; const r = receiptEl(); if (r) r.style.setProperty("--tear", v); }
+  // Tearing off the slip: it comes away, slides to the middle of the screen and becomes the contact screen.
   function tearOff() {
     if (ui.slipTorn) return;
-    const slip = $("#slip"), r = receiptEl();
+    const slip = $("#slip"), r = receiptEl(), area = $("#record-area");
     ui.slipTorn = true; FX.play("lift");
     r.classList.add("torn"); $("#perf").remove();
     slip.classList.add("loose");
-    slip.dataset.drag = "";
-    if (ui.recordView) $("#rv-scroll").appendChild(slip);
-    else if (isPhone()) r.after(slip);
-    else { $("#desk").appendChild(slip); moveTo(slip, r.offsetLeft - 60, r.offsetTop + 40); raise(slip); }
+    slip.dataset.drag = ""; slip.tabIndex = 0;
+    slip.setAttribute("role", "button"); slip.setAttribute("aria-label", "Contact slip. Press Enter to open the contact screen.");
+    area.appendChild(slip);
+    if (!isPhone()) moveTo(slip, r.offsetLeft + r.offsetWidth + 28, Math.max(0, r.offsetTop + r.offsetHeight - slip.offsetHeight - 10));
     setTear(0);
-    slip.focus({ preventScroll: true });
+    if (reduced()) { openContact(slip); return; }
+    const sr = rectOf(slip), dx = window.innerWidth / 2 - (sr.left + sr.width / 2), dy = window.innerHeight / 2 - (sr.top + sr.height / 2);
+    slip.style.transition = "transform 0.28s ease-out"; slip.style.transform = "translate(" + dx + "px," + dy + "px)";
+    setTimeout(() => { openContact(slip); slip.style.transition = "none"; slip.style.transform = ""; void slip.offsetWidth; slip.style.transition = ""; }, 300);
   }
   function tearAll() {
     if (reduced()) { tearOff(); return; }
     [0.35, 0.7, 1].forEach((v, i) => setTimeout(() => { setTear(v); if (v === 1) tearOff(); }, i * 60));
   }
 
-  // ----- the lamp: its base on the desk, its arm and shade reaching up over the counter and the booth -----
-  function placeLamp() {
-    const lamp = $("#lamp"), desk = $("#desk");
-    if (!lamp || !desk || isPhone()) return;
-    lamp.style.left = desk.offsetLeft + desk.clientWidth - 236 + "px";
-    lamp.style.top = desk.offsetTop - 104 + "px";
+  // ----- the contact screen: a retro computer (or phone) with a mail form on its screen -----
+  let contactReturn = null;
+  function mailto() {
+    const p = state.profile, subj = $("#cm-subject"), msg = $("#cm-msg");
+    return "mailto:" + p.email + "?subject=" + encodeURIComponent(subj ? subj.value : "Hello from your portfolio") + (msg && msg.value ? "&body=" + encodeURIComponent(msg.value) : "");
   }
+  function contactContent(phone) {
+    const p = state.profile, links = p.links.filter((l) => safeUrl(l.url));
+    const mark = (l) => '<a class="cm-mark" href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>";
+    if (phone) {
+      return '<p class="cm-title" id="cm-title">Contact</p><div class="cm-grid"><a class="cm-big" id="cm-send" href="' + esc(mailto()) + '">Email me</a>' +
+        '<button class="cm-big" data-act="cm-copy">Copy address</button>' + links.map((l) => mark(l).replace('class="cm-mark"', 'class="cm-big"')).join("") + '</div><p class="cm-note" id="cm-note" aria-live="polite"></p>';
+    }
+    return '<p class="cm-title" id="cm-title">New message</p>' +
+      '<div class="cm-row"><span class="cm-lab">To:</span><span class="cm-val">' + esc(p.email) + '</span><button class="cm-btn" data-act="cm-copy">Copy address</button></div>' +
+      '<label class="cm-row" for="cm-subject"><span class="cm-lab">Subject:</span><input id="cm-subject" class="cm-in" value="Hello from your portfolio" autocomplete="off"></label>' +
+      '<label class="cm-lab cm-block" for="cm-msg">Message:</label><textarea id="cm-msg" class="cm-in" rows="3"></textarea>' +
+      '<div class="cm-row"><a class="cm-btn cm-send" id="cm-send" href="' + esc(mailto()) + '">Send</a><span class="cm-note" id="cm-note" aria-live="polite"></span></div>' +
+      '<div class="cm-row cm-marks"><span class="cm-lab">Look me up:</span>' + links.map(mark).join("") + "</div>";
+  }
+  function openContact(from) {
+    const box = $("#contact"), dev = $("#cm-device"), phone = isPhone(), a = ART[phone ? "phone" : "computer"];
+    if (!box || !a) return;
+    contactReturn = from || document.activeElement;
+    const s = Math.max(phone ? 3 : 4, Math.min(phone ? 8 : 9, Math.floor(Math.min(window.innerWidth * 0.92 / a.w, window.innerHeight * 0.9 / a.h))));
+    const sc = a.screen, cl = phone ? { x: 4, y: 19 } : a.close;
+    dev.innerHTML = SPR.art(phone ? "phone" : "computer", s) +
+      '<div class="cm-screen" style="left:' + sc.x * s + "px;top:" + sc.y * s + "px;width:" + sc.w * s + "px;height:" + sc.h * s + 'px"><div class="cm-content" id="cm-content">' + contactContent(phone) + "</div></div>" +
+      '<button class="cm-x" data-act="cm-close" aria-label="Close the contact screen" style="left:' + cl.x * s + "px;top:" + cl.y * s + 'px">X</button>';
+    dev.style.width = a.w * s + "px"; dev.style.height = a.h * s + "px";
+    box.hidden = false; ui.contactOpen = true;
+    app.inert = true; introRoot.inert = true;
+    fitContact(sc.w * s, sc.h * s);
+    void dev.offsetWidth; box.classList.add("open");
+    FX.play("hum");
+    const first = $("#cm-subject", dev) || $(".cm-big", dev);
+    setTimeout(() => { if (first) first.focus({ preventScroll: true }); }, reduced() ? 0 : 200);
+  }
+  // Content larger than the screen is scaled down, never the computer itself.
+  function fitContact(w, h) {
+    const c = $("#cm-content");
+    c.style.transform = ""; c.style.width = w + "px";
+    const k = Math.min(1, h / c.scrollHeight);
+    if (k < 1) { c.style.width = w / k + "px"; const k2 = Math.min(1, h / c.scrollHeight); c.style.transform = "scale(" + k2 + ")"; }
+  }
+  function closeContact() {
+    const box = $("#contact");
+    if (!box || !ui.contactOpen) return;
+    ui.contactOpen = false;
+    box.classList.remove("open"); box.hidden = true;
+    app.inert = false; introRoot.inert = false;
+    const back = $("#slip.loose") || contactReturn;
+    if (back) back.focus({ preventScroll: true });
+  }
+
+  // ----- the lamp: base on the desk's top-right corner, shade over the counter strip only -----
   function setLampVisible(on) { const st = $("#stage"); if (st) st.classList.toggle("lamp-ready", on); }
   function toggleLamp() { ui.lampOn = !ui.lampOn; $("#stage").classList.toggle("lamp-off", !ui.lampOn); FX.play("lamp"); $("#lamp-switch").setAttribute("aria-pressed", String(ui.lampOn)); }
+  // Open or held papers pass over the lamp; when one overlaps it, the lamp fades back.
+  function checkLamp() {
+    const lamp = $("#lamp");
+    if (!lamp) return;
+    const r = rectOf(lamp);
+    const over = $$("#desk .paper.open, #desk .paper.held").some((p) => { const b = rectOf(p); return b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom; });
+    lamp.classList.toggle("faded", over);
+  }
 
   // ----- pill nav -----
   const AREAS = [["booth", "Booth"], ["desk", "Desk"], ["record", "Entry record"]];
   function currentArea() {
     if (ui.view !== "desk" || !$("#scene")) return 0;
-    if (ui.recordView) return 2;
-    if (isPhone()) { const r = receiptEl(); if (r && rectOf(r).top < window.innerHeight * 0.5) return 2; return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0; }
+    if (rectOf($("#record")).top < window.innerHeight * 0.55) return 2;
+    if (isPhone()) return rectOf($("#desk")).top < window.innerHeight * 0.5 ? 1 : 0;
     return -rectOf($("#scene")).top >= BOOT - 10 ? 1 : 0;
   }
   function goArea(i) {
     const id = AREAS[i][0], sc = $("#scene");
-    if (id !== "record" && ui.recordView) closeRecordView();
     if (id === "booth") window.scrollTo({ top: isPhone() ? 0 : docTop(sc), behavior: behavior() });
     else if (id === "desk") window.scrollTo({ top: isPhone() ? docTop($("#desk")) - 8 : docTop(sc) + unpackEnd(), behavior: behavior() });
     else {
-      // bring the desk into view, then let the printer print (or show the record if it already has)
+      // the desk has to be in view for the printer to print, so bring it up first
       if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
-      window.scrollTo({ top: isPhone() ? docTop($("#printer")) - 8 : docTop(sc) + unpackEnd(), behavior: "auto" });
+      if (!isPhone()) window.scrollTo({ top: docTop(sc) + unpackEnd(), behavior: "auto" });
       printRecord();
     }
   }
@@ -2510,18 +2598,18 @@ window.DEMOS = (function () {
 
   function renderDesk() {
     app.innerHTML = '<main class="site"><section class="scene" id="scene"><div class="stage' + (ui.lampOn ? "" : " lamp-off") + '" id="stage">' + boothHTML() + deskHTML() +
-      '<div class="lamp" id="lamp"><span class="lamp-art" aria-hidden="true"><span class="off">' + SPR.lamp(false, PX) + '</span><span class="on">' + SPR.lamp(true, PX) + "</span></span>" +
-      '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div></div></section></main>';
+      "</div></section>" + recordHTML() + "</main>";
     board = FX.board($("#board"), state.profile.board, 20);
     sizeScene();
     if (!isPhone()) placeFurniture();
     computeFit();
-    placeStickers(); placeLamp();
+    placeStickers();
     renderPutAway();
+    renderMarks("record");
+    if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
     layoutDrawer(false);
     applyScene(true);
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
-    if (ui.printed) { const r = makeReceipt(); if (isPhone()) $("#printer").after(r); else if (ui.recordView) { ui.recordView = false; openRecordView(); } else placeReceipt(); }
     updatePill(); updateBar();
   }
   function render() {
@@ -2619,7 +2707,11 @@ window.DEMOS = (function () {
     "flip-pass": flipPass,
     bar() { const open = $("#stampbar").classList.contains("out"); ui.barPinned = !open; updateBar(); },
     print() { printRecord(); },
-    "record-down"() { closeRecordView(); },
+    "cm-close"() { closeContact(); },
+    "cm-copy"(b) {
+      const note = $("#cm-note"), done = () => { if (note) note.textContent = "Copied"; b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy address"; if (note) note.textContent = ""; }, 1600); };
+      try { navigator.clipboard.writeText(state.profile.email).then(done, () => { if (note) note.textContent = state.profile.email; }); } catch (err) { if (note) note.textContent = state.profile.email; }
+    },
     "all-back"() { putAllBack(); },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
@@ -2671,8 +2763,8 @@ window.DEMOS = (function () {
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
     if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) takeOut(folder.dataset.id); else openCase(folder.dataset.id); return; }
-    const rec = ev.target.closest("#desk > .receipt");
-    if (rec && !justDragged && !ui.printing && !isPhone() && !ev.target.closest("button, a, .perf")) openRecordView();
+    const slipEl = ev.target.closest("#slip.loose");
+    if (slipEl && !justDragged && !ev.target.closest("button, a")) openContact(slipEl);
   }, true);
 
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
@@ -2769,6 +2861,7 @@ window.DEMOS = (function () {
       if (drag.el.classList.contains("paper")) markHandled();
     }
     moveTo(drag.el, drag.ox + dx, drag.oy + dy);
+    if (drag.el.classList.contains("paper")) checkLamp();
     const ct = $("#counter"), isCase = drag.el.classList.contains("p-case"), fb = $("#filebox");
     if (ct && drag.el.classList.contains("paper") && !isCase && !drag.el.classList.contains("p-record")) {
       const r = rectOf(ct); ct.classList.add("show-hint"); ct.classList.toggle("ready", ev.clientY < r.bottom && ev.clientY > r.top - 40);
@@ -2814,7 +2907,7 @@ window.DEMOS = (function () {
     const ct = $("#counter"), fb = $("#filebox");
     if (ct) ct.classList.remove("show-hint");
     if (fb && fb.classList.contains("hot")) { fb.classList.remove("hot"); fileBack(d.el.dataset.id); return; }
-    if (d.el.classList.contains("p-record")) { ui.recPos = [d.el.offsetLeft, d.el.offsetTop]; FX.play("settle"); return; }
+    checkLamp();
     if (d.el.classList.contains("paper")) {
       pst(d.el.dataset.id).tilt = tilt;
       if (ct && ct.classList.contains("ready")) { ct.classList.remove("ready"); putAway(d.el.dataset.id, { x: d.ox, y: Math.max(d.oy, TOP) }); return; }
@@ -2827,6 +2920,17 @@ window.DEMOS = (function () {
   document.addEventListener("dragstart", (ev) => { if (ev.target.closest && ev.target.closest("[data-drag], .stamp-btn, [data-stamp-root]")) ev.preventDefault(); });
 
   document.addEventListener("keydown", (ev) => {
+    if (ui.contactOpen) {
+      if (ev.key === "Escape") { ev.preventDefault(); closeContact(); return; }
+      if (ev.key === "Tab") {
+        const f = $$("#contact a[href], #contact button, #contact input, #contact textarea").filter((e) => e.offsetParent);
+        const i = f.indexOf(document.activeElement);
+        if (ev.shiftKey && (i <= 0)) { ev.preventDefault(); f[f.length - 1].focus(); }
+        else if (!ev.shiftKey && i === f.length - 1) { ev.preventDefault(); f[0].focus(); }
+      }
+      return;
+    }
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches("#slip.loose")) { ev.preventDefault(); openContact(ev.target); return; }
     const t = ev.target, typing = t.closest && t.closest(".f, input, textarea, [contenteditable]");
     if (ev.key === "Enter" && t.closest && t.closest(".f")) ev.preventDefault();
     if (typing || ev.ctrlKey || ev.metaKey || ev.altKey) return;
@@ -2854,7 +2958,7 @@ window.DEMOS = (function () {
     }
     if (ev.key === "Escape") {
       if (held) { springBack(); return; }
-      if (ui.recordView) { closeRecordView(); return; }
+
       if ($("#intro")) { closeIntro(); return; }
       if (ui.drawer > 0.5) { setDrawer(0); $("#handle").focus(); return; }
       const open = paperIds().filter((id) => pst(id).open);
@@ -2875,6 +2979,9 @@ window.DEMOS = (function () {
     if ((ev.key === "b" || ev.key === "B") && el.matches(".p-case")) { ev.preventDefault(); fileBack(el.dataset.id); return; }
     const step = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[ev.key];
     if (step) { ev.preventDefault(); markHandled(); raise(el); moveTo(el, el.offsetLeft + step[0], el.offsetTop + step[1]); }
+  });
+  document.addEventListener("input", (ev) => {
+    if (ev.target.closest && ev.target.closest("#contact")) { const a = $("#cm-send"); if (a) a.href = mailto(); }
   });
   app.addEventListener("input", (ev) => {
     const el = ev.target.closest("[data-k]");
@@ -2910,7 +3017,7 @@ window.DEMOS = (function () {
       "<title>CV Please</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n" +
       '<link rel="stylesheet" href="' + $("#fonts").getAttribute("href") + '" id="fonts">\n' +
       "<style id=\"page-style\">" + $("#page-style").textContent + "</style>\n<div id=\"app\"></div>\n<div id=\"intro-root\"></div>\n<div id=\"fixed-root\"></div>\n" +
-      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("sprites") + block("sounds") + block("fx") + block("demos") + block("main") + "</body></html>";
+      lt + sc + " type=\"application/json\" id=\"cv-data\">" + json + lt + "/" + sc + ">\n" + block("art") + block("sprites") + block("sounds") + block("fx") + block("demos") + block("main") + "</body></html>";
   }
   async function save() {
     if (!artifact || busy || !dirty) return;

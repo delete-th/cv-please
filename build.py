@@ -23,7 +23,7 @@ def body():
     data = json.loads(read("data.json"))
     blob = json.dumps(data, indent=1, ensure_ascii=False).replace("<", "\\u003c")
     scripts = "".join('<script id="%s">%s</script>\n' % (sid, read(f)) for sid, f in
-                      [("sprites", "sprites.js"), ("sounds", "sounds.js"), ("fx", "fx.js"), ("demos", "demos.js"), ("main", "app.js")])
+                      [("art", "art.js"), ("sprites", "sprites.js"), ("sounds", "sounds.js"), ("fx", "fx.js"), ("demos", "demos.js"), ("main", "app.js")])
     return ('<title>CV Please</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
             '<link rel="stylesheet" href="%s" id="fonts">\n<style id="page-style">%s</style>\n'
             '<div id="app"></div>\n<div id="intro-root"></div>\n<div id="fixed-root"></div>\n'

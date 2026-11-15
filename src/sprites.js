@@ -85,146 +85,20 @@ window.SPR = (function () {
     ".kBkkkkkkkBBBByyBbk.", ".kBkKbKbKkBBByYYybk.", ".kBkbKbKbkBBBByyBbk.", ".kBkKbKbKkBBBBBBBbk.", ".kBkkkkkkkBkkBkkBbk.",
     ".kBBBBBBBBBBBBBBBbk.", ".kbbbbbbbbbbbbbbbbk.", "..kkkkkkkkkkkkkkkk..", "...kk..........kk...",
   ];
-  S.lamp = [
-    ".......kkkkkk.......", ".....kkccccccKk.....", "....kcGcccccccCk....", "...kcGccccccccCCk...", "..kcccccccccccCCCk..",
-    "..kkkkkkkkkkkkkkkk..", "......kLLLLLLk......", ".......kkkkkk.......", ".........kk.........", "........kWk.........",
-    ".......kWk..........", "......kWk...........", ".....kWk............", ".....kWk............", "......kWk...........",
-    ".......kWk..........", "........kWk.........", ".....kkkkkkkkk......", "....kbBBBBBBBbk.....", "...kbBBBBBBBBBbk....",
-    "...kkkkkkkkkkkkkk...",
-  ];
-  S.cup = [
-    "................", "....kkkkkkkk....", "...kffffffffk...", "...kfwwwwwwfkkk.", "...kffffffffk..k", "...kffffffffk..k",
-    "...kffffffffk..k", "...kffffffffkkk.", "...kffffffffk...", "...kfffffffuk...", "....kffffffk....", "....kkkkkkkk....",
-    "..kkkkkkkkkkkk..", "...kuuuuuuuuk...", "....kkkkkkkk....", "................",
-  ];
-  S.plant = [
-    ".......k........", "......kGk..k....", "..k...kGk.kGk...", ".kGk..kgk.kgk...", ".kgGk.kgkkgk....", "..kggkkgkgk..k..",
-    "...kgggggk..kGk.", "....kggggkkkgk..", ".....kggggggk...", "....kkkkkkkkkk..", "....krrrrrrrRk..", ".....krrrrrRk...",
-    ".....krrrrrRk...", "......krrrRk....", "......kkkkkk....", "................",
-  ];
-  S.laptop = ["..kkkkkkkkkkkk.."].concat(["oooooooooo", "ogggoooooo", "ooogggggoo", "oggooooooo", "oooooggggo", "oooooooooo"].map((s) => "..k" + s + "k.."))
-    .concat(["..kkkkkkkkkkkk..", ".kBBBBBBBBBBBBk.", "kBbBbBbBbBbBbBBk", "kbbbbbbbbbbbbbbk", ".kkkkkkkkkkkkkk."]);
-  S.clip = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K.K.K", "K.K...K", "K..KKK.", ".K.....", "..KKKK."];
   S.handle = ["..kkkkkkkkkkkk..", ".kyyyyyyyyyyyyk.", "kyYkkkkkkkkkkYyk", "kYk..........kYk", "kk............kk"];
   S.left = ["...y.", "..yy.", ".yyy.", "yyyy.", ".yyy.", "..yy.", "...y."];
   S.right = S.left.map((r) => r.split("").reverse().join(""));
   S.corner = [".........k", "........kP", ".......kPP", "......kPPP", ".....kPPPP", "....kPPPPu", "...kPPPPuu", "..kPPPuuuu", ".kPPuuuuuu", "kkkkkkkkkk"];
 
-  // A manila envelope with its flap open, drawn from simple geometry.
-  S.envelope = (function () {
-    const W = 60, H = 40, g = [];
-    for (let y = 0; y < H; y++) {
-      let row = "";
-      for (let x = 0; x < W; x++) {
-        const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
-        let ch = edge ? "k" : y > H - 5 ? "M" : x === 1 || y === 1 ? "p" : "m";
-        const lx = 1 + (y - 1) * 1.45, rx = W - 2 - (y - 1) * 1.45;
-        if (!edge && y < 21 && x >= lx && x <= rx) ch = Math.abs(x - lx) < 1.5 || Math.abs(x - rx) < 1.5 ? "k" : "M";
-        row += ch;
-      }
-      g.push(row);
-    }
-    return g;
-  })();
 
 
-  // ----- desk furniture, all seen from above with light from the top left -----
-  function grid(w, h) { return Array.from({ length: h }, () => Array(w).fill(".")); }
-  function rows(g) { return g.map((r) => r.join("")); }
-  function disc(g, cx, cy, rx, ry, ch) {
-    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[0].length; x++) {
-      const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2;
-      if (d <= 1) g[y][x] = typeof ch === "function" ? ch(x, y, d) : ch;
-    }
+
+  // Thea's desk objects: PNGs on a clean pixel grid, always drawn at a whole-number scale.
+  function art(name, scale, cls, alt) {
+    const a = (window.ART || {})[name];
+    if (!a) return "";
+    return '<img class="spr art art-' + name + " " + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ' draggable="false">';
   }
-  function rect(g, x0, y0, w, h, ch) { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (g[y] && g[y][x] !== undefined) g[y][x] = ch; }
-  function thick(g, x0, y0, x1, y1, ch, r) {
-    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
-    for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); rect(g, x - r, y - r, r * 2 + 1, r * 2 + 1, ch); }
-  }
-
-  // The file box: an open wooden tray. Inner walls on the top and left are in shadow, the front lip is thick.
-  S.filebox = (function () {
-    const W = 87, H = 67, g = grid(W, H);
-    rect(g, 0, 0, W, H, "k");
-    rect(g, 1, 1, W - 2, H - 2, "W");
-    rect(g, 1, 1, W - 2, 1, "s"); rect(g, 1, 1, 1, H - 2, "s");
-    rect(g, 4, 4, W - 8, H - 13, "k");
-    rect(g, 5, 5, W - 10, H - 15, "w");
-    rect(g, 5, 5, W - 10, 3, "d"); rect(g, 5, 5, 3, H - 15, "d");
-    for (let y = 12; y < H - 12; y += 6) rect(g, 9, y, W - 16, 1, "d");
-    rect(g, 1, H - 9, W - 2, 1, "k");
-    rect(g, 1, H - 8, W - 2, 1, "s");
-    return rows(g);
-  })();
-
-  // The printer: a squat box with a paper tray at the back and the output slot at the front.
-  S.printer = (function () {
-    const W = 50, H = 34, g = grid(W, H);
-    rect(g, 10, 0, 30, 7, "k"); rect(g, 11, 1, 28, 6, "f");
-    rect(g, 0, 5, W, H - 5, "k");
-    rect(g, 1, 6, W - 2, H - 7, "b");
-    rect(g, 1, 6, W - 2, 2, "B"); rect(g, 1, 6, 2, H - 7, "B");
-    rect(g, 4, 11, W - 8, 13, "o");
-    rect(g, 5, 12, W - 10, 11, "b");
-    rect(g, 6, 13, 10, 1, "B");
-    rect(g, 7, H - 6, W - 14, 2, "k");
-    rect(g, 42, 26, 3, 2, "o"); rect(g, 37, 26, 3, 2, "o");
-    return rows(g);
-  })();
-
-  // The desk lamp: a heavy round base on the desk, a jointed arm, and a shade reaching up and over the counter.
-  S.biglamp = (function () {
-    const W = 72, H = 80, g = grid(W, H);
-    disc(g, 54, 68, 14, 9.5, "k");
-    disc(g, 54, 68, 13, 8.5, (x, y) => (x + y < 54 + 68 - 6 ? "B" : x + y > 54 + 68 + 6 ? "o" : "b"));
-    disc(g, 52, 64, 4, 3, "k"); disc(g, 52, 64, 3, 2, "B");
-    thick(g, 52, 63, 40, 36, "k", 2); thick(g, 40, 36, 24, 18, "k", 2);
-    thick(g, 52, 63, 40, 36, "B", 1); thick(g, 40, 36, 24, 18, "B", 1);
-    disc(g, 40, 36, 3.5, 3.5, "k"); disc(g, 40, 36, 2, 2, "b");
-    disc(g, 18, 14, 17, 12, "k");
-    disc(g, 18, 14, 16, 11, (x, y) => (x + y < 18 + 14 - 8 ? "G" : x + y > 18 + 14 + 8 ? "C" : "c"));
-    disc(g, 13, 19, 9, 5.5, "k");
-    disc(g, 13, 19, 8, 4.5, "L");
-    disc(g, 11, 18, 3, 1.6, "Z");
-    return rows(g);
-  })();
-
-  // A mug seen from above: rim, coffee with a highlight, and the handle as a small loop.
-  S.cup = (function () {
-    const W = 22, H = 18, g = grid(W, H);
-    rect(g, 15, 6, 6, 6, "k"); rect(g, 16, 7, 4, 4, "f"); rect(g, 17, 8, 2, 2, ".");
-    disc(g, 9, 9, 8.5, 8.5, "k");
-    disc(g, 9, 9, 7.5, 7.5, (x, y) => (x + y < 14 ? "f" : "P"));
-    disc(g, 9, 9, 5.5, 5.5, "k");
-    disc(g, 9, 9, 4.8, 4.8, (x, y) => (x + y > 20 ? "d" : "w"));
-    rect(g, 6, 6, 2, 1, "s"); rect(g, 6, 7, 1, 1, "s");
-    return rows(g);
-  })();
-
-  // A potted plant from above: round pot and soil, leaves spreading out over the rim.
-  S.plant = (function () {
-    const W = 26, H = 26, g = grid(W, H), cx = 13, cy = 13;
-    disc(g, cx, cy, 8, 8, "k"); disc(g, cx, cy, 7, 7, "r"); disc(g, cx, cy, 5.5, 5.5, "R"); disc(g, cx, cy, 4.5, 4.5, "d");
-    [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
-      const a = i * (Math.PI * 2 / 7) + 0.3, ex = cx + Math.cos(a) * 9.5, ey = cy + Math.sin(a) * 9.5;
-      const mx = cx + Math.cos(a) * 5.5, my = cy + Math.sin(a) * 5.5;
-      disc(g, mx, my, 3.6, 3.6, "k"); disc(g, ex, ey, 2.8, 2.8, "k");
-      disc(g, mx, my, 2.6, 2.6, i % 2 ? "g" : "G"); disc(g, ex, ey, 1.8, 1.8, i % 2 ? "g" : "G");
-    });
-    disc(g, cx, cy, 2, 2, "G");
-    return rows(g);
-  })();
-
-  // A small laptop from above: the open lid is a thin dark strip, the keyboard below it.
-  S.laptop = (function () {
-    const W = 24, H = 18, g = grid(W, H);
-    rect(g, 0, 0, W, 4, "k"); rect(g, 1, 1, W - 2, 2, "o");
-    rect(g, 0, 4, W, H - 4, "k"); rect(g, 1, 5, W - 2, H - 6, "b"); rect(g, 1, 5, W - 2, 1, "B");
-    for (let y = 7; y < 12; y += 2) for (let x = 3; x < W - 3; x += 2) g[y][x] = "B";
-    rect(g, 8, 13, 8, 3, "B"); rect(g, 9, 14, 6, 1, "o");
-    return rows(g);
-  })();
 
   function rects(rows, map) {
     let out = "";
@@ -287,7 +161,6 @@ window.SPR = (function () {
     const a = APPLICANTS[id] || APPLICANTS.thea;
     return '<img class="spr ' + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ">";
   }
-  function lamp(on, scale) { return draw("biglamp", scale, "", { L: on ? "cover-ink" : "rule", Z: on ? "field" : "rule" }); }
 
   // The warm pool the desk lamp throws on the wood: stepped rings, with a dithered outer edge.
   function pool(scale) {
@@ -371,5 +244,5 @@ window.SPR = (function () {
     root.setProperty("--worn-size", 16 * scale + "px");
   }
 
-  return { draw: draw, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, lamp: lamp, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
+  return { draw: draw, art: art, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
 })();
