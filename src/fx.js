@@ -34,6 +34,7 @@ window.FX = (function () {
     const c = ctx();
     if (c && name === "flip") { paperFlip(c); return; }
     if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
+    if (c && name === "chime") { cuteChime(c); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -86,6 +87,21 @@ window.FX = (function () {
     bp.type = "peaking"; bp.frequency.value = 3200 * pitch; bp.gain.value = 5; bp.Q.value = 0.8;
     g.gain.value = len > 0.2 ? 0.75 : 0.45;
     s.connect(hp); hp.connect(bp); bp.connect(g); g.connect(snd.gain); s.start(t0);
+  }
+  function cuteChime(c) {
+    const t0 = c.currentTime + 0.01, out = c.createGain();
+    out.gain.value = 0.5; out.connect(snd.gain);
+    // two round notes a fourth apart, each with a quick upward slide, then a tiny sparkle on top
+    const note = (at, f0, f1, len, vol, type) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type || "triangle";
+      o.frequency.setValueAtTime(f0, at); o.frequency.exponentialRampToValueAtTime(f1, at + 0.05);
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+      o.connect(g); g.connect(out); o.start(at); o.stop(at + len + 0.02);
+    };
+    note(t0, 740, 880, 0.16, 0.5);
+    note(t0 + 0.12, 1050, 1175, 0.24, 0.45);
+    note(t0 + 0.12, 2350, 2350, 0.12, 0.06, "sine");
   }
   function toggle() {
     snd.on = !snd.on;

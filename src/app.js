@@ -233,7 +233,7 @@
     const b = $("#booth");
     if (!b) return;
     const w = window.innerWidth, h = window.innerHeight;
-    const big = !isPhone() && w >= 1100 && w - 64 - 96 - 294 - 552 >= 430 && h >= 820;
+    const big = false;
     b.classList.toggle("pb3", big); b.classList.toggle("pb2", !big);
   }
   function deskHTML() {
@@ -349,7 +349,14 @@
     if (!$("#scene")) return;
     const s = sceneNow(), prev = force ? {} : ui.scene || {}, n = ORDER().length;
     const sh = $("#shutter"), ct = $("#counter"), desk = $("#desk");
-    if (s.shut !== prev.shut) { sh.style.transform = "translateY(" + -s.shut * 25 + "%)"; sh.classList.toggle("up", s.shut === 4); if (!force) FX.play("shutter"); }
+    if (s.shut !== prev.shut) {
+      clearTimeout(applyScene.shutTimer);
+      sh.classList.toggle("rolling", !force && !reduced());
+      sh.classList.remove("up");
+      sh.style.transform = "translateY(" + -s.shut * 25 + "%)";
+      if (s.shut === 4) applyScene.shutTimer = setTimeout(() => sh.classList.add("up"), force || reduced() ? 0 : 1100);
+      if (!force) FX.play("shutter");
+    }
     if (s.counter !== prev.counter) ct.style.transform = "translateX(" + -(3 - s.counter) * 34 + "%)";
     if (s.lamp !== prev.lamp) { setLampVisible(s.lamp); if (!force && s.lamp) FX.play("lamp"); }
     if (s.board !== prev.board) { if (s.board) board.start(); else board.blank(); }
