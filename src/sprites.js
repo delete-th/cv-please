@@ -91,6 +91,9 @@ window.SPR = (function () {
   S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
+  // a generic squiggle for the signature lines (no real signatures)
+  S.squiggle = ["..............kk..........", "..k.........k...k......k..", ".k.k...kk..k.....k..kk.k.k", "k...k.k..kk.......kk..k...", ".....k...................."];
+  S.squiggle2 = ["......kk...............", ".k...k..k....kk....k...", "k.k.k....k..k..k..k.k.k", "...k......kk....kk...k."];
   S.steam1 = ["...f...", "..f..f.", ".f..f..", "..f..f.", ".f..f..", "..f....", "......."];
   S.steam2 = ["..f....", ".f..f..", "..f..f.", ".f..f..", "..f..f.", "...f...", "......."];
   S.speakeron = ["....y......", "...yy....y.", "..yyy..y..y", "yyyyy...y.y", "yyyyy...y.y", "yyyyy...y.y", "..yyy..y..y", "...yy....y.", "....y......"];
@@ -266,5 +269,27 @@ window.SPR = (function () {
     root.setProperty("--worn-size", 16 * scale + "px");
   }
 
-  return { draw: draw, art: art, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
+  // A generic seal: a ring, a laurel either side and an open book in the middle (not any university's real crest).
+  function crest(scale, flat) {
+    const N = 23, c = 11, rows = [];
+    for (let y = 0; y < N; y++) {
+      let row = "";
+      for (let x = 0; x < N; x++) {
+        const dx = x - c, dy = y - c, d = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+        let ch = ".";
+        if (d >= 10 && d < 11.2) ch = dx + dy < -4 ? "y" : "Y";
+        else if (d >= 6.4 && d < 7.6 && Math.abs(Math.abs(ang) - 90) > 22 && Math.round(ang / 18) % 2 === 0) ch = dx < 0 ? "y" : "Y";
+        else if (y >= 8 && y <= 14 && x >= 6 && x <= 16) {
+          const edge = y === 8 || y === 14 || x === 6 || x === 16, spine = x === 11;
+          ch = edge || spine ? "Y" : (y === 10 || y === 12) && x !== 11 ? "Y" : "y";
+          if (y === 8 && (x === 11)) ch = ".";
+        }
+        row += ch;
+      }
+      rows.push(row);
+    }
+    S._crest = rows;
+    return draw("_crest", scale, "", flat ? { Y: flat, y: flat } : { Y: "gold-dark", y: "cover-ink" });
+  }
+  return { draw: draw, art: art, crest: crest, stamp: stamp, STAMP_FACE: STAMP_FACE, applicant: applicant, pool: pool, scene: scene, ring: ring, installTiles: installTiles, seeded: seeded, sheet: S };
 })();

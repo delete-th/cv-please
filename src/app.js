@@ -9,7 +9,7 @@
   let editing = false, dirty = false, canEdit = false, busy = false, note = "", artifact = null;
   const ui = {
     view: "desk", admitted: null, introStep: 0, introDone: false, passPage: 0,
-    marks: { visa: [], record: [], id: [] }, inked: { visa: false, record: false, id: false }, papers: {}, stickers: {}, scene: null, maxOut: 0,
+    marks: { visa: [], record: [], id: [], diploma: [] }, inked: { visa: false, record: false, id: false, diploma: false }, papers: {}, stickers: {}, scene: null, maxOut: 0,
     forced: false, boothForced: false, handled: false, drawer: 0, fit: 1,
     hot: null, front: null, printed: false, torn: 0, slipTorn: false, slipPos: null,
     barAuto: false, barPinned: null, radioOn: true, said: new Set(), asked: null,
@@ -57,11 +57,22 @@
       '</div><dl class="fields">' + field("Name", p.name) + field("Nationality", p.nationality) + field("Based in", p.basedIn) + field("Occupation", p.occupation) + "</dl></div>" +
       '<div class="stamp-box ghost' + (ui.inked.id ? " inked" : "") + '" aria-hidden="true"></div><div class="marks" data-marks="id"></div></div>';
   }
+  // A landscape certificate: crest watermark, gold seal, red ribbon, a double rule, and the wording of a real diploma.
+  // The university and degree come from the education entry; the honour is split off the degree name.
   function diplomaInner() {
-    const e = state.education;
-    return '<div class="pad"><p class="doc-title">Diploma <span class="ink green seal">With distinction</span></p>' +
-      '<p class="dip-line"><b>' + esc(e.degree) + '</b></p><p class="dip-line">' + esc(e.school) + '</p><p class="dip-line">' + esc(e.major) +
-      '</p><p class="dip-line">Graduated ' + esc(e.graduated) + '</p><p class="dip-line">Coursework: ' + esc(e.coursework) + "</p></div>";
+    const e = state.education, p = state.profile;
+    const school = String(e.school || ""), uni = school.split("(")[0].trim(), partner = (school.match(/\(([^)]+)\)/) || [])[1] || "";
+    const degree = String(e.degree || ""), honour = (degree.match(/\(([^)]+)\)/) || [])[1] || "", name = degree.replace(/\s*\([^)]*\)/, "").trim();
+    return '<div class="dip stampable" data-stamp="diploma"><span class="dip-mark" aria-hidden="true">' + SPR.crest(7, "wood-5") + "</span>" +
+      '<span class="dip-seal" aria-hidden="true">' + SPR.crest(2) + '</span><span class="dip-ribbon" aria-hidden="true"></span>' +
+      '<p class="dip-uni">' + esc(uni) + "</p>" + (partner ? '<p class="dip-small dip-it">in partnership with the ' + esc(partner) + "</p>" : "") +
+      '<p class="dip-small">On the recognition of successful completion of the requisite course of study, we hereby confer upon</p>' +
+      '<p class="dip-name">' + esc(p.name) + '</p><p class="dip-small dip-it">the degree of</p><p class="dip-degree">' + esc(name) + "</p>" +
+      (honour ? '<p class="dip-honour">' + esc(honour.charAt(0).toUpperCase() + honour.slice(1)) + "</p>" : "") +
+      '<p class="dip-small">' + esc(e.major) + "</p>" +
+      '<div class="dip-foot"><span class="dip-sign"><i aria-hidden="true">' + SPR.draw("squiggle", 1) + "</i><b>Vice-Chancellor</b></span>" +
+      '<span class="dip-conf">Conferred ' + esc(e.graduated) + '</span><span class="dip-sign"><i aria-hidden="true">' + SPR.draw("squiggle2", 1) + "</i><b>Dean of the Faculty</b></span></div>" +
+      '<div class="stamp-box ghost' + (ui.inked.diploma ? " inked" : "") + '" aria-hidden="true"></div><div class="marks" data-marks="diploma"></div></div>';
   }
   // each award gets its pin, matched by the award's own words
   function pinFor(a) {
@@ -382,9 +393,10 @@
     const u = usable(), i = caseIndex(id), s = ui.fit;
     if (i >= 0) return slotPos(i);
     const widths = ["id", "diploma", "honours"].map((k) => { const e = paperEl(k); return (e ? e.offsetWidth : 300) * s; });
-    const left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] * 0.85 + widths[1] * 0.85 + widths[2];
+    // papers may overlap only by their blank margins: the ID card's right edge, the diploma's side margins
+    const ov = [54, 36], left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] - ov[0] + widths[1] - ov[1] + widths[2];
     const extra = Math.max(0, avail - min) / 3, q = min > avail ? Math.max(0.5, (avail - widths[2]) / (min - widths[2])) : 1;
-    const gap0 = (widths[0] * 0.85 + Math.min(extra, widths[0] * 0.15 + 60)) * q, gap1 = (widths[1] * 0.85 + Math.min(extra, widths[1] * 0.15 + 60)) * q;
+    const gap0 = (widths[0] - ov[0] + Math.min(extra, ov[0] + 60)) * q, gap1 = (widths[1] - ov[1] + Math.min(extra, ov[1] + 60)) * q;
     const x0 = left + Math.min(extra, 40), k = { id: 0, diploma: 1, honours: 2 }[id], x = [x0, x0 + gap0, x0 + gap0 + gap1][k];
     const h = el ? el.offsetHeight : 0;
     return [Math.round(x), Math.round(Math.max(u.top, Math.min(u.top + [8, 16, 0][k], u.bottom - h)))];
@@ -1026,7 +1038,7 @@
     if (x + fw > box.left && x - fw < box.right && y + fh > box.top && y - fh < box.bottom) ui.inked[key] = true;
     renderMarks(key); FX.play("thud");
     if (key === "id" && kind === "denied") { ui.marks.id[ui.marks.id.length - 1].really = true; renderMarks("id"); }
-    $("#stamp-status").textContent = (kind === "approved" ? "Approved" : "Denied") + " stamp pressed on the " + (key === "visa" ? "visa" : key === "id" ? "ID card" : "entry record") + ".";
+    $("#stamp-status").textContent = (kind === "approved" ? "Approved" : "Denied") + " stamp pressed on the " + (key === "visa" ? "visa" : key === "id" ? "ID card" : key === "diploma" ? "diploma" : "entry record") + ".";
     afterStamp(key, kind);
   }
 
@@ -1484,7 +1496,7 @@
     computeFit();
     placeStickers();
     renderPutAway();
-    renderMarks("record"); renderMarks("id");
+    renderMarks("record"); renderMarks("id"); renderMarks("diploma");
     if (ui.slipTorn && ui.slipPos && !isPhone()) setPos($("#slip"), ui.slipPos[0], ui.slipPos[1]);
     layoutDrawer(false);
     $$(".pobj").forEach(placePobj); drawHands(); fitPinboard();
@@ -1492,6 +1504,7 @@
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     updatePill(); updateBar();
     $$(".room").forEach((r, k) => { r.inert = !isPhone() && k !== ui.room; });
+    const dip = paperEl("diploma"); if (dip) dip.style.setProperty("--dzoom", isPhone() ? Math.min(1, (window.innerWidth * 0.86) / 480).toFixed(3) : 1);
     // the Records room scrolls on its own; the tray follows the stamp box as it does
     const recRoom = $("#record");
     if (recRoom) recRoom.addEventListener("scroll", () => { updateBar(); if (held && !held.busy) placeHeld(held.fx, held.fy); }, { passive: true });
@@ -1688,7 +1701,7 @@
 
   // ----- name tags: objects first, names when pointed at -----
   let tagTimer = null, tagFor = null;
-  function tagTarget(el) { return el && el.closest && (el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab")); }
+  function tagTarget(el) { return el && el.closest && (el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
   function showTag(el, now) {
     clearTimeout(tagTimer);
     const go = () => {
@@ -1696,7 +1709,14 @@
       if (!t) { t = document.createElement("div"); t.id = "tag"; t.className = "tag"; t.setAttribute("role", "tooltip"); fixedRoot.appendChild(t); }
       tagFor = el;
       const r = rectOf(el), strip = el.classList.contains("folder-tab");
-      if (strip) {
+      if (el.classList.contains("p-diploma")) {
+        t.innerHTML = '<b class="tg-name">Coursework</b><span class="tg-sub">' + esc(state.education.coursework) + "</span>";
+        t.className = "tag side pop"; t.hidden = false;
+        const right = r.right + 14 + t.offsetWidth < window.innerWidth;
+        t.classList.toggle("flip", !right);
+        t.style.left = Math.round(right ? r.right + 14 : r.left - 14 - t.offsetWidth) + "px";
+        t.style.top = Math.round(clamp(r.top + 24, 8, window.innerHeight - t.offsetHeight - 8)) + "px";
+      } else if (strip) {
         const pr = state.projects[caseIndex(el.dataset.id)], box = rectOf($("#filebox"));
         t.innerHTML = '<b class="tg-name">' + esc(pr.name) + '</b><span class="tg-sub">' + esc([pr.role, pr.dates].filter(Boolean).join(", ")) + "</span>";
         t.className = "tag side pop"; t.hidden = false;
@@ -1947,6 +1967,7 @@
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 5) return;
       drag.moved = true;
+      hideTag();
       if (drag.el.classList.contains("pobj") && !drag.el.classList.contains("on-desk")) {
         const r = rectOf(drag.el), d = rectOf($("#desk")), x = r.left - d.left, y = r.top - d.top;
         hideNote(); pobjToDesk(drag.el, x, y); drag.ox = x; drag.oy = y;
