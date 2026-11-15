@@ -923,7 +923,19 @@
       b.innerHTML = '<span class="ts-face" aria-hidden="true">' + SPR.applicant(state.profile.applicant || "thea", 1, "") + '</span><p class="ts-text"></p>';
       fixedRoot.appendChild(b);
     }
-    $(".ts-text", b).textContent = lines[noteTurn[id]];
+    // the line is typed out a few letters at a time, with a small talking blip every few letters
+    const tx = $(".ts-text", b), said = lines[noteTurn[id]];
+    clearInterval(showNote.typer);
+    if (reduced()) tx.textContent = said;
+    else {
+      let i = 0;
+      tx.textContent = ""; tx.style.minWidth = Math.min(380, said.length * 8) + "px";
+      showNote.typer = setInterval(() => {
+        i = Math.min(said.length, i + 2); tx.textContent = said.slice(0, i);
+        if (i % 4 === 0 && /\w/.test(said[i - 1] || "")) FX.play("talk");
+        if (i >= said.length) { clearInterval(showNote.typer); tx.style.minWidth = ""; }
+      }, 34);
+    }
     const win = $(".window-wrap"), wr = win ? rectOf(win) : null, inView = wr && wr.bottom > 40 && wr.top >= -4;
     b.classList.toggle("own", !inView);
     b.hidden = false;

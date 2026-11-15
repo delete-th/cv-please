@@ -1847,6 +1847,11 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 @media (max-width: 820px) { .rec-plant { display: none; } }
 /* booth height: between the tall and the short versions */
 @media (min-width: 821px) { .window { height: 158px; } }
+/* Thea's speech bubble: bigger text and a soft warm glow, like lamp light on paper */
+.thea-say { max-width: 420px; }
+.ts-text { padding: 13px 18px 14px; border-width: 3px; font: 400 19px/1.4 var(--sans); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cover-ink) 35%, transparent), 0 0 22px 6px color-mix(in srgb, var(--cover-ink) 28%, transparent); }
+.ts-text::before { left: -11px; top: 15px; width: 13px; height: 13px; border-width: 3px; }
+.thea-say.own .ts-face { padding: 4px; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -2934,6 +2939,7 @@ window.FX = (function () {
     if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
     if (c && name === "chime") { cuteChime(c); return; }
     if (c && name === "tin") { tinRattle(c); return; }
+    if (c && name === "talk") { talkBlip(c); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
@@ -3027,6 +3033,15 @@ window.FX = (function () {
   function keyClack(c) {
     tick(c, 0.012, 4800, 0.5);
     tick(c, 0.03, 900, 0.45);
+  }
+  // a soft, slightly random syllable: two quick tones, like a voice heard through the booth glass
+  function talkBlip(c) {
+    const at = c.currentTime + 0.004, base = 330 + Math.random() * 110, o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(base, at); o.frequency.linearRampToValueAtTime(base * (Math.random() < 0.5 ? 1.12 : 0.92), at + 0.05);
+    lp.type = "lowpass"; lp.frequency.value = 1400;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.07);
+    o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.08);
   }
   function toggle() {
     snd.on = !snd.on;
@@ -4126,7 +4141,19 @@ window.DEMOS = (function () {
       b.innerHTML = '<span class="ts-face" aria-hidden="true">' + SPR.applicant(state.profile.applicant || "thea", 1, "") + '</span><p class="ts-text"></p>';
       fixedRoot.appendChild(b);
     }
-    $(".ts-text", b).textContent = lines[noteTurn[id]];
+    // the line is typed out a few letters at a time, with a small talking blip every few letters
+    const tx = $(".ts-text", b), said = lines[noteTurn[id]];
+    clearInterval(showNote.typer);
+    if (reduced()) tx.textContent = said;
+    else {
+      let i = 0;
+      tx.textContent = ""; tx.style.minWidth = Math.min(380, said.length * 8) + "px";
+      showNote.typer = setInterval(() => {
+        i = Math.min(said.length, i + 2); tx.textContent = said.slice(0, i);
+        if (i % 4 === 0 && /\w/.test(said[i - 1] || "")) FX.play("talk");
+        if (i >= said.length) { clearInterval(showNote.typer); tx.style.minWidth = ""; }
+      }, 34);
+    }
     const win = $(".window-wrap"), wr = win ? rectOf(win) : null, inView = wr && wr.bottom > 40 && wr.top >= -4;
     b.classList.toggle("own", !inView);
     b.hidden = false;

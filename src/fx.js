@@ -36,6 +36,7 @@ window.FX = (function () {
     if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
     if (c && name === "chime") { cuteChime(c); return; }
     if (c && name === "tin") { tinRattle(c); return; }
+    if (c && name === "talk") { talkBlip(c); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
@@ -129,6 +130,15 @@ window.FX = (function () {
   function keyClack(c) {
     tick(c, 0.012, 4800, 0.5);
     tick(c, 0.03, 900, 0.45);
+  }
+  // a soft, slightly random syllable: two quick tones, like a voice heard through the booth glass
+  function talkBlip(c) {
+    const at = c.currentTime + 0.004, base = 330 + Math.random() * 110, o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(base, at); o.frequency.linearRampToValueAtTime(base * (Math.random() < 0.5 ? 1.12 : 0.92), at + 0.05);
+    lp.type = "lowpass"; lp.frequency.value = 1400;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.07);
+    o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.08);
   }
   function toggle() {
     snd.on = !snd.on;
