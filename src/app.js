@@ -1622,28 +1622,28 @@
   // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
   // 4x where the open page clears the tray (beside it on short screens), else 3x
   const drawnPass = () => (state.profile.passportStyle || "sprite") === "drawn" && !isPhone();
-  // Canvas 112x80 art pixels: two 54x76 pages either side of the spine at x 56. The cover is 54x76 and hinged at the spine.
-  // Frames: 0 closed, 1 cover lifting, 2 cover edge-on, 3 cover over to the left (its lining showing), 4 open spread.
-  const DP_BOX = [[56, 2, 110, 78], [56, 2, 110, 78], [54, 2, 110, 78], [20, 2, 110, 78], [2, 2, 110, 78]];
-  const DP_HOLD = [0, 90, 90, 90, 110];
-  function drawnScale() { return clamp(Math.floor((window.innerHeight - 72 - 16 - 64 - 16) / 76), 4, 6); }
+  // The drawn passport follows the sprite sequence: upright, turned sideways (spine along the top), then opened upward.
+  // Canvas 80x116 art pixels; the spine runs along y 58. Data page below it (x 2-78, y 58-112), visa page above (y 4-58).
+  // Frames: 0 upright, 1 and 2 turning, 3 sideways, 4 cover lifting, 5 edge-on, 6 visa page unfolding, 7 open.
+  const DP_BOX = [[13, 20, 67, 96], [8, 22, 72, 94], [5, 28, 75, 90], [2, 58, 78, 112], [2, 58, 78, 112], [2, 56, 78, 112], [2, 18, 78, 112], [2, 4, 78, 112]];
+  const DP_HOLD = [0, 80, 80, 250, 90, 90, 90, 90];
+  function drawnScale() { return clamp(Math.floor((window.innerHeight - 72 - 16 - 64 - 16) / 108), 4, 6); }
   function renderDrawnPassport() {
-    const p = state.profile, e = state.education, S = drawnScale();
+    const p = state.profile, e = state.education, S = drawnScale(), pv = p.passport || {};
     const parts = p.name.trim().split(/\s+/), surname = parts.length > 1 ? parts.pop() : "", given = parts.join(" ");
+    const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
     ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
     introRoot.innerHTML =
       '<div class="intro dp-intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
-      '<div class="passport dp" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + 112 * S + "px;height:" + 80 * S + 'px">' +
-      '<div class="dp-page dp-left"><div class="dp-in"><p class="dp-head"><span>Passport</span><span>' + mrz("P " + p.nationality.slice(0, 3), 5) + "</span></p>" +
-      '<div class="dp-body"><div class="dp-photo">' + SPR.applicant("thea", S >= 6 ? 2 : 1, portraitAlt) + '</div><dl class="fields">' +
-      field("Surname", surname) + field("Given name", given) + field("Nationality", p.nationality) + "</dl></div>" +
-      '<dl class="fields dp-more">' + field("Occupation", p.occupation) + field("Based in", p.basedIn) + field("Graduated", e.graduated) + "</dl>" +
-      '<p class="dp-mrz" aria-hidden="true">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 32) + "<br>" + mrz("BCS " + e.graduated + " UOW SIM", 32) + "</p></div></div>" +
-      '<div class="dp-page dp-right"><div class="dp-in visa stampable" data-stamp="visa"><h2>Entry visa</h2><dl class="visa-lines">' +
-      "<dt>Holder</dt><dd>" + esc(p.name) + "</dd><dt>Purpose</dt><dd>" + esc(p.seeking) + "</dd><dt>Issued</dt><dd>" + today + "</dd></dl>" +
-      '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="visa"></div></div></div>' +
+      '<div class="passport dp" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + 80 * S + "px;height:" + 116 * S + 'px">' +
+      '<div class="dp-page dp-data"><div class="dp-in"><div class="dp-photo">' + SPR.applicant("thea", S >= 6 ? 2 : 1, portraitAlt) + "</div>" +
+      '<div class="dp-id"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + '</p><dl class="pp-rows">' +
+      row("NAT", pv.nat || p.nationality) + row("OCC", pv.occ || p.occupation) + row("BASE", pv.base || p.basedIn) + row("GRAD", pv.grad || e.graduated) + "</dl></div>" +
+      '<p class="dp-mrz" aria-hidden="true">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 36) + "</p></div></div>" +
+      '<div class="dp-page dp-visa"><div class="dp-in visa stampable" data-stamp="visa"><p class="dp-vhead"><b>Entry visa</b><span>' + esc(p.name) + " · " + today + "</span></p>" +
+      '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp here</div><div class="marks" data-marks="visa"></div></div></div>' +
       '<span class="dp-spine" aria-hidden="true"></span>' +
-      '<div class="dp-cover" data-act="intro-next" aria-hidden="true"><span class="dp-emb">' + SPR.draw("emblem", Math.max(2, S - 2)) + '</span><b>Passport</b><span class="dp-name">' + esc(p.name) + "</span><i></i><i></i><i></i><i></i></div></div>" +
+      '<div class="dp-cover" data-act="intro-next" aria-hidden="true"><div class="dp-face"><span class="dp-emb">' + SPR.draw("emblem", Math.max(2, S - 2)) + '</span><b>Passport</b><span class="dp-name">' + esc(p.name) + "</span></div><i></i><i></i><i></i><i></i></div></div>" +
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     placePassport(0);
@@ -1689,15 +1689,15 @@
   }
   function playPassport(dir) {
     const pp = $("#passport"); if (!pp) return;
-    const dp = pp.classList.contains("dp"), last = dp ? 4 : 7, hold = dp ? DP_HOLD : PP_HOLD;
+    const dp = pp.classList.contains("dp"), last = 7, hold = dp ? DP_HOLD : PP_HOLD;
     const to = dir > 0 ? last : 0;
     pp.classList.remove("open");
     if (reduced()) { setFrame(to); pp.classList.toggle("open", to === last); return; }
     let f = +pp.dataset.frame;
-    FX.play(dp ? "flip" : "dwslide");
+    FX.play("dwslide");
     const tick = () => {
       f += dir; setFrame(f);
-      if (!dp && dir > 0 && f === 4) FX.play("flip");
+      if (dir > 0 && f === 4) FX.play("flip");
       if (f === to) { pp.classList.toggle("open", to === last); return; }
       setTimeout(tick, hold[f]);
     };
