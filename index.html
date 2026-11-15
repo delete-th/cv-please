@@ -1880,6 +1880,16 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
   .booth-meta { grid-area: meta; align-self: end; justify-self: stretch; }
   .booth-side { align-self: start; }
 }
+/* Simplify: a quick scan of the desk, then the simple page */
+.scan { position: fixed; inset: 0; z-index: 300; pointer-events: none; overflow: hidden; }
+.scan-flash { position: absolute; inset: 0; background: var(--field); opacity: 0; animation: scan-flash 0.18s steps(2, end); }
+@keyframes scan-flash { 0% { opacity: 0.55; } 100% { opacity: 0; } }
+.scan-bar { position: absolute; left: 0; right: 0; top: -40px; height: 40px; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--cover-ink) 70%, transparent) 70%, var(--field) 92%, transparent); animation: scan-down 0.6s steps(14, end) 0.08s forwards; }
+@keyframes scan-down { to { top: 100%; } }
+/* everything the bar has passed is "scanned": a pale wash that the simple page arrives under */
+.scan-done { position: absolute; left: 0; right: 0; top: 0; height: 0; background: color-mix(in srgb, var(--field) 55%, transparent); animation: scan-wash 0.6s steps(14, end) 0.08s forwards; }
+@keyframes scan-wash { to { height: 100%; } }
+.scan.out { opacity: 0; transition: opacity 0.25s ease-out; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -2968,6 +2978,7 @@ window.FX = (function () {
     if (c && name === "chime") { cuteChime(c); return; }
     if (c && name === "tin") { tinRattle(c); return; }
     if (c && name === "talk") { talkBlip(c); return; }
+    if (c && name === "scan") { scanSound(c); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
@@ -3070,6 +3081,17 @@ window.FX = (function () {
     lp.type = "lowpass"; lp.frequency.value = 1400;
     g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.07);
     o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.08);
+  }
+  // a camera shutter, then the hum of a scanner head travelling down the glass
+  function scanSound(c) {
+    const t0 = c.currentTime;
+    tick(c, 0.01, 5200, 0.55); tick(c, 0.025, 1300, 0.4, t0 + 0.035);
+    const o = c.createOscillator(), bp = c.createBiquadFilter(), g = c.createGain(), at = t0 + 0.09, len = 0.56;
+    o.type = "sawtooth"; o.frequency.setValueAtTime(92, at); o.frequency.linearRampToValueAtTime(104, at + len);
+    bp.type = "bandpass"; bp.Q.value = 3; bp.frequency.setValueAtTime(700, at); bp.frequency.exponentialRampToValueAtTime(1900, at + len);
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.09, at + 0.05); g.gain.setValueAtTime(0.09, at + len - 0.08); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(bp); bp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + len + 0.02);
+    tick(c, 0.02, 2400, 0.3, at + len);
   }
   function toggle() {
     snd.on = !snd.on;
@@ -5362,7 +5384,19 @@ window.DEMOS = (function () {
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
     lamp() { toggleLamp(); },
-    view(b) { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); },
+    view(b) {
+      const go = () => { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); };
+      // Simplify: the desk is scanned (a shutter click, a light bar sweeping down) and the scan becomes the simple page
+      if (b.dataset.v !== "list" || reduced() || $(".scan")) { go(); return; }
+      FX.play("scan");
+      const sc = document.createElement("div");
+      sc.className = "scan"; sc.setAttribute("aria-hidden", "true");
+      sc.innerHTML = '<span class="scan-flash"></span><span class="scan-bar"></span><span class="scan-done"></span>';
+      fixedRoot.appendChild(sc);
+      setTimeout(go, 680);
+      setTimeout(() => sc.classList.add("out"), 720);
+      setTimeout(() => sc.remove(), 1000);
+    },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
     step(b) { goRoom(currentArea() + +b.dataset.dir); },
     "open-booth"() { ui.boothForced = true; applyScene(); $("#hello").focus({ preventScroll: true }); },

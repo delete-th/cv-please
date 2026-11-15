@@ -2116,7 +2116,19 @@
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
     lamp() { toggleLamp(); },
-    view(b) { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); },
+    view(b) {
+      const go = () => { ui.view = b.dataset.v; render(); window.scrollTo(0, 0); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); };
+      // Simplify: the desk is scanned (a shutter click, a light bar sweeping down) and the scan becomes the simple page
+      if (b.dataset.v !== "list" || reduced() || $(".scan")) { go(); return; }
+      FX.play("scan");
+      const sc = document.createElement("div");
+      sc.className = "scan"; sc.setAttribute("aria-hidden", "true");
+      sc.innerHTML = '<span class="scan-flash"></span><span class="scan-bar"></span><span class="scan-done"></span>';
+      fixedRoot.appendChild(sc);
+      setTimeout(go, 680);
+      setTimeout(() => sc.classList.add("out"), 720);
+      setTimeout(() => sc.remove(), 1000);
+    },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
     step(b) { goRoom(currentArea() + +b.dataset.dir); },
     "open-booth"() { ui.boothForced = true; applyScene(); $("#hello").focus({ preventScroll: true }); },

@@ -37,6 +37,7 @@ window.FX = (function () {
     if (c && name === "chime") { cuteChime(c); return; }
     if (c && name === "tin") { tinRattle(c); return; }
     if (c && name === "talk") { talkBlip(c); return; }
+    if (c && name === "scan") { scanSound(c); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
     if (!c || !snd.bufs[name]) return;
@@ -139,6 +140,17 @@ window.FX = (function () {
     lp.type = "lowpass"; lp.frequency.value = 1400;
     g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.07);
     o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.08);
+  }
+  // a camera shutter, then the hum of a scanner head travelling down the glass
+  function scanSound(c) {
+    const t0 = c.currentTime;
+    tick(c, 0.01, 5200, 0.55); tick(c, 0.025, 1300, 0.4, t0 + 0.035);
+    const o = c.createOscillator(), bp = c.createBiquadFilter(), g = c.createGain(), at = t0 + 0.09, len = 0.56;
+    o.type = "sawtooth"; o.frequency.setValueAtTime(92, at); o.frequency.linearRampToValueAtTime(104, at + len);
+    bp.type = "bandpass"; bp.Q.value = 3; bp.frequency.setValueAtTime(700, at); bp.frequency.exponentialRampToValueAtTime(1900, at + len);
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.09, at + 0.05); g.gain.setValueAtTime(0.09, at + len - 0.08); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(bp); bp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + len + 0.02);
+    tick(c, 0.02, 2400, 0.3, at + len);
   }
   function toggle() {
     snd.on = !snd.on;
