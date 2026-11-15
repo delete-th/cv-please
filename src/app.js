@@ -1468,6 +1468,9 @@
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     updatePill(); updateBar();
     $$(".room").forEach((r, k) => { r.inert = !isPhone() && k !== ui.room; });
+    // the Records room scrolls on its own; the tray follows the stamp box as it does
+    const recRoom = $("#record");
+    if (recRoom) recRoom.addEventListener("scroll", () => { updateBar(); if (held && !held.busy) placeHeld(held.fx, held.fy); }, { passive: true });
   }
   function render() {
     const desk = !editing && ui.view === "desk";

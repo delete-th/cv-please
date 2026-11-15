@@ -1254,6 +1254,13 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 /* the passport's bio page stays inside its page on short screens */
 .passport .fields dd { margin-bottom: 2px; }
 @media (min-width: 821px) and (max-height: 759px) { .passport .pp-mrz { display: none; } }
+/* the Records room scrolls as a whole; its end clears the stamp tray */
+@media (min-width: 821px) {
+  .room.room-record { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--ink-soft) transparent; }
+  .room-record.record-sec { padding-bottom: 236px; }
+  .room-record .record-wrap { height: auto; }
+  .room-record .record-area { flex: none; overflow: visible; }
+}
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -3841,6 +3848,9 @@ window.DEMOS = (function () {
     paperIds().forEach((id) => { const el = paperEl(id); if (el && pst(id).open) placeOpen(el); });
     updatePill(); updateBar();
     $$(".room").forEach((r, k) => { r.inert = !isPhone() && k !== ui.room; });
+    // the Records room scrolls on its own; the tray follows the stamp box as it does
+    const recRoom = $("#record");
+    if (recRoom) recRoom.addEventListener("scroll", () => { updateBar(); if (held && !held.busy) placeHeld(held.fx, held.fy); }, { passive: true });
   }
   function render() {
     const desk = !editing && ui.view === "desk";
