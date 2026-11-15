@@ -277,7 +277,7 @@
   // panels in art pixels: resting and pressed; the pressed sprite stands on the same bottom-centre
   const STAMPS = {
     approved: { rest: [4, 38, 32, 10], press: [5, 36, 31, 8], fs: [17, 17] },
-    denied: { rest: [4, 38, 32, 10], press: [5, 34, 30, 8], fs: [26, 24] },
+    denied: { rest: [4, 38, 32, 10], press: [5, 34, 30, 8], fs: [20, 20] },
   };
   const ST = 2;
   function stampArt(kind) {
