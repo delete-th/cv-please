@@ -4122,6 +4122,9 @@ window.DEMOS = (function () {
   function setDrawer(id) {
     const was = ui.dwOpen;
     if (was === id) return;
+    // switching drawers: the open one slides shut first, then the other slides out
+    clearTimeout(setDrawer.next);
+    if (was && id && !reduced() && !isPhone()) { setDrawer(null); setDrawer.next = setTimeout(() => setDrawer(id), 262); return; }
     ui.dwOpen = id; hideTag();
     if (id) { ui.dwLast = id; markHandled(); say(id === "skills" ? "drawer" : "personal"); }
     FX.play("dwslide");
