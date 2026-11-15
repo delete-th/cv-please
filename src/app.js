@@ -182,19 +182,40 @@
       SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="blink" id="blink" aria-hidden="true"><i></i><i></i></span><span class="ledge" aria-hidden="true"></span>' +
       '<div class="shutter" id="shutter"><span>Booth closed.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
       '<div class="board" id="board" aria-hidden="true"></div><p class="sr-only">Departure board: ' + esc(p.board.join(", ")) + "</p></div>" +
-      '<div class="booth-main"><div class="booth-links"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
-      '<button class="btn-quiet" data-act="passport">View passport</button><span class="owner" id="owner">' + ownerBar() + "</span></div>" +
-      '<div class="plate-row"><div class="nameplate"><h1 id="hello" tabindex="-1">' + esc(p.greeting) + '</h1></div><p class="tagline">' + esc(p.tagline) + "</p></div>" +
+      '<div class="booth-main">' + (p.eyebrow ? '<p class="eyebrow">' + esc(p.eyebrow) + "</p>" : "") +
+      '<h1 class="bname" id="hello" tabindex="-1">' + esc(p.name) + '</h1><p class="tagline">' + esc(p.tagline) + "</p>" +
       '<p class="denied-note" id="denied-note"' + (ui.admitted === "denied" ? "" : " hidden") + ">" + esc(deniedLine()) + "</p>" +
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
-        '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") + "</div>" +
-      '<div class="booth-side"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
-      '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '"><span class="sb-icon" aria-hidden="true">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + '</span><span class="sb-label">' + (FX.soundOn ? "Sound on" : "Sound off") + "</span></button>" +
+        '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") +
+      '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="area" data-to="record">60-second version</button><button class="btn-quiet" data-act="view" data-v="list">List view</button>' +
+      '<button class="btn-quiet" data-act="passport">View passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
+      '<div class="booth-side">' + pinboardHTML() + "</div>" +
+      '<div class="booth-meta"><p class="clock"><time id="clock">' + clock() + "</time></p>" +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
-      '</div><p class="aside" id="aside" aria-live="polite" hidden></p>' +
-      '<div class="intercom" id="intercom">' + SPR.art("intercom", SC) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div>' +
-      '<div class="pinboard" aria-label="Pinboard">' + SPR.art("pinboard", SC) + '<span class="pb-map">' + SPR.art("map-manila", SC, "", "A scrap of a map of Manila") + '<span class="pb-pin" aria-hidden="true"></span></span>' +
-      '<p class="pb-scrap">' + esc(pinNote()) + "</p></div></header>";
+      '<button class="sound-btn" data-act="sound" aria-pressed="' + FX.soundOn + '"><span class="sb-icon" aria-hidden="true">' + SPR.draw("speakeron", PX) + SPR.draw("speakeroff", PX) + '</span><span class="sb-label">' + (FX.soundOn ? "Sound on" : "Sound off") + "</span></button></div>" +
+      '<p class="aside" id="aside" aria-live="polite" hidden></p>' +
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
+  }
+
+  // The pinboard: passes from the events Thea went to (each opens its case file), the prize voucher,
+  // an index card with the roles she is open to, and an optional "Currently" note.
+  function pinboardHTML() {
+    const p = state.profile, src = ART["pinboard-large"] ? ART["pinboard-large"].src : "";
+    const bands = ["green", "cover", "red"], pins = ["red", "ink", "green"];
+    const passes = state.projects.map((pr, i) => [pr, i]).filter((x) => x[0].event).slice(0, 3).map((x, k) => {
+      const pr = x[0], ev = String(pr.event), m = ev.match(/^(.*?)\s+((?:19|20)\d\d)\b/), name = m ? m[1] : ev.split(",")[0], year = m ? m[2] : "";
+      const won = state.awards.filter((a) => a.event && name.indexOf(a.event) === 0 && a.result).map((a) => a.result);
+      const tail = (ev.split(",")[1] || "").trim(), detail = won.length ? won.join(" and ") + ", for " + shortName(pr) + "." : "Built " + shortName(pr) + (tail ? " for the " + tail : "") + ".";
+      return '<button class="pbi pbi-pass pbi-' + bands[k % 3] + '" data-act="pin-case" data-id="case-' + x[1] + '" data-tag="' + esc(detail) + '" data-k="' + k + '" aria-label="' + esc(name + " " + year + ": open the " + shortName(pr) + " case file") + '">' +
+        '<span class="tack tack-' + pins[k % 3] + '" aria-hidden="true"></span><span class="pbi-band" aria-hidden="true"><i></i></span><span class="pbi-name">' + esc(name) + '</span><span class="pbi-year">' + esc(year) + "</span></button>";
+    }).join("");
+    const prize = state.awards.map((a) => String(a.note || "").match(/prize was an? (.+?)\.?$/i)).filter(Boolean)[0];
+    const prizeAward = state.awards.find((a) => /prize was/i.test(a.note || ""));
+    const ticket = prize ? '<span class="pbi pbi-ticket" tabindex="0" data-tag="' + esc("Won with " + prizeAward.result + " at " + prizeAward.event + " " + prizeAward.year + ".") + '"><span class="tack tack-ink" aria-hidden="true"></span><span class="pbi-tk">' + esc(prize[1].replace(/^./, (c) => c.toUpperCase())) + "</span></span>" : "";
+    const card = p.openTo ? '<span class="pbi pbi-card" tabindex="0" data-tag="' + esc(p.seeking || "") + '"><span class="tack tack-red" aria-hidden="true"></span><b>Open to:</b> ' + esc(p.openTo) + "</span>" : "";
+    const now = String(p.currently || "").trim();
+    const cur = now ? '<span class="pbi pbi-note" tabindex="0" data-tag="' + esc("Updated by Thea.") + '"><span class="tack tack-green" aria-hidden="true"></span><b>Currently</b> ' + esc(now) + "</span>" : "";
+    return '<div class="pinboard" role="group" aria-label="Pinboard" style="border-image-source: url(' + src + ')">' + passes + ticket + card + cur + "</div>";
   }
 
   // the visitor's local hour sets the sky: dawn, day, dusk or night
@@ -202,7 +223,6 @@
     const h = (d || new Date()).getHours();
     return h >= 5 && h < 9 ? "dawn" : h >= 9 && h < 17 ? "day" : h >= 17 && h < 19 ? "dusk" : "night";
   }
-  const pinNote = () => (/relocat/i.test(state.profile.basedIn || "") ? "Relocating to Metro Manila" : "");
   function checkSky() {
     const sk = $("#skyline");
     if (!sk) return;
@@ -216,14 +236,11 @@
   setInterval(checkSky, 60000);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitPinboard(); layoutDrawer(false); });
   function fitPinboard() {
-    const pb = $(".pinboard"), main = $(".booth-main");
-    if (!pb || isPhone()) return;
-    pb.classList.remove("small", "away");
-    const side = $(".booth-side"); if (side) pb.style.right = Math.round(window.innerWidth - rectOf(side).left + 24) + "px";
-    const room = () => { const b = rectOf(pb); if (!b.width) return true; return $$(".booth-links > button, .booth-links .owner > *, .plate-row .tagline, .nameplate", main).every((e) => { const x = rectOf(e); return !x.width || x.right + 24 <= b.left || x.bottom < b.top || x.top > b.bottom; }); };
-    if (room()) return;
-    pb.classList.add("small");
-    if (!room()) pb.classList.add("away");
+    const b = $("#booth");
+    if (!b) return;
+    const w = window.innerWidth, h = window.innerHeight;
+    const big = !isPhone() && w >= 1100 && w - 64 - 96 - 294 - 552 >= 430 && h >= 820;
+    b.classList.toggle("pb3", big); b.classList.toggle("pb2", !big);
   }
   function deskHTML() {
     const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + (id === "mug" ? '<span class="steam">' + SPR.draw("steam1", PX) + SPR.draw("steam2", PX) + "</span>" : "") + "</span>";
@@ -232,8 +249,8 @@
       '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
       '<div class="filebox" id="filebox" data-act="all-back"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", BX) + "</span></div>" +
       '<div class="filebox-front" id="filebox-front">' + SPR.art("filebox-front", BX) + '<button class="box-plate" data-act="all-back" aria-label="Put all files back"></button></div>' +
-      '<div class="printer" id="printer"><div class="feed" id="feed" aria-hidden="true"></div><button class="printer-btn" data-act="print" aria-label="Print the entry record">' +
-      SPR.art("printer", SC) + '<span class="led" aria-hidden="true"></span></button></div>' +
+      '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
+      '<span class="pr-paper" id="feed" aria-hidden="true"></span><span class="pr-front" aria-hidden="true">' + SPR.art("printer-front-off", 4, "pr-off") + SPR.art("printer-front-on", 4, "pr-on") + "</span></div>" +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
       sticker("mug", "mug") + sticker("plant", "plant") + sticker("pen", "pen") +
       '<button class="notepad" id="notepad" data-act="note" aria-label="Sticky notes: leave Thea a note"' + (ui.noteSent ? " hidden" : "") + ">" + SPR.art("sticky-pad", SC) + "</button>" +
@@ -267,7 +284,7 @@
     return '<section class="room room-record record-sec" id="record" aria-labelledby="record-h"><div class="record-wrap"><div class="record-intro"><h2 id="record-h">Entry record</h2>' +
       "<p>The 60-second version, printed at the desk. Stamp it if you want to leave a verdict, and tear off the slip to get in touch.</p>" +
       '<button class="btn-quiet" data-act="print">' + (ui.printed ? "Print it again" : "Print it") + "</button></div>" +
-      '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer", SC) + "</button></div>" +
+      '<div class="rec-printer" aria-hidden="false"><button class="printer-btn" data-act="print" aria-label="Print the entry record again">' + SPR.art("printer-off", 4) + "</button></div>" +
       '<div class="record-area" id="record-area">' + (ui.printed ? "" : '<p class="record-empty" id="record-empty">Nothing printed yet. Click the printer on the desk, or print it from here.</p>') +
       receipt + (ui.slipTorn ? slip : "") + "</div></div></section>";
   }
@@ -1175,25 +1192,25 @@
   function receiptEl() { return $("#receipt"); }
   // The light blinks and a stub feeds out of the slot line by line. Then it tears off at the slot, slides off
   // the bottom of the desk, and the page scrolls down to the entry record section where the full record lands.
+  // The light comes on and a sheet rises out of the slot two art pixels at a time while the printer sounds.
+  // Then it tears at the slot, slides off to the right as the view pans to Records, and the printer goes dark.
   function printRecord() {
     if (ui.printing) return;
-    const pr = $("#printer"), feed = $("#feed");
+    const pr = $("#printer"), paper = $("#feed");
     say("record");
-    if (isPhone() || reduced() || !pr || !feed) { FX.play("print"); landRecord(false); if (isPhone()) scrollToRecord("auto"); else goRoom(1); return; }
+    if (isPhone() || reduced() || !pr || !paper) { FX.play("print"); landRecord(false); if (isPhone()) scrollToRecord("auto"); else goRoom(1); return; }
     ui.printing = true;
-    pr.classList.add("busy");
+    const ART_PX = 4, step = 2, steps = 9, tick = 80;
+    paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px");
+    pr.classList.add("on");
     FX.play("print");
-    const steps = 10, max = 108;
-    feed.classList.remove("torn");
-    for (let k = 1; k <= steps; k++) setTimeout(() => { feed.style.setProperty("--feed", Math.round(max * k / steps) + "px"); }, k * 110);
-    setTimeout(() => {
-      pr.classList.remove("busy");
-      FX.play("lift");
-      feed.classList.add("torn");
-      setTimeout(() => goRoom(1, true), 380);
-      setTimeout(() => { landRecord(true); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, 860);
-      setTimeout(() => { feed.classList.remove("torn"); feed.style.setProperty("--feed", "0px"); ui.printing = false; }, 1300);
-    }, steps * 110 + 120);
+    for (let k = 1; k <= steps; k++) setTimeout(() => { paper.style.setProperty("--rise", k * step * ART_PX + "px"); }, k * tick);
+    const torn = steps * tick + 160;
+    setTimeout(() => { paper.classList.add("tear"); FX.play("lift"); }, torn);
+    setTimeout(() => { paper.classList.add("off"); pr.classList.remove("on"); }, torn + tick);
+    setTimeout(() => goRoom(1, true), torn + tick + 60);
+    setTimeout(() => { landRecord(true); setTimeout(() => { updateBar(); const r = receiptEl(); if (r) r.focus({ preventScroll: true }); }, 380); }, torn + 700);
+    setTimeout(() => { paper.className = "pr-paper"; paper.style.setProperty("--rise", "0px"); ui.printing = false; }, torn + 900);
   }
   function scrollToRecord(how) {
     const r = $("#record"), rc = receiptEl();
@@ -1503,7 +1520,8 @@
       f("profile.summary", "A short summary", "summary " + blk(), "p") +
       (editing ? '<div style="margin-top:20px">' + row("Full name", f("profile.name", "Full name")) + row("Nationality", f("profile.nationality", "Nationality")) +
         row("Based in", f("profile.basedIn", "Where you live")) + row("Occupation", f("profile.occupation", "Shown on the passport and ID card")) +
-        row("Seeking", f("profile.seeking", "Roles you want, for the entry record")) + row("Departure board", f("profile.board", "Phrases, separated by commas")) + "</div>" : "") + "</section>" +
+        row("Seeking", f("profile.seeking", "Roles you want, for the entry record")) + row("Booth eyebrow", f("profile.eyebrow", "Three words over your name")) +
+        row("Open to", f("profile.openTo", "Index card on the pinboard")) + row("Currently", f("profile.currently", "Sticky note on the pinboard (left empty, it stays hidden)")) + row("Departure board", f("profile.board", "Phrases, separated by commas")) + "</div>" : "") + "</section>" +
       sec("cases", "Case files", "Projects I built or led, most with a student team.", state.projects.map(listCase).join("") + add("projects", "project", "case file")) +
       sec("strengths", "Strengths", editing ? "Printed on the entry record." : "",
         editing ? state.strengths.map((s, i) => '<div class="edit-point">' + f("strengths." + i, "A strength, as a plain fact", "block") + del("strengths", i, "strength") + "</div>").join("") + add("strengths", "strength", "strength")
@@ -1605,7 +1623,7 @@
     ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
     // the passport canvas is 104x128 art pixels; the open page sits at (15, 2) on it
     const S = passScale(), px = (v) => v * S + "px", X = (v) => px(15 + v), Y = (v) => px(2 + v);
-    const pv = p.passport || {}, base = pv.base || String(p.basedIn || "").replace(/,?\s*relocating to\s*/i, " to ");
+    const pv = p.passport || {}, base = pv.base || p.basedIn;
     const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
     if (drawnPass()) { renderDrawnPassport(); return; }
     const L = passLayout(S);
@@ -1819,7 +1837,7 @@
 
   // ----- name tags: objects first, names when pointed at -----
   let tagTimer = null, tagFor = null;
-  function tagTarget(el) { return el && el.closest && (el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
+  function tagTarget(el) { return el && el.closest && (el.closest(".pbi") || el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
   function showTag(el, now) {
     clearTimeout(tagTimer);
     const go = () => {
@@ -1834,6 +1852,13 @@
         t.classList.toggle("flip", !right);
         t.style.left = Math.round(right ? r.right + 14 : r.left - 14 - t.offsetWidth) + "px";
         t.style.top = Math.round(clamp(r.top + 24, 8, window.innerHeight - t.offsetHeight - 8)) + "px";
+      } else if (el.classList.contains("pbi")) {
+        t.innerHTML = '<span class="tg-sub">' + esc(el.dataset.tag) + "</span>";
+        t.className = "tag below pop"; t.hidden = false;
+        const below = r.bottom + 12 + t.offsetHeight < window.innerHeight - 8;
+        t.classList.toggle("flip", !below);
+        t.style.left = Math.round(clamp(r.left + r.width / 2 - t.offsetWidth / 2, 8, window.innerWidth - t.offsetWidth - 8)) + "px";
+        t.style.top = Math.round(below ? r.bottom + 12 : r.top - 12 - t.offsetHeight) + "px";
       } else if (strip) {
         const pr = state.projects[caseIndex(el.dataset.id)], box = rectOf($("#filebox"));
         t.innerHTML = '<b class="tg-name">' + esc(pr.name) + '</b><span class="tg-sub">' + esc([pr.role, pr.dates].filter(Boolean).join(", ")) + "</span>";
@@ -1912,6 +1937,11 @@
     },
     "note-cancel"() { const f = $("#vnote"); if (f) f.hidden = true; const pad = $("#notepad"); if (pad) pad.focus({ preventScroll: true }); },
     tab(b) { const id = b.dataset.id; openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); },
+    "pin-case"(b) {
+      const id = b.dataset.id, go = () => { openCase(id); const el = paperEl(id); if (el) { if (isPhone()) el.scrollIntoView({ block: "nearest", inline: "center", behavior: behavior() }); el.focus({ preventScroll: true }); } };
+      hideTag();
+      if (!isPhone() && ui.room !== 0) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 460); } else go();
+    },
     "to-box"(b) { fileBack(b.dataset.id); const el = paperEl(b.dataset.id); if (el) el.focus({ preventScroll: true }); },
     page(b) { flipCase(b.dataset.id, +b.dataset.dir); },
     lamp() { toggleLamp(); },

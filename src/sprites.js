@@ -5,7 +5,7 @@ window.SPR = (function () {
     r: "stamp-red", R: "red-dark", g: "stamp-green", G: "green-light",
     b: "booth", B: "booth-light", y: "cover-ink", Y: "gold-dark",
     w: "wood-3", W: "wood-4", s: "wood-5", d: "wood-4", c: "cover", C: "cover-edge",
-    o: "booth-dark", m: "manila", M: "manila-deep",
+    o: "booth-dark", m: "folder-tan", M: "folder-tan-deep",
   };
   const mirror = (rows) => rows.map((r) => r + r.split("").reverse().join(""));
 
@@ -208,7 +208,7 @@ window.SPR = (function () {
   // The view through the booth window: a skyline and a short queue outside.
   // The sky follows the visitor's local hour in stepped colours: dawn, day, dusk and night.
   const SKY = {
-    dawn: { sky: "paper-deep", band: "manila", lit: 0.88 },
+    dawn: { sky: "paper-deep", band: "folder-tan", lit: 0.88 },
     day: { sky: "booth-light", band: "", lit: 2 },
     dusk: { sky: "gold-dark", band: "wood-4", lit: 0.5 },
     night: { sky: "booth-dark", band: "", lit: 0.2 },
@@ -216,7 +216,7 @@ window.SPR = (function () {
   function scene(scale, phase) {
     const W = 96, H = 32, rnd = seeded(2026), k = SKY[phase] || SKY.day, stars = seeded(7);
     let out = box(0, 0, W, H, k.sky);
-    if (k.band) out += box(0, H - 16, W, 4, k.band) + box(0, H - 19, W, 3, k.band === "manila" ? "paper" : "gold-dark");
+    if (k.band) out += box(0, H - 16, W, 4, k.band) + box(0, H - 19, W, 3, k.band === "folder-tan" ? "paper" : "gold-dark");
     if (phase === "night") for (let i = 0; i < 16; i++) out += box(1 + Math.floor(stars() * (W - 2)), 1 + Math.floor(stars() * 9), 1, 1, "field");
     for (let x = 0; x < W; ) {
       const w = 6 + Math.floor(rnd() * 7), h = 8 + Math.floor(rnd() * 13);

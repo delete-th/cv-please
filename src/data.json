@@ -1,11 +1,12 @@
 {
   "profile": {
     "name": "Thea Saguid",
+    "eyebrow": "Software · Security · AI",
     "greeting": "Hi, I'm Thea.",
     "tagline": "Computer Science graduate building secure software, AI tools and threat detection.",
     "summary": "Computer Science graduate from the University of Wollongong (SIM) with a double specialisation in Cybersecurity and Digital Systems Security. Built full-stack web and mobile applications, REST APIs and AI-powered tools using TypeScript, Python, JavaScript, React and SQL, mostly as part of student teams. Looking for a software engineering role where I can contribute to building reliable, secure products.",
     "nationality": "Filipino",
-    "basedIn": "Singapore, relocating to Metro Manila",
+    "basedIn": "Singapore",
     "occupation": "Software and security engineer",
     "email": "th.saguid@gmail.com",
     "links": [
@@ -19,17 +20,18 @@
       }
     ],
     "seeking": "Software engineering, AI engineering, or cybersecurity and SOC roles",
+    "openTo": "software, AI and security roles",
+    "currently": "",
     "board": [
       "SOFTWARE ENGINEER",
       "SECURITY",
       "BUILDS WITH AI",
-      "CS GRADUATE",
-      "RELOCATING TO MANILA"
+      "CS GRADUATE"
     ],
     "passport": {
       "nat": "Filipino",
       "occ": "Software engineer",
-      "base": "SG → Manila",
+      "base": "Singapore",
       "grad": "Sep 2026"
     }
   },
