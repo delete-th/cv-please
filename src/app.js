@@ -172,7 +172,7 @@
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
       '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
-      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", SC) + '</span><button class="box-all" data-act="all-back" aria-label="Put all folders back in the box">All back</button></div>' +
+      '<div class="filebox" id="filebox"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", SC) + '</span><button class="box-all" data-act="all-back" aria-label="Put all folders back in the box">Put all back</button></div>' +
       '<div class="printer" id="printer"><div class="feed" id="feed" aria-hidden="true"></div><button class="printer-btn" data-act="print" aria-label="Print the entry record">' +
       SPR.art("printer", SC) + '<span class="led" aria-hidden="true"></span></button></div>' +
       '<span class="pool" aria-hidden="true">' + SPR.pool(PX) + "</span>" +
@@ -211,11 +211,11 @@
     (kind === "approved" ? "APPROVED" : "DENIED") + "</span></span>";
   function renderFixed() {
     const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys">' + stampArt(kind) + "</button>";
-    fixedRoot.innerHTML = '<aside class="stampbar" id="stampbar" aria-label="Stamp bar">' +
-      '<button class="bar-tab" data-act="bar" aria-expanded="false" aria-controls="bar-rail">Stamps</button>' +
-      '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("denied") + slot("approved") +
+    fixedRoot.innerHTML = '<div class="stamp-dock" id="stampdock"><div class="stampbar" id="stampbar" role="group" aria-label="Stamp tray">' +
+      '<div class="bar-rail" id="bar-rail"><div class="rivets" aria-hidden="true"><i></i><i></i></div>' + slot("approved") + slot("denied") +
       '<p class="bar-note"><span class="point">Drag a stamp onto the paper and let go. Or tap a stamp, then the paper.</span><span class="touch">Drag a stamp onto the paper, or tap one, then the paper.</span></p><div class="rivets" aria-hidden="true"><i></i><i></i></div>' +
-      '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></aside>' +
+      '<p class="sr-only" id="stamp-keys">Press Enter to pick it up, arrow keys to move it, B to move it over the stamp box, Enter to stamp and Escape to put it back.</p></div></div>' +
+      '<button class="handle stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("handle", PX) + "<span>Stamps</span></button></div>" +
       '<p class="sr-only" id="stamp-status" aria-live="polite"></p>' +
       '<span class="mark ink ink-preview" id="ink-preview" hidden></span>' +
       '<div class="contact" id="contact" role="dialog" aria-modal="true" aria-labelledby="cm-title" hidden><div class="cm-back" data-act="cm-close"></div><div class="cm-device" id="cm-device"></div></div>' +
@@ -275,17 +275,18 @@
   // the ID card, diploma and commendations across the middle overlapping only by their margins,
   // a clear lane on the right, and the bottom strip kept for the drawer front and the pill nav.
   // On short screens the whole layout shrinks a little so every paper starts on the desk.
-  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 12;
+  const LANE = 170, MID_X = 300, TOP = 50, BOTTOM = 68, SLOT = 22;
   const usable = () => { const d = $("#desk"); return { w: d.clientWidth, h: d.clientHeight, top: TOP, bottom: d.clientHeight - BOTTOM - 6 }; };
   // the file box sits in the bottom-left corner; each folder has its own slot in it
   function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
   // inside the tray (art pixels 6..47 across, 3..33 down at 3x): one 12px row per folder, its tab on top
-  function slotPos(i) { const b = boxRect(); return [b.x + 18, b.y + 21 + i * SLOT]; }
+  function slotPos(i) { const b = boxRect(); return [b.x + 18, b.y + 31 + i * SLOT]; }
   function placeFurniture() {
     const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
     box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
-    lamp.style.left = u.w - lamp.offsetWidth - 6 + "px"; lamp.style.top = "0px";
-    pr.style.left = u.w - pr.offsetWidth - 34 + "px"; pr.style.top = Math.min(u.top + lamp.offsetHeight - 18, u.bottom - pr.offsetHeight - 96) + "px";
+    // the lamp is anchored to the desk's top-right corner in CSS; keep the printer below its arm and clear of the Stamps tab
+    const right = u.w - 14, below = lamp.offsetHeight + 8;
+    pr.style.left = right - pr.offsetWidth + "px"; pr.style.top = Math.min(below, u.bottom - pr.offsetHeight) + "px";
     env.style.left = Math.round(u.w * 0.3) + "px"; env.style.top = u.top + 16 + "px";
     $("#unpack-hint").style.left = Math.round(u.w * 0.3) + env.offsetWidth + 24 + "px";
   }
@@ -325,18 +326,36 @@
     if (instant) still(el, go); else { el.classList.add("moving"); go(); }
   }
   function placeStickers() {
-    const u = usable(), w = u.w, pr = $("#printer"), box = boxRect();
+    const u = usable(), w = u.w, pr = $("#printer"), box = boxRect(), mugEl = $('.sticker[data-sticker="mug"]');
+    const mugBelow = pr.offsetTop + pr.offsetHeight + 8 + mugEl.offsetHeight <= u.bottom;
     const spots = {
-      mug: [pr.offsetLeft + 6, pr.offsetTop + pr.offsetHeight + 8],
-      plant: [12, u.top + 4],
+      mug: mugBelow ? [pr.offsetLeft + pr.offsetWidth - mugEl.offsetWidth, pr.offsetTop + pr.offsetHeight + 8] : [pr.offsetLeft - mugEl.offsetWidth - 12, pr.offsetTop + 6],
       pen: [box.x + box.w + 18, u.bottom - 130],
     };
     $$(".sticker", $("#desk")).forEach((el) => {
-      const id = el.dataset.sticker, p = ui.stickers[id] || spots[id];
+      const id = el.dataset.sticker;
+      if (id === "plant") return;
+      const p = ui.stickers[id] || spots[id];
       setPos(el, clamp(p[0], 0, w - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
     });
-    const mug = $('.sticker[data-sticker="mug"]'), ring = $(".cup-ring");
+    placePlant();
+    const mug = mugEl, ring = $(".cup-ring");
     if (ring && mug) setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40));
+  }
+  // The plant goes wherever it fits without touching the box, a paper or another object; on a desk too short for it, it stays off.
+  function placePlant() {
+    const el = $('.sticker[data-sticker="plant"]'), u = usable();
+    if (!el) return;
+    if (ui.stickers.plant) { el.hidden = false; setPos(el, ui.stickers.plant[0], ui.stickers.plant[1]); return; }
+    const w = el.offsetWidth || 162, h = el.offsetHeight || 153, box = boxRect();
+    const taken = [box].concat(paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open) return null; const at = st.x != null ? [st.x, st.y] : landing(id, e); return { x: at[0], y: at[1], w: e.offsetWidth * ui.fit, h: e.offsetHeight * ui.fit }; }).filter(Boolean))
+      .concat(["#printer", "#lamp", '.sticker[data-sticker="mug"]', '.sticker[data-sticker="pen"]'].map((q) => { const e = $(q); return e ? { x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight } : null; }).filter(Boolean));
+    const free = (x, y) => y >= u.top && y + h <= u.bottom && x >= 0 && x + w <= u.w && !taken.some((r) => x < r.x + r.w && r.x < x + w && y < r.y + r.h && r.y < y + h);
+    const tries = [[12, u.top + 4], [12, box.y - h - 8]];
+    for (let y = u.top + 4; y + h <= u.bottom; y += 24) for (let x = 12; x + w <= u.w; x += 24) tries.push([x, y]);
+    const spot = tries.find((t) => free(t[0], t[1]));
+    el.hidden = !spot;
+    if (spot) setPos(el, spot[0], spot[1]);
   }
   function relayout() {
     if (isPhone() || !$("#desk")) return;
@@ -552,8 +571,14 @@
     if (auto !== ui.barAuto) { ui.barAuto = auto; ui.barPinned = null; }
     const open = ui.barPinned == null ? auto : ui.barPinned;
     bar.classList.toggle("out", open);
-    $(".bar-tab", bar).setAttribute("aria-expanded", String(open));
+    $("#stamp-handle").setAttribute("aria-expanded", String(open));
     $("#bar-rail").inert = !open;
+  }
+  function toggleTray(force) {
+    const open = force != null ? force : !$("#stampbar").classList.contains("out");
+    ui.barPinned = open; updateBar();
+    if (open) { const first = $("#stampbar .stamp-btn"); if (first) setTimeout(() => first.focus({ preventScroll: true }), reduced() ? 0 : 210); }
+    else if (document.activeElement && document.activeElement.closest("#stampdock")) $("#stamp-handle").focus({ preventScroll: true });
   }
   function markHTML(m) {
     return '<span class="mark ink ' + (m.kind === "approved" ? "green" : "red") + '" style="left:' + m.x + "px;top:" + m.y + "px;--tilt:" + m.rot + "deg;opacity:" + m.op +
@@ -720,33 +745,65 @@
     [0.35, 0.7, 1].forEach((v, i) => setTimeout(() => { setTear(v); if (v === 1) tearOff(); }, i * 60));
   }
 
-  // ----- the contact screen: a retro computer (or phone) with a mail form on its screen -----
-  let contactReturn = null;
+  // ----- the contact screen: a retro computer (or phone) with a mail form and a small browser on its screen -----
+  let contactReturn = null, lastField = null;
   function mailto() {
     const p = state.profile, subj = $("#cm-subject"), msg = $("#cm-msg");
     return "mailto:" + p.email + "?subject=" + encodeURIComponent(subj ? subj.value : "Hello from your portfolio") + (msg && msg.value ? "&body=" + encodeURIComponent(msg.value) : "");
   }
-  function contactContent(phone) {
+  // shortcuts on the browser's start page: generic pixel icons, never the companies' logos
+  function shortcuts(phone) {
     const p = state.profile, links = p.links.filter((l) => safeUrl(l.url));
-    const mark = (l) => '<a class="cm-mark" href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(l.label) + "</a>";
-    if (phone) {
-      return '<p class="cm-title" id="cm-title">Contact</p><div class="cm-grid"><a class="cm-big" id="cm-send" href="' + esc(mailto()) + '">Email me</a>' +
-        '<button class="cm-big" data-act="cm-copy">Copy address</button>' + links.map((l) => mark(l).replace('class="cm-mark"', 'class="cm-big"')).join("") + '</div><p class="cm-note" id="cm-note" aria-live="polite"></p>';
-    }
-    return '<p class="cm-title" id="cm-title">New message</p>' +
+    const handle = (u) => u.replace(/\/+$/, "").split("/").pop();
+    const site = (l) => /linkedin/i.test(l.url) ? { icon: "brief", label: p.name + " · LinkedIn" } : /github/i.test(l.url) ? { icon: "code", label: handle(l.url) + " · GitHub" } : { icon: "paper", label: l.label };
+    const tile = (inner, attrs) => (attrs.href ? '<a class="br-tile" ' : '<button class="br-tile" ') + Object.keys(attrs).map((k) => k + '="' + esc(attrs[k]) + '"').join(" ") + ">" + inner + (attrs.href ? "</a>" : "</button>");
+    const face = (icon, label) => '<span class="br-circle">' + SPR.draw(icon, 3) + '</span><span class="br-label">' + esc(label) + "</span>";
+    return links.map((l) => { const x = site(l); return tile(face(x.icon, x.label), { href: safeUrl(l.url), target: "_blank", rel: "noopener", "data-address": safeUrl(l.url).replace(/^https?:\/\/(www\.)?/, "") }); }).join("") +
+      (phone ? tile(face("mail", "Write to me"), { href: mailto(), id: "cm-send" }) : tile(face("mail", "Write to me"), { "data-act": "br-mail" })) +
+      tile(face("stampicon", "This desk"), { "data-act": "cm-close" });
+  }
+  function contactContent(phone) {
+    const p = state.profile;
+    if (phone) return '<p class="cm-title" id="cm-title">Look me up</p><div class="br-tiles br-grid">' + shortcuts(true) + '</div><p class="cm-note" id="cm-note" aria-live="polite"></p>';
+    return '<div class="cm-mail" id="cm-mail"><p class="cm-title" id="cm-title">New message</p>' +
       '<div class="cm-row"><span class="cm-lab">To:</span><span class="cm-val">' + esc(p.email) + '</span><button class="cm-btn" data-act="cm-copy">Copy address</button></div>' +
       '<label class="cm-row" for="cm-subject"><span class="cm-lab">Subject:</span><input id="cm-subject" class="cm-in" value="Hello from your portfolio" autocomplete="off"></label>' +
       '<label class="cm-lab cm-block" for="cm-msg">Message:</label><textarea id="cm-msg" class="cm-in" rows="3"></textarea>' +
-      '<div class="cm-row"><a class="cm-btn cm-send" id="cm-send" href="' + esc(mailto()) + '">Send</a><span class="cm-note" id="cm-note" aria-live="polite"></span></div>' +
-      '<div class="cm-row cm-marks"><span class="cm-lab">Look me up:</span>' + links.map(mark).join("") + "</div>";
+      '<div class="cm-row"><a class="cm-btn cm-send" id="cm-send" href="' + esc(mailto()) + '">Send</a><button class="cm-btn" data-act="cm-browser">Look me up</button><span class="cm-note" id="cm-note" aria-live="polite"></span></div></div>' +
+      '<div class="cm-browser" id="cm-browser" hidden><div class="br-title"><span>Look me up</span><button class="br-x" data-act="br-close" aria-label="Close the browser">X</button></div>' +
+      '<div class="br-nav"><button class="br-arrow" aria-label="Back" disabled>' + SPR.draw("left", 3) + '</button><button class="br-arrow" aria-label="Forward" disabled>' + SPR.draw("right", 3) + "</button>" +
+      '<div class="br-addr"><span class="br-search">search:</span> <span id="br-url"></span></div></div><div class="br-load" id="br-load"><i></i></div>' +
+      '<div class="br-tiles">' + shortcuts(false) + "</div></div>";
   }
+  // keys drawn over the sprite's flat keyboard so they can go down: three rows and a space bar, in art pixels
+  const KEYROWS = [["QWERTYUIOP", 6, 49], ["ASDFGHJKL", 7, 52], ["ZXCVBNM", 8, 55]];
+  function keyboardHTML(s) {
+    const k = (label, x, y, w, extra) => '<span class="cm-key' + (extra || "") + '" data-k="' + esc(label) + '" style="left:' + x * s + "px;top:" + y * s + "px;width:" + w * s + "px;height:" + 2 * s + "px;--ks:" + s + 'px"></span>';
+    let out = "";
+    KEYROWS.forEach((r) => { r[0].split("").forEach((ch, i) => { out += k(ch, r[1] + i * 4, r[2], 3); }); });
+    out += k("Back", 46, 49, 6, " wide") + k("Enter", 44, 52, 8, " wide") + k("Enter", 44 + 0, 55, 0, " gone") + k(" ", 16, 58, 24, " wide");
+    const kb = ART.computer.keys;
+    return '<div class="cm-keys" aria-hidden="true" style="left:' + kb.x * s + "px;top:" + kb.y * s + "px;width:" + kb.w * s + "px;height:" + kb.h * s + 'px"></div>' +
+      '<div class="cm-keyset" aria-hidden="true">' + out + "</div>";
+  }
+  function pressKey(name) {
+    if (reduced()) return;
+    let el = $('.cm-key[data-k="' + (name === " " ? " " : name) + '"]');
+    if (!el) { const all = $$(".cm-key:not(.wide):not(.gone)"); el = all[Math.floor(Math.random() * all.length)]; }
+    if (!el) return;
+    el.classList.add("down");
+    setTimeout(() => el.classList.remove("down"), 80);
+  }
+  function keyName(ev) { return ev.key === "Enter" ? "Enter" : ev.key === "Backspace" ? "Back" : ev.key === " " ? " " : ev.key.length === 1 ? ev.key.toUpperCase() : null; }
+  function typeSound(name) { FX.play(name === " " || name === "Enter" || name === "Back" ? "keybig" : "key"); }
   function openContact(from) {
     const box = $("#contact"), dev = $("#cm-device"), phone = isPhone(), a = ART[phone ? "phone" : "computer"];
     if (!box || !a) return;
     contactReturn = from || document.activeElement;
-    const s = Math.max(phone ? 3 : 4, Math.min(phone ? 8 : 9, Math.floor(Math.min(window.innerWidth * 0.92 / a.w, window.innerHeight * 0.9 / a.h))));
+    // the largest whole-number scale where the whole device fits with 24px to spare
+    const s = Math.max(3, Math.min(14, Math.floor(Math.min((window.innerWidth - 48) / a.w, (window.innerHeight - 48) / a.h))));
     const sc = a.screen, cl = phone ? { x: 4, y: 19 } : a.close;
-    dev.innerHTML = SPR.art(phone ? "phone" : "computer", s) +
+    dev.innerHTML = SPR.art(phone ? "phone" : "computer", s) + (phone ? "" : keyboardHTML(s)) +
       '<div class="cm-screen" style="left:' + sc.x * s + "px;top:" + sc.y * s + "px;width:" + sc.w * s + "px;height:" + sc.h * s + 'px"><div class="cm-content" id="cm-content">' + contactContent(phone) + "</div></div>" +
       '<button class="cm-x" data-act="cm-close" aria-label="Close the contact screen" style="left:' + cl.x * s + "px;top:" + cl.y * s + 'px">X</button>';
     dev.style.width = a.w * s + "px"; dev.style.height = a.h * s + "px";
@@ -755,19 +812,49 @@
     fitContact(sc.w * s, sc.h * s);
     void dev.offsetWidth; box.classList.add("open");
     FX.play("hum");
-    const first = $("#cm-subject", dev) || $(".cm-big", dev);
+    const first = $("#cm-subject", dev) || $(".br-tile", dev);
     setTimeout(() => { if (first) first.focus({ preventScroll: true }); }, reduced() ? 0 : 200);
   }
   // Content larger than the screen is scaled down, never the computer itself.
   function fitContact(w, h) {
     const c = $("#cm-content");
-    c.style.transform = ""; c.style.width = w + "px";
+    c.style.transform = ""; c.style.width = w + "px"; c.style.height = "";
     const k = Math.min(1, h / c.scrollHeight);
-    if (k < 1) { c.style.width = w / k + "px"; const k2 = Math.min(1, h / c.scrollHeight); c.style.transform = "scale(" + k2 + ")"; }
+    if (k < 1) { c.style.width = w / k + "px"; const k2 = Math.min(1, h / c.scrollHeight); c.style.transform = "scale(" + k2 + ")"; c.style.height = h / k2 + "px"; }
+    else c.style.height = h + "px";
+  }
+  function openBrowser() {
+    const b = $("#cm-browser");
+    if (!b) return;
+    b.hidden = false; $("#cm-mail").hidden = true;
+    $("#br-url").textContent = ""; $("#br-load").className = "br-load";
+    const t = $(".br-tile", b); if (t) t.focus({ preventScroll: true });
+  }
+  function closeBrowser() {
+    const b = $("#cm-browser");
+    if (!b || b.hidden) return false;
+    b.hidden = true; $("#cm-mail").hidden = false;
+    const back = $('[data-act="cm-browser"]'); if (back) back.focus({ preventScroll: true });
+    return true;
+  }
+  // The site opens in a new tab straight from the click; the address bar types it out and loads alongside.
+  let typing = null;
+  function typeAddress(text) {
+    const url = $("#br-url"), load = $("#br-load");
+    if (!url) return;
+    clearInterval(typing); url.textContent = ""; load.className = "br-load";
+    if (reduced()) { url.textContent = text; load.className = "br-load done"; return; }
+    let i = 0;
+    typing = setInterval(() => {
+      url.textContent = text.slice(0, ++i);
+      const ch = text[i - 1]; FX.play("key"); pressKey(/[a-z]/i.test(ch) ? ch.toUpperCase() : null);
+      if (i >= text.length) { clearInterval(typing); load.className = "br-load go"; setTimeout(() => { load.className = "br-load done"; }, 500); }
+    }, 20);
   }
   function closeContact() {
     const box = $("#contact");
     if (!box || !ui.contactOpen) return;
+    clearInterval(typing);
     ui.contactOpen = false;
     box.classList.remove("open"); box.hidden = true;
     app.inert = false; introRoot.inert = false;
@@ -1002,9 +1089,12 @@
     "intro-skip": closeIntro,
     passport: renderIntro,
     "flip-pass": flipPass,
-    bar() { const open = $("#stampbar").classList.contains("out"); ui.barPinned = !open; updateBar(); },
+    bar() { toggleTray(); },
     print() { printRecord(); },
     "cm-close"() { closeContact(); },
+    "cm-browser"() { openBrowser(); },
+    "br-close"() { closeBrowser(); },
+    "br-mail"() { closeBrowser(); const f = $("#cm-msg"); if (f) f.focus({ preventScroll: true }); },
     "cm-copy"(b) {
       const note = $("#cm-note"), done = () => { if (note) note.textContent = "Copied"; b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy address"; if (note) note.textContent = ""; }, 1600); };
       try { navigator.clipboard.writeText(state.profile.email).then(done, () => { if (note) note.textContent = state.profile.email; }); } catch (err) { if (note) note.textContent = state.profile.email; }
@@ -1055,6 +1145,8 @@
 
   document.addEventListener("click", (ev) => {
     if (swallowClick) { swallowClick = false; ev.preventDefault(); ev.stopPropagation(); return; }
+    const tile = ev.target.closest("a.br-tile[data-address]");
+    if (tile) { typeAddress(tile.dataset.address); return; }
     if (ev.target.closest(".stamp-btn")) return; // stamps are handled by pointer and keyboard
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
@@ -1067,7 +1159,21 @@
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
   let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
+  document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches("#cm-subject, #cm-msg")) lastField = ev.target; });
   document.addEventListener("pointerdown", (ev) => {
+    const key = ev.target.closest && ev.target.closest(".cm-key");
+    if (key && ui.contactOpen) {
+      ev.preventDefault();
+      const f = lastField && lastField.isConnected ? lastField : $("#cm-msg"), k = key.dataset.k;
+      if (!f) return;
+      const a = f.selectionStart, b = f.selectionEnd, v = f.value;
+      if (k === "Back") { const from = a === b ? Math.max(0, a - 1) : a; f.value = v.slice(0, from) + v.slice(b); f.selectionStart = f.selectionEnd = from; }
+      else { const ch = k === "Enter" ? (f.tagName === "TEXTAREA" ? "\n" : "") : k === " " ? " " : k.toLowerCase(); f.value = v.slice(0, a) + ch + v.slice(b); f.selectionStart = f.selectionEnd = a + ch.length; }
+      f.dispatchEvent(new Event("input", { bubbles: true }));
+      f.focus({ preventScroll: true });
+      typeSound(k); pressKey(k);
+      return;
+    }
     if (ev.button !== 0) return;
     const sbtn = ev.target.closest(".stamp-btn");
     if (held && held.mode === "armed" && !held.busy) {
@@ -1154,7 +1260,7 @@
       if (drag.el.classList.contains("filed")) { const id = drag.el.dataset.id; pst(id).inBox = false; drag.el.classList.remove("filed"); }
       drag.el.classList.remove("moving", "nudge"); drag.el.classList.add("held");
       try { drag.el.setPointerCapture(ev.pointerId); } catch (err) { /* capture is optional */ }
-      FX.play("lift");
+      FX.play(drag.el.classList.contains("sticker") ? "tap" : "lift");
       if (drag.el.classList.contains("paper")) markHandled();
     }
     moveTo(drag.el, drag.ox + dx, drag.oy + dy);
@@ -1210,7 +1316,7 @@
       if (ct && ct.classList.contains("ready")) { ct.classList.remove("ready"); putAway(d.el.dataset.id, { x: d.ox, y: Math.max(d.oy, TOP) }); return; }
     }
     if (ct) ct.classList.remove("ready");
-    FX.play("settle");
+    FX.play(d.el.classList.contains("sticker") ? "tap" : "settle");
   }
   document.addEventListener("pointerup", endDrag);
   document.addEventListener("pointercancel", endDrag);
@@ -1218,7 +1324,11 @@
 
   document.addEventListener("keydown", (ev) => {
     if (ui.contactOpen) {
-      if (ev.key === "Escape") { ev.preventDefault(); closeContact(); return; }
+      if (ev.key === "Escape") { ev.preventDefault(); if (!closeBrowser()) closeContact(); return; }
+      if (ev.target.matches && ev.target.matches("#cm-subject, #cm-msg") && !ev.ctrlKey && !ev.metaKey) {
+        const k = keyName(ev);
+        if (k) { typeSound(k); pressKey(k); }
+      }
       if (ev.key === "Tab") {
         const f = $$("#contact a[href], #contact button, #contact input, #contact textarea").filter((e) => e.offsetParent);
         const i = f.indexOf(document.activeElement);
@@ -1253,6 +1363,8 @@
         if (ev.key === "Escape") { ev.preventDefault(); springBack(); $("#stamp-status").textContent = "Stamp put back."; return; }
       }
     }
+    if (ev.key === "Escape" && !held && $("#stampbar").classList.contains("out") && document.activeElement && document.activeElement.closest("#stampdock")) { toggleTray(false); return; }
+    if ((ev.key === "s" || ev.key === "S") && !typing && !held && (ui.view === "desk" || $("#intro")) && !editing) { ev.preventDefault(); toggleTray(); return; }
     if (ev.key === "Escape") {
       if (held) { springBack(); return; }
 

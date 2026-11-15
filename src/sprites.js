@@ -100,6 +100,12 @@ window.SPR = (function () {
     return '<img class="spr art art-' + name + " " + (cls || "") + '" src="' + a.src + '" width="' + a.w * scale + '" height="' + a.h * scale + '" alt="' + (alt || "") + '"' + (alt ? "" : ' aria-hidden="true"') + ' draggable="false">';
   }
 
+
+  S.brief = ["............", "....kkkk....", "....k..k....", ".kkkkkkkkkk.", ".kWWWWWWWWk.", ".kWsWWWWWWk.", ".kkkkWWkkkk.", ".kwwwkkwwwk.", ".kwwwwwwwwk.", ".kwwwwwwwwk.", ".kkkkkkkkkk.", "............"];
+  S.code = ["............", "............", "...k......k.", "..k...k....k", ".k...k......", "k...k.......", ".k.k......k.", "..k......k..", ".k......k...", "........k...", "............", "............"];
+  S.mail = ["............", "............", "kkkkkkkkkkkk", "kkfffffffffk", "kfkffffffkfk", "kffkffffkffk", "kfffkkkkfffk", "kffffffffffk", "kffffffffffk", "kkkkkkkkkkkk", "............", "............"];
+  S.stampicon = ["....kkkk....", "...kBBBbk...", "...kBbbbk...", "....kkkk....", ".....kk.....", ".....kk.....", "..kkkkkkkk..", ".kGGGGGGGGk.", ".kgggggggg k".replace(" ", "g"), ".kkkkkkkkkk.", "............", "............"];
+
   function rects(rows, map) {
     let out = "";
     rows.forEach((row, y) => {
