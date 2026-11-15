@@ -1560,19 +1560,22 @@
     const p = state.profile, e = state.education;
     const parts = p.name.trim().split(/\s+/), surname = parts.length > 1 ? parts.pop() : "", given = parts.join(" ");
     ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
-    const S = passScale(), pp = (x) => x * S + "px";
+    // the passport canvas is 104x128 art pixels; the open page sits at (15, 2) on it
+    const S = passScale(), px = (v) => v * S + "px", X = (v) => px(15 + v), Y = (v) => px(2 + v);
+    const base = String(p.basedIn || "").replace(/,?\s*relocating to\s*/i, " to ");
+    const row = (lab, val) => '<div class="pp-row"><dt>' + lab + "</dt><dd>" + esc(val) + "</dd></div>";
     introRoot.innerHTML =
-      '<div class="intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
-      '<div class="passport" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + pp(89) + ";height:" + pp(89) + '">' +
-      '<span class="pp-frames" aria-hidden="true" data-act="intro-next" style="background-image:url(' + ART["passport-anim-sheet"].src + ')"></span>' +
+      '<div class="intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite" style="top:' + (56 + 117 * S) + 'px">Next applicant. Open the passport to begin.</p>' +
+      '<div class="passport" id="passport" data-frame="0"" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + px(104) + ";height:" + px(128) + '">' +
+      '<span class="pp-frames" id="pp-frames" aria-hidden="true" data-act="intro-next" style="background-image:url(' + ART["passport-seq-sheet"].src + ")" + '"></span>' +
       '<div class="pp-spread" id="pp-spread">' +
-      '<div class="pp-left" style="left:' + pp(3) + ";top:" + pp(14) + ";width:" + pp(37) + ";height:" + pp(68) + '">' +
-      '<div class="pp-photo" style="left:' + pp(4) + ";top:" + pp(7) + ";width:" + pp(18) + ";height:" + pp(25) + '">' + SPR.applicant("thea", Math.max(1, Math.floor(Math.min(18 * S / 55, 25 * S / 59))), portraitAlt) + "</div>" +
-      '<dl class="fields pp-fields" style="top:' + pp(34) + '">' + field("Surname", surname) + field("Given name", given) + field("Nationality", p.nationality) + field("Graduated", e.graduated) + field("Occupation", p.occupation) + "</dl>" +
-      '<div class="pp-mrz" aria-hidden="true">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 40) + "<br>" + mrz("BCS " + e.graduated + " UOW SIM", 40) + "</div></div>" +
-      '<div class="pp-right visa-page visa stampable" data-stamp="visa" style="left:' + pp(48) + ";top:" + pp(14) + ";width:" + pp(37) + ";height:" + pp(68) + '"><h2>Entry visa</h2><dl class="visa-lines">' +
-      "<dt>Holder</dt><dd>" + esc(p.name) + "</dd><dt>Purpose</dt><dd>" + esc(p.seeking) + "</dd><dt>Issued</dt><dd>" + today + "</dd><dt>Based in</dt><dd>" + esc(p.basedIn) + "</dd></dl>" +
-      '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="visa"></div></div></div></div>' +
+      '<div class="pp-visa visa stampable" data-stamp="visa" style="left:' + X(0) + ";top:" + Y(0) + ";width:" + px(74) + ";height:" + px(52) + '">' +
+      '<div class="stamp-box ghost' + (ui.inked.visa ? " inked" : "") + '" aria-hidden="true" style="left:' + px(14) + ";top:" + px(9) + ";width:" + px(46) + ";height:" + px(39) + '"></div>' +
+      '<p class="pp-visa-title" style="left:' + px(14) + ";top:" + px(48) + ";width:" + px(46) + ";height:" + px(5) + '">Entry visa</p><div class="marks" data-marks="visa"></div></div>' +
+      '<div class="pp-photo" style="left:' + X(43) + ";top:" + Y(68) + ";width:" + px(23) + ";height:" + px(29) + '">' + SPR.applicant("thea", Math.max(1, Math.floor(Math.min(23 * S / 55, 29 * S / 59))), portraitAlt) + "</div>" +
+      '<div class="pp-data" style="left:' + X(4) + ";top:" + Y(63) + ";width:" + px(37) + ";height:" + px(35) + '"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + "</p>" +
+      '<dl class="pp-rows">' + row("NAT", p.nationality) + row("OCC", p.occupation) + row("BASE", base) + row("GRAD", e.graduated) + "</dl></div>" +
+      '<p class="pp-code" aria-hidden="true" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + ";height:" + px(8) + '">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 30) + "</p></div></div>" +
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     document.documentElement.classList.add("locked");
@@ -1581,20 +1584,32 @@
     updateBar();
   }
   // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
+  // 4x where the open page clears the tray (beside it on short screens), else 3x
   function passScale() {
-    const vh = window.innerHeight, side = vh < 760 && !isPhone(), bottom = side ? vh - 80 : vh - 72 - ($("#stampbar") ? $("#stampbar").offsetHeight : 222) - 16;
-    for (let k = 6; k >= 4; k--) if (12 + 84 * k <= bottom) return k;
-    return 4;
+    const vh = window.innerHeight, side = vh < 760 && !isPhone(), bottom = side ? vh - 72 : vh - 72 - ($("#stampbar") ? $("#stampbar").offsetHeight : 226) - 16;
+    return 12 + 44 + 128 * 4 <= bottom + 13 * 4 ? 4 : 3;
   }
   function trayClear() { const bar = $("#stampbar"); return (bar ? bar.offsetHeight : 210) + 80; }
+  // the turn (frames 1-3) then the opening (4-7), in hard steps; closing plays it backwards
+  const PP_HOLD = [0, 80, 80, 250, 90, 90, 90, 90];
+  function setFrame(f) {
+    const pp = $("#passport"), fr = $("#pp-frames"); if (!pp || !fr) return;
+    pp.dataset.frame = f; fr.style.backgroundPosition = -104 * f * (+pp.style.getPropertyValue("--pp") || 4) + "px 0";
+  }
   function playPassport(dir) {
     const pp = $("#passport"); if (!pp) return;
-    const to = dir > 0 ? 3 : 0;
-    if (reduced()) { pp.dataset.frame = to; pp.classList.toggle("open", to === 3); return; }
-    let f = +pp.dataset.frame;
+    const to = dir > 0 ? 7 : 0;
     pp.classList.remove("open");
-    const tick = () => { f += dir; pp.dataset.frame = f; if (f !== to) setTimeout(tick, 110); else pp.classList.toggle("open", to === 3); };
-    setTimeout(tick, 110);
+    if (reduced()) { setFrame(to); pp.classList.toggle("open", to === 7); return; }
+    let f = +pp.dataset.frame;
+    FX.play("dwslide");
+    const tick = () => {
+      f += dir; setFrame(f);
+      if (dir > 0 && f === 4) FX.play("flip");
+      if (f === to) { pp.classList.toggle("open", to === 7); return; }
+      setTimeout(tick, PP_HOLD[f]);
+    };
+    setTimeout(tick, dir > 0 ? 0 : PP_HOLD[f]);
   }
   function introNext() {
     if (ui.introStep !== 0) return;

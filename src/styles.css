@@ -1413,3 +1413,28 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 
 /* room for the landscape diploma: the ID card and commendations a little narrower */
 @media (min-width: 821px) { .p-id { width: 330px; } .p-honours { width: 300px; } }
+
+/* ---------- the passport: upright, turns sideways, opens upward (8 frames on one sheet) ---------- */
+.pp-frames { background-size: calc(832px * var(--pp)) calc(128px * var(--pp)); background-position: 0 0; }
+.passport .pp-left, .passport .pp-right { display: none; }
+.pp-visa { position: absolute; }
+.pp-visa .stamp-box.ghost { position: absolute; right: auto; bottom: auto; visibility: hidden; }
+.pp-visa-title { position: absolute; margin: 0; display: grid; place-items: center; color: var(--gold-dark); font: 400 var(--t-label)/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; -webkit-font-smoothing: none; }
+.passport .pp-photo { position: absolute; display: grid; place-items: center; overflow: hidden; }
+.pp-data { position: absolute; color: var(--ink); }
+.pp-name { margin: 0 0 3px; font: 700 16px/1.15 var(--typed); }
+.pp-rows { margin: 0; display: grid; gap: 3px; }
+.pp-row { margin: 0; }
+.pp-row dt { display: inline-block; margin: 0 5px 0 0; padding: 1px 4px 0; vertical-align: 1px; background: var(--ink); color: var(--field); font: 600 12px/14px var(--sans); }
+.pp-row dd { display: inline; margin: 0; font: 700 var(--t-typed)/16px var(--typed); }
+.pp-code { position: absolute; margin: 0; display: flex; align-items: center; justify-content: flex-end; overflow: hidden; white-space: nowrap; color: var(--ink-soft); font: 400 13px/1 var(--typed); }
+@media (min-width: 821px) { .intro .passport { margin-top: 0; } }
+.pp-rows { gap: 3px; line-height: 16px; }
+.pp-row { line-height: 16px; }
+.pp-row dt { vertical-align: top; padding: 2px 4px 1px; font: 600 12px/13px var(--sans); }
+.pp-row dd { line-height: 16px; }
+.pp-name { margin-bottom: 1px; line-height: 18px; }
+.pp-rows { gap: 1px; }
+.pp-row { display: block; height: auto; }
+.pp-row dt { font: 600 12px/12px var(--sans); padding: 2px 4px 1px; margin-top: 0; }
+.pp-row { font: 700 var(--t-typed)/16px var(--typed); }
