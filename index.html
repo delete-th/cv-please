@@ -1775,6 +1775,10 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .rec-printer .art { filter: none; }
 .rec-printer { filter: var(--rest-shadow); }
 .rec-printer:has(.printer-btn:hover, .printer-btn:focus-visible) { filter: var(--shape-ring) var(--rest-shadow); }
+/* case file header: the title sits on one line with the return and close icons, centred against them */
+.p-case.open .paper-head { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; }
+.p-case.open .paper-head h2 { flex: 1; margin: 0; }
+.p-case.open .ph-row { flex: none; gap: 8px; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
