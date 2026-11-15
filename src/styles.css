@@ -1584,3 +1584,13 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .p-diploma .dip-conf { font: 700 13px/1 var(--typed); }
 .p-diploma .dip-sign b { font: 600 11px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; font-variant: normal; }
 .p-diploma .dip-small { max-width: 300px; }
+
+/* Thea's speech bubble for the things in her drawer */
+.thea-say { position: fixed; z-index: 86; display: flex; align-items: flex-start; gap: 10px; max-width: 320px; pointer-events: none; }
+.thea-say.pop { animation: say-pop 0.12s steps(2, end); }
+@keyframes say-pop { 0% { scale: 0.92; } 100% { scale: 1; } }
+.ts-face { display: none; flex: none; padding: 3px; background: var(--booth-light); border: var(--px) solid var(--ink); line-height: 0; }
+.thea-say.own .ts-face { display: block; }
+.ts-text { position: relative; margin: 6px 0 0; padding: 9px 13px 10px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); filter: var(--rest-shadow); font: 400 var(--t-body)/1.35 var(--sans); }
+.ts-text::before { content: ""; position: absolute; left: -9px; top: 12px; width: 10px; height: 10px; background: var(--paper); border-left: 2px solid var(--ink); border-bottom: 2px solid var(--ink); rotate: 45deg; }
+@media (prefers-reduced-motion: reduce) { .thea-say.pop { animation: none; } }

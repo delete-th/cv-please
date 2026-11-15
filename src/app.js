@@ -686,9 +686,9 @@
   const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 90 };
   // Thea's things in the Personal drawer, at their spots on the drawer floor (art pixels)
   const POBJ = {
-    bottle: { art: "cola-bottle", x: 22, y: 24, label: "Glass bottle", hint: "Press Enter to nudge it." },
-    watch: { art: "watch", x: 30, y: 68, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
-    sketchbook: { art: "sketchbook-closed", x: 150, y: 34, label: "Sketchbook", hint: "Press Enter to open it." },
+    bottle: { art: "cola-bottle", x: 19, y: 27, label: "Glass bottle", hint: "Press Enter to nudge it." },
+    watch: { art: "watch", x: 35, y: 64, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
+    sketchbook: { art: "sketchbook-closed", x: 146, y: 40, label: "Sketchbook", hint: "Press Enter to open it." },
   };
   const noteOf = (id) => ((state.effects || []).find((e) => e.id === id) || {}).note || "";
   function pobjHTML(id) {
@@ -846,16 +846,26 @@
   }
 
   // ----- Thea's things: notes, the watch, the bottle and the sketchbook -----
+  const noteTurn = {};
   function showNote(el) {
-    const n = $("#pnote"), text = noteOf(el.dataset.p), desk = $("#desk");
-    if (!n || !text || isPhone()) return;
-    n.textContent = text; n.hidden = false;
-    const r = rectOf(el), d = rectOf(desk), w = n.offsetWidth, h = n.offsetHeight;
-    let x = r.right - d.left + 12, y = r.top - d.top;
-    if (x + w > desk.clientWidth - 8) x = r.left - d.left - w - 12;
-    n.style.left = clamp(x, 8, desk.clientWidth - w - 8) + "px"; n.style.top = clamp(y, 8, desk.clientHeight - h - 8) + "px";
+    const id = el.dataset.p, lines = noteOf(id).split("|").map((x) => x.trim()).filter(Boolean);
+    if (!lines.length || isPhone()) return;
+    noteTurn[id] = ((noteTurn[id] == null ? -1 : noteTurn[id]) + 1) % lines.length;
+    let b = $("#thea-say");
+    if (!b) {
+      b = document.createElement("div"); b.id = "thea-say"; b.className = "thea-say"; b.setAttribute("role", "status");
+      b.innerHTML = '<span class="ts-face" aria-hidden="true">' + SPR.applicant(state.profile.applicant || "thea", 1, "") + '</span><p class="ts-text"></p>';
+      fixedRoot.appendChild(b);
+    }
+    $(".ts-text", b).textContent = lines[noteTurn[id]];
+    const win = $(".window-wrap"), wr = win ? rectOf(win) : null, inView = wr && wr.bottom > 40 && wr.top >= -4;
+    b.classList.toggle("own", !inView);
+    b.hidden = false;
+    if (inView) { b.style.left = Math.round(wr.right + 14) + "px"; b.style.top = Math.round(wr.top + 26) + "px"; }
+    else { b.style.left = "16px"; b.style.top = "16px"; }
+    b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
   }
-  function hideNote() { const n = $("#pnote"); if (n) n.hidden = true; }
+  function hideNote() { const b = $("#thea-say"); if (b) b.hidden = true; const n = $("#pnote"); if (n) n.hidden = true; }
   // the hands are pixel lines on a canvas the size of the sprite, so they turn with it and stay on the art grid
   const WATCH = { cx: 16.5, cy: 50 };
   let slow = null;
