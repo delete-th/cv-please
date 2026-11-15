@@ -82,7 +82,8 @@
   function folderInner(i) {
     const p = state.projects[i];
     const filed = pst(("case-" + i)).inBox && !isPhone(), side = ["left", "right"][i % 2];
-    return SPR.art("folder-" + side + "-top", BX, "fold-art") + '<button class="folder-tab ft-' + side + '" data-act="tab" data-id="' + ("case-" + i) + '" tabindex="' + (filed ? 0 : -1) + '" aria-label="Open case file: ' + esc(p.name) + '" title="' + esc(p.name) + '"' + (filed ? "" : ' aria-hidden="true"') + '><span class="ft-box">' + esc(p.tab || shortName(p)) + '</span><span class="ft-full">' + esc(shortName(p)) + "</span>" +
+    return SPR.art("fstrip-" + (i % 7), BX, "fold-art") + '<span class="ft-icon ft-' + side + '" aria-hidden="true">' + SPR.draw(p.icon || "paper", 1) + "</span>" +
+      '<button class="folder-tab ft-' + side + '" data-act="tab" data-id="' + ("case-" + i) + '" tabindex="' + (filed ? 0 : -1) + '" aria-label="' + esc(p.name) + '"' + (filed ? "" : ' aria-hidden="true"') + '><span class="ft-full">' + esc(shortName(p)) +
       '</button><span class="clip">' + SPR.art("paperclip", SC) + "</span>" +
       '<div class="folder-face">' + SPR.draw(p.icon || "paper", PX) + "<div><b>" + esc(shortName(p)) + '</b><span class="when">' + esc(p.dates) + "</span></div></div>" +
       (p.award ? '<span class="ink red mini-stamp">' + esc(p.award) + "</span>" : "") + '<span class="peek" aria-hidden="true">Open file</span>';
@@ -145,7 +146,7 @@
       (i >= 0 && ui.hot && uses(state.projects[i].stack, ui.hot) ? " hot" : "");
     const label = i >= 0 ? "Case file: " + state.projects[i].name : paperLabel(id);
     return '<article class="' + cls + '" data-id="' + id + '" data-drag tabindex="' + (cls.includes(" filed") ? -1 : 0) + '" aria-label="' + esc(label) + '"' +
-      (i >= 0 ? ' aria-expanded="' + st.open + '"' : "") + ' style="--tilt:' + st.tilt + "deg" + (i >= 0 ? ";--tab-x:" + ((i % 3) * 34 + 8) + "px" : "") + '">' + paperInner(id) + "</article>";
+      (i >= 0 ? ' aria-expanded="' + st.open + '"' : "") + ' style="--tilt:' + st.tilt + "deg" + (i >= 0 ? ";--tab-x:" + ((i % 3) * 34 + 8) + "px;--tabc:" + TABC[i % TABC.length] : "") + '">' + paperInner(id) + "</article>";
   }
   function skillsHTML() {
     const p = frontCase();
@@ -262,7 +263,19 @@
 
   // ----- fixed controls: the stamp bar and the pill nav -----
   const FACE = SPR.STAMP_FACE;
-  const stampArt = (kind) => '<span class="stamp-art">' + SPR.stamp(kind, 2) + '<span class="word" style="left:' + FACE.x * 2 + "px;top:" + FACE.y * 2 + "px;width:" + FACE.w * 2 + "px;height:" + FACE.h * 2 + 'px">' +
+  // panels in art pixels: resting and pressed; the pressed sprite stands on the same bottom-centre
+  const STAMPS = {
+    approved: { rest: [4, 38, 32, 10], press: [5, 36, 31, 8], fs: [28, 26] },
+    denied: { rest: [4, 38, 32, 10], press: [5, 34, 30, 8], fs: [40, 38] },
+  };
+  function stampArt(kind) {
+    const k = STAMPS[kind], a = ART["stamp-" + kind], b = ART["stamp-" + kind + "-pressed"], word = kind === "approved" ? "APPROVED" : "DENIED";
+    const layer = (cls, art, name, pnl, fs, dx, dy) => '<span class="' + cls + '" style="left:' + dx + "px;top:" + dy + 'px">' + SPR.art(name, SC) +
+      '<span class="word" style="left:' + pnl[0] * SC + "px;top:" + pnl[1] * SC + "px;width:" + pnl[2] * SC + "px;height:" + pnl[3] * SC + "px;font-size:" + fs + 'px">' + word + "</span></span>";
+    return '<span class="stamp-art" style="width:' + a.w * SC + "px;height:" + a.h * SC + 'px">' + layer("st-rest", a, "stamp-" + kind, k.rest, k.fs[0], 0, 0) +
+      layer("st-press", b, "stamp-" + kind + "-pressed", k.press, k.fs[1], Math.floor((a.w - b.w) * SC / 2), (a.h - b.h) * SC) + "</span>";
+  }
+  const stampArtOld = (kind) => '<span class="stamp-art">' + SPR.stamp(kind, 2) + '<span class="word" style="left:' + FACE.x * 2 + "px;top:" + FACE.y * 2 + "px;width:" + FACE.w * 2 + "px;height:" + FACE.h * 2 + 'px">' +
     (kind === "approved" ? "APPROVED" : "DENIED") + "</span></span>";
   function renderFixed() {
     const slot = (kind) => '<button class="stamp-btn" data-kind="' + kind + '" aria-label="' + (kind === "approved" ? "Approved" : "Denied") + ' stamp" aria-describedby="stamp-keys"><span class="inkpad" aria-hidden="true">' +
@@ -362,7 +375,7 @@
     const u = usable(), avail = u.bottom - u.top, el = (id) => paperEl(id);
     const mids = ["id", "diploma", "honours"].map(el), midH = Math.max.apply(null, mids.map((e, k) => e.offsetHeight + [8, 16, 0][k]));
     const left = boxRect().w + 30, minW = mids[0].offsetWidth * 0.85 + mids[1].offsetWidth * 0.85 + mids[2].offsetWidth;
-    ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.72, 1);
+    ui.fit = 1;
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
   function landing(id, el) {
@@ -639,6 +652,7 @@
     return '<span class="pobj p-' + id + (o.rot ? " rot" : "") + '" data-p="' + id + '" data-drag role="button" tabindex="0" aria-label="' + esc(o.label + ". " + o.hint + " Press M to move it between the drawer and the desk.") +
       '" style="--aw:' + a.w + ";--ah:" + a.h + '">' + SPR.art(o.art, SC) + (id === "watch" ? '<canvas class="hands" width="' + a.w + '" height="' + a.h + '" aria-hidden="true"></canvas>' : "") + "</span>";
   }
+  const TABC = ['#8fa7b8', '#b9a2c4', '#8fb39a', '#d9b26a', '#c98b7a', '#a7b78a', '#9a9a8c'];
   const FS = 4; // closed fronts on the desk edge are drawn at 4x so the plate fits its label
   const floorHTML = (id) => '<div class="dw-floor dw-floor-' + id + '" id="' + (id === "skills" ? "drawer-box" : "dw-things") + '">' +
     (id === "skills" ? (isPhone() ? skillsHTML() : cardsHTML()) : Object.keys(POBJ).map(pobjHTML).join("")) + "</div>";
@@ -646,7 +660,7 @@
     const a = ART.drawer, floorId = id === "skills" ? "drawer-box" : "dw-things";
     return '<div class="dw dw-' + id + '" id="dw-' + id + '" data-dw="' + id + '" style="--dw-w:' + a.w * FS + "px;--dw-h:" + a.h * FS + 'px">' + SPR.art("drawer", FS, "dw-art") +
       (isPhone() ? floorHTML(id) : "") +
-      '<button class="dw-front" data-act="dw" data-dw="' + id + '" aria-expanded="false" aria-controls="' + floorId + '"><span class="dw-plate">' + label + "</span></button></div>";
+      '<button class="dw-front" data-act="dw" data-dw="' + id + '" data-tag="' + label + '" aria-label="' + label + ' drawer" aria-expanded="false" aria-controls="' + floorId + '"></button></div>';
   }
   // the open drawer, pulled out toward the visitor: one big drawer whose floor shows the chosen drawer's contents
   function bigDrawerHTML() {
@@ -942,6 +956,16 @@
   function placeTray() {
     const dock = $("#stampdock"), bar = $("#stampbar");
     if (!dock || !bar) return;
+    const side = !!$("#intro") && window.innerHeight < 760 && !isPhone();
+    bar.classList.toggle("side", side);
+    if (side) {
+      const d = rectOf(dock), pp = $("#passport"), pr = pp ? rectOf(pp) : null, w = bar.offsetWidth, h = bar.offsetHeight;
+      const left = pr ? Math.min(window.innerWidth - w - 16, pr.right + 24) : window.innerWidth - w - 24;
+      bar.style.left = Math.round(left - d.left + (parseFloat(getComputedStyle(dock).translate) || 0)) + "px";
+      bar.style.bottom = Math.round(d.bottom - (window.innerHeight / 2 + h / 2)) + "px";
+      return;
+    }
+    bar.style.left = ""; bar.style.bottom = "";
     if (isPhone()) { bar.style.removeProperty("--tray-dx"); return; }
     const d = rectOf(dock), w = bar.offsetWidth, c = d.left + d.width / 2 - (parseFloat(getComputedStyle(dock).translate) || 0);
     const want = c - w / 2, left = clamp(want, 8, window.innerWidth - 8 - w);
@@ -975,6 +999,7 @@
     if (!box || !onScreen(box)) return;
     const top = trayTopOpen(), b = rectOf(box), by = b.bottom - top + 24;
     if (!intro && !isPhone()) return;
+    if (bar.classList.contains("side")) return;
     if (b.bottom > top - 16) (intro || window).scrollBy({ top: by, behavior: behavior() });
   }
   function toggleTray(force) {
@@ -1048,7 +1073,7 @@
     $("#ink-preview").hidden = true;
     const art = rectOf($(".stamp-art", h.btn)), done = () => { h.el.remove(); h.btn.classList.remove("empty"); updateBar(); if (!now) FX.play("clack"); };
     if (now || reduced()) { done(); return; }
-    h.el.classList.remove("lifted", "p1", "p2"); h.el.classList.add("glide");
+    h.el.classList.remove("lifted", "pressed"); h.el.classList.add("glide");
     h.el.style.left = art.left + "px"; h.el.style.top = art.top + "px";
     setTimeout(done, 210);
   }
@@ -1059,9 +1084,8 @@
     const s = h.over || stampableAt(h.fx, h.fy), x = h.fx, y = h.fy;
     const finish = () => { if (s) inkAt(s, x, y, h.kind); else FX.play("tick"); };
     if (reduced()) { finish(); springBack(); return; }
-    h.el.classList.remove("glide"); h.el.classList.add("p1");
-    setTimeout(() => { h.el.classList.replace("p1", "p2"); finish();
-      setTimeout(() => { h.el.classList.remove("p2"); setTimeout(springBack, 70); }, 90); }, 60);
+    h.el.classList.remove("glide"); h.el.classList.add("pressed");
+    setTimeout(() => { finish(); setTimeout(() => { h.el.classList.remove("pressed"); setTimeout(springBack, 70); }, 40); }, 90);
   }
   async function stampOnto(root, kind) {
     const s = $(".stampable", root) || root;
@@ -1523,16 +1547,19 @@
     const p = state.profile, e = state.education;
     const parts = p.name.trim().split(/\s+/), surname = parts.length > 1 ? parts.pop() : "", given = parts.join(" ");
     ui.introStep = 0; ui.introDone = false; ui.passPage = 0;
+    const S = passScale(), pp = (x) => x * S + "px";
     introRoot.innerHTML =
       '<div class="intro" id="intro" role="dialog" aria-label="Passport"><div class="intro-inner"><p class="intro-say" id="say" aria-live="polite">Next applicant. Open the passport to begin.</p>' +
-      '<div class="passport" id="passport" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied.">' +
-      '<div class="pp-page pp-under" id="pp-under">' + studiesUnder() + "</div>" +
-      '<div class="pp-leaf" id="pp-leaf"><div class="leaf-face leaf-front">' + visaFront() + '</div><div class="leaf-face leaf-back">' + commendationsBack() + "</div></div>" +
-      '<div class="pp-cover"><div class="pp-front" data-act="intro-next">' + SPR.draw("emblem", PX) + "<b>Passport</b><span>" + esc(p.name) + "</span></div>" +
-      '<div class="pp-back"><div class="pp-head"><span>Passport</span><span>' + mrz("P " + p.nationality.slice(0, 3), 5) + "</span></div>" +
-      '<div class="pp-body"><div class="pp-photo">' + SPR.applicant("thea", PX, portraitAlt) + '</div><dl class="fields">' +
-      field("Surname", surname) + field("Given name", given) + field("Nationality", p.nationality) + field("Occupation", p.occupation) + field("Based in", p.basedIn) + field("Graduated", e.graduated) + "</dl></div>" +
-      '<div class="pp-mrz" aria-hidden="true">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 40) + "<br>" + mrz("BCS " + e.graduated + " UOW SIM", 40) + "</div></div></div></div>" +
+      '<div class="passport" id="passport" data-frame="0" data-stamp-root tabindex="0" aria-label="Passport. Press A to stamp the visa approved or D to stamp it denied." style="--pp:' + S + ";width:" + pp(89) + ";height:" + pp(89) + '">' +
+      '<span class="pp-frames" aria-hidden="true" data-act="intro-next" style="background-image:url(' + ART["passport-anim-sheet"].src + ')"></span>' +
+      '<div class="pp-spread" id="pp-spread">' +
+      '<div class="pp-left" style="left:' + pp(3) + ";top:" + pp(14) + ";width:" + pp(37) + ";height:" + pp(68) + '">' +
+      '<div class="pp-photo" style="left:' + pp(4) + ";top:" + pp(7) + ";width:" + pp(18) + ";height:" + pp(25) + '">' + SPR.applicant("thea", Math.max(1, Math.floor(Math.min(18 * S / 55, 25 * S / 59))), portraitAlt) + "</div>" +
+      '<dl class="fields pp-fields" style="top:' + pp(34) + '">' + field("Surname", surname) + field("Given name", given) + field("Nationality", p.nationality) + field("Graduated", e.graduated) + field("Occupation", p.occupation) + "</dl>" +
+      '<div class="pp-mrz" aria-hidden="true">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 40) + "<br>" + mrz("BCS " + e.graduated + " UOW SIM", 40) + "</div></div>" +
+      '<div class="pp-right visa-page visa stampable" data-stamp="visa" style="left:' + pp(48) + ";top:" + pp(14) + ";width:" + pp(37) + ";height:" + pp(68) + '"><h2>Entry visa</h2><dl class="visa-lines">' +
+      "<dt>Holder</dt><dd>" + esc(p.name) + "</dd><dt>Purpose</dt><dd>" + esc(p.seeking) + "</dd><dt>Issued</dt><dd>" + today + "</dd><dt>Based in</dt><dd>" + esc(p.basedIn) + "</dd></dl>" +
+      '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp box</div><div class="marks" data-marks="visa"></div></div></div></div>' +
       '<div class="intro-actions"><button class="btn-main" id="intro-btn" data-act="intro-next">Open passport</button><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
     renderMarks("visa");
     document.documentElement.classList.add("locked");
@@ -1540,9 +1567,25 @@
     $("#intro-btn").focus({ preventScroll: true });
     updateBar();
   }
+  // the passport scale: 6x where it fits above the open tray, otherwise a step down (on short screens the tray moves beside it)
+  function passScale() {
+    const vh = window.innerHeight, side = vh < 760 && !isPhone(), bottom = side ? vh - 80 : vh - 72 - ($("#stampbar") ? $("#stampbar").offsetHeight : 222) - 16;
+    for (let k = 6; k >= 4; k--) if (12 + 84 * k <= bottom) return k;
+    return 4;
+  }
+  function trayClear() { const bar = $("#stampbar"); return (bar ? bar.offsetHeight : 210) + 80; }
+  function playPassport(dir) {
+    const pp = $("#passport"); if (!pp) return;
+    const to = dir > 0 ? 3 : 0;
+    if (reduced()) { pp.dataset.frame = to; pp.classList.toggle("open", to === 3); return; }
+    let f = +pp.dataset.frame;
+    pp.classList.remove("open");
+    const tick = () => { f += dir; pp.dataset.frame = f; if (f !== to) setTimeout(tick, 110); else pp.classList.toggle("open", to === 3); };
+    setTimeout(tick, 110);
+  }
   function introNext() {
     if (ui.introStep !== 0) return;
-    $("#passport").classList.add("open");
+    playPassport(1);
     ui.introStep = 1;
     $("#say").textContent = "";
     $("#intro-btn").hidden = true;
@@ -1642,6 +1685,46 @@
     r.hidden = false;
     clearTimeout(sudoEgg.timer); sudoEgg.timer = setTimeout(() => { r.hidden = true; }, 3000);
   }
+
+  // ----- name tags: objects first, names when pointed at -----
+  let tagTimer = null, tagFor = null;
+  function tagTarget(el) { return el && el.closest && (el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab")); }
+  function showTag(el, now) {
+    clearTimeout(tagTimer);
+    const go = () => {
+      let t = $("#tag");
+      if (!t) { t = document.createElement("div"); t.id = "tag"; t.className = "tag"; t.setAttribute("role", "tooltip"); fixedRoot.appendChild(t); }
+      tagFor = el;
+      const r = rectOf(el), strip = el.classList.contains("folder-tab");
+      if (strip) {
+        const pr = state.projects[caseIndex(el.dataset.id)], box = rectOf($("#filebox"));
+        t.innerHTML = '<b class="tg-name">' + esc(pr.name) + '</b><span class="tg-sub">' + esc([pr.role, pr.dates].filter(Boolean).join(", ")) + "</span>";
+        t.className = "tag side pop"; t.hidden = false;
+        t.style.left = Math.round(box.right + 14) + "px";
+        t.style.top = Math.round(clamp(r.top + r.height / 2 - t.offsetHeight / 2, 8, window.innerHeight - t.offsetHeight - 8)) + "px";
+      } else {
+        t.innerHTML = '<span class="tg-word">' + esc(el.dataset.tag) + "</span>";
+        t.className = "tag above pop"; t.hidden = false;
+        const fr = rectOf(el.closest(".dw")), cx = fr.left + parseFloat(getComputedStyle(el.closest(".dw")).getPropertyValue("--crop")) + (fr.width - 2 * parseFloat(getComputedStyle(el.closest(".dw")).getPropertyValue("--crop"))) / 2;
+        t.style.left = Math.round(clamp(cx - t.offsetWidth / 2, 8, window.innerWidth - t.offsetWidth - 8)) + "px";
+        t.style.top = Math.round(r.bottom - DW_FRONT * FS - t.offsetHeight - 10) + "px";
+      }
+      setTimeout(() => t.classList.remove("pop"), 60);
+    };
+    if (now) go(); else tagTimer = setTimeout(go, 120);
+  }
+  function hideTag() { clearTimeout(tagTimer); tagFor = null; const t = $("#tag"); if (t) t.hidden = true; }
+  document.addEventListener("pointerover", (ev) => { if (ev.pointerType === "touch") return; const t = tagTarget(ev.target); if (t && t !== tagFor) showTag(t); });
+  document.addEventListener("pointerout", (ev) => { const t = tagTarget(ev.target); if (t && !t.contains(ev.relatedTarget) && ev.pointerType !== "touch") hideTag(); });
+  document.addEventListener("focusin", (ev) => { const t = tagTarget(ev.target); if (t) showTag(t, true); });
+  document.addEventListener("focusout", (ev) => { if (tagTarget(ev.target)) hideTag(); });
+  // touch: the first tap shows the name, the second opens; a tap anywhere else hides it
+  document.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType !== "touch") return;
+    const t = tagTarget(ev.target);
+    if (!t) { hideTag(); return; }
+    if (tagFor !== t) { showTag(t, true); swallowClick = true; }
+  }, true);
 
   // ----- actions -----
   function touched() { dirty = true; note = ""; }
@@ -1751,7 +1834,7 @@
     const b = ev.target.closest("[data-act]");
     if (b && !b.disabled) { ACTIONS[b.dataset.act](b); return; }
     const folder = ev.target.closest(".paper.p-case:not(.open)");
-    if (folder && !justDragged) { if (pst(folder.dataset.id).inBox && !isPhone()) putAllBack(); else openCase(folder.dataset.id); return; }
+    if (folder && !justDragged) { openCase(folder.dataset.id); return; }
     const slipEl = ev.target.closest("#slip.loose");
     if (slipEl && !justDragged && !ev.target.closest("button, a")) openContact(slipEl);
   }, true);
