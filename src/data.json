@@ -130,7 +130,8 @@
       "stack": "React Native, Expo, Node.js, Express.js, PostgreSQL (Supabase), JWT, bcrypt, Playwright, Google Gemini, Groq, VirusTotal, Google Safe Browsing, URLScan.io, URLhaus, Railway",
       "aside": "",
       "featured": "yes",
-      "short": ""
+      "short": "",
+      "tab": "Scure"
     },
     {
       "name": "PolicyLens: Policy Compliance Checker",
@@ -149,7 +150,8 @@
       "stack": "Python, FastAPI, PostgreSQL, Supabase, pgvector, Azure AI Foundry (GPT-4o), OpenAI embeddings, React, GitHub Actions",
       "aside": "",
       "featured": "yes",
-      "short": ""
+      "short": "",
+      "tab": "PolicyLens"
     },
     {
       "name": "S.H.I.E.L.D: AI Incident Response Assistant",
@@ -170,7 +172,8 @@
       "stack": "Python, FastAPI, React, WebSockets, faster-whisper (Whisper STT), Ollama with Mistral, ElevenLabs TTS, DeepFace, Redis, Supabase PostgreSQL, Docker Compose",
       "aside": "",
       "featured": "",
-      "short": ""
+      "short": "",
+      "tab": "S.H.I.E.L.D"
     },
     {
       "name": "STEMulate: Learning Management System",
@@ -190,7 +193,8 @@
       "stack": "Next.js, TypeScript, Supabase (PostgreSQL), Express.js, Socket.IO, AES-256, PayMongo",
       "aside": "",
       "featured": "",
-      "short": ""
+      "short": "",
+      "tab": "STEMulate"
     },
     {
       "name": "IOC Enricher: Threat Intelligence Tool",
@@ -208,7 +212,8 @@
       "stack": "Python, regular expressions, VirusTotal API, AbuseIPDB API, Shodan API, DOCX/Markdown/JSON reporting",
       "aside": "",
       "featured": "",
-      "short": ""
+      "short": "",
+      "tab": "IOC Enricher"
     },
     {
       "name": "Help Out, Reach Out: CSR Volunteer Matching Platform",
@@ -227,7 +232,8 @@
       "stack": "PHP, MySQL, object-oriented programming (boundary-control-entity design), PHPUnit, GitHub Actions",
       "aside": "",
       "featured": "",
-      "short": ""
+      "short": "",
+      "tab": "Help Out"
     },
     {
       "name": "Shadow AI Data Leakage Prevention Prototype",
@@ -244,7 +250,8 @@
       "stack": "Python, mitmproxy",
       "aside": "",
       "featured": "yes",
-      "short": "Shadow AI DLP"
+      "short": "Shadow AI DLP",
+      "tab": "Shadow AI"
     }
   ],
   "awards": [

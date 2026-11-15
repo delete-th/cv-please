@@ -81,8 +81,8 @@
   }
   function folderInner(i) {
     const p = state.projects[i];
-    const filed = pst(("case-" + i)).inBox && !isPhone(), side = ["left", "mid", "right"][i % 3];
-    return SPR.art("folder-" + side, BX, "fold-art") + '<button class="folder-tab ft-' + side + '" data-act="tab" data-id="' + ("case-" + i) + '" tabindex="' + (filed ? 0 : -1) + '" aria-label="Open case file: ' + esc(p.name) + '"' + (filed ? "" : ' aria-hidden="true"') + ">" + esc(shortName(p)) +
+    const filed = pst(("case-" + i)).inBox && !isPhone(), side = ["left", "right"][i % 2];
+    return SPR.art("folder-" + side + "-top", BX, "fold-art") + '<button class="folder-tab ft-' + side + '" data-act="tab" data-id="' + ("case-" + i) + '" tabindex="' + (filed ? 0 : -1) + '" aria-label="Open case file: ' + esc(p.name) + '" title="' + esc(p.name) + '"' + (filed ? "" : ' aria-hidden="true"') + '><span class="ft-box">' + esc(p.tab || shortName(p)) + '</span><span class="ft-full">' + esc(shortName(p)) + "</span>" +
       '</button><span class="clip">' + SPR.art("paperclip", SC) + "</span>" +
       '<div class="folder-face">' + SPR.draw(p.icon || "paper", PX) + "<div><b>" + esc(shortName(p)) + '</b><span class="when">' + esc(p.dates) + "</span></div></div>" +
       (p.award ? '<span class="ink red mini-stamp">' + esc(p.award) + "</span>" : "") + '<span class="peek" aria-hidden="true">Open file</span>';
@@ -339,7 +339,7 @@
   // the file box sits in the bottom-left corner; each folder has its own slot in it
   function boxRect() { const b = $("#filebox"); return { x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }; }
   // inside the tray (art pixels 6..47 across, 3..33 down at 3x): one 12px row per folder, its tab on top
-  function slotPos(i) { const b = boxRect(); return [b.x + 7 * BX, b.y + (3 + 6 * i) * BX]; }
+  function slotPos(i) { const b = boxRect(); return [b.x + 7 * BX, b.y + (5 + 7 * i) * BX]; }
   // a folder in the box is reached by its tab; out on the desk, by the folder itself
   function filedFocus(el, filed) {
     el.tabIndex = filed ? -1 : 0;
@@ -348,7 +348,7 @@
   }
   function placeFurniture() {
     const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
-    box.style.left = "16px"; box.style.top = Math.max(u.top + 40, u.bottom - box.offsetHeight) + "px";
+    box.style.left = "16px"; box.style.top = Math.max(8, u.bottom - box.offsetHeight) + "px";
     const front = $("#filebox-front"); front.style.left = box.style.left; front.style.top = box.style.top;
     // the lamp is anchored to the desk's top-right corner in CSS; keep the printer below its arm and clear of the Stamps tab
     const right = u.w - 14, below = lamp.offsetHeight + 8;
