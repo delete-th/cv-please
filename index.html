@@ -3972,13 +3972,13 @@ window.DEMOS = (function () {
   const DW_FRONT = 16, DW_FLOOR = { x: 14, y: 14, w: 182, h: 122 };
   // Thea's things in the Personal drawer, at their spots on the drawer floor (art pixels)
   const POBJ = {
-    bottle: { art: "cola-bottle", x: 19, y: 27, label: "Glass bottle", hint: "Press Enter to nudge it." },
-    watch: { art: "watch", x: 35, y: 64, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
-    sketchbook: { art: "sketchbook-closed", x: 146, y: 40, label: "Sketchbook", hint: "Press Enter to open it." },
-    usb: { art: "usb", x: 18, y: 114, label: "USB stick with a tape label", hint: "Press Enter to plug it in and open Thea's GitHub in a new tab." },
-    gum: { art: "gum", x: 81, y: 108, label: "Pack of stick gum", hint: "Press Enter to slide a stick out." },
-    mints: { art: "mints-3", x: 125, y: 108, label: "Tin of mints", hint: "Press Enter to take a mint." },
-    keycap: { art: "keycap-up", x: 165, y: 101, label: "Keycap fidget toy", hint: "Press Space or Enter to click it." },
+    bottle: { art: "cola-bottle", x: 20, y: 19, label: "Glass bottle", hint: "Press Enter to nudge it." },
+    watch: { art: "watch", x: 40, y: 66, rot: true, label: "Watch, showing your local time", hint: "Press Enter to slow time down." },
+    sketchbook: { art: "sketchbook-closed", x: 147, y: 23, label: "Sketchbook", hint: "Press Enter to open it." },
+    usb: { art: "usb", x: 18, y: 110, label: "USB stick with a tape label", hint: "Press Enter to plug it in and open Thea's GitHub in a new tab." },
+    gum: { art: "gum", x: 76, y: 114, label: "Pack of stick gum", hint: "Press Enter to slide a stick out." },
+    mints: { art: "mints-3", x: 162, y: 88, label: "Tin of mints", hint: "Press Enter to take a mint." },
+    keycap: { art: "keycap-up", x: 127, y: 108, label: "Keycap fidget toy", hint: "Press Space or Enter to click it." },
   };
   const noteOf = (id) => ((state.effects || []).find((e) => e.id === id) || {}).note || "";
   function pobjHTML(id) {
@@ -4064,7 +4064,7 @@ window.DEMOS = (function () {
   function dwGeom() {
     const vw = window.innerWidth, vh = window.innerHeight, a = ART.drawer;
     let sc = 2;
-    for (let k = 8; k >= 2; k--) if (a.h * k <= vh - 200 && a.w * k <= Math.min(vw * 0.8, 1100)) { sc = k; break; }
+    for (let k = 8; k >= 2; k--) if (a.h * k <= vh - 120 && a.w * k <= Math.min(vw * 0.8, 1100)) { sc = k; break; }
     const cols = Math.max(a.w, Math.floor(Math.min(vw * 0.75, 1100) / sc)), extra = cols - a.w;
     const mapX = (x) => (x < 80 ? x : x < 130 ? x + Math.floor(extra / 2) : x + extra);
     return { sc: sc, cols: cols, extra: extra, mapX: mapX, w: cols * sc, h: a.h * sc };
@@ -5385,12 +5385,18 @@ window.DEMOS = (function () {
   // pointer handling: stamps first, then the drawer handle, the perforation, and desk papers
   let drag = null, pageDrag = null, sheetDrag = null, justDragged = false, swallowClick = false, drawerDrag = null, perfDrag = null, perfMoved = false;
   const NO_DRAG = "button, a, input, textarea, select, label, .demo-box, .f";
-  document.addEventListener("pointerover", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !drag) showNote(po); });
+  let noteWait = null;
+  document.addEventListener("pointerover", (ev) => {
+    const po = ev.target.closest && ev.target.closest(".pobj");
+    if (!po || drag) return;
+    clearTimeout(noteWait);
+    noteWait = setTimeout(() => { if (po.matches(":hover") && !drag) showNote(po); }, 450);
+  });
   document.addEventListener("keyup", (ev) => { if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches('.pobj[data-p="keycap"]')) keyPress(ev.target, false); });
   document.addEventListener("pointerdown", (ev) => { const k = ev.target.closest && ev.target.closest('.pobj[data-p="keycap"]'); if (k && ev.button === 0) keyPress(k, true); });
   const keyUp = () => $$('.pobj[data-p="keycap"].pressed').forEach((k) => keyPress(k, false));
   document.addEventListener("pointerup", keyUp); document.addEventListener("pointercancel", keyUp);
-  document.addEventListener("pointerout", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !po.contains(ev.relatedTarget)) hideNote(); });
+  document.addEventListener("pointerout", (ev) => { const po = ev.target.closest && ev.target.closest(".pobj"); if (po && !po.contains(ev.relatedTarget)) { clearTimeout(noteWait); hideNote(); } });
   document.addEventListener("focusout", (ev) => { if (ev.target.closest && ev.target.closest(".pobj")) hideNote(); });
   document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches(".pobj")) showNote(ev.target); });
   document.addEventListener("focusin", (ev) => { if (ev.target.matches && ev.target.matches("#cm-subject, #cm-msg")) lastField = ev.target; });
