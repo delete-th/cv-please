@@ -33,6 +33,7 @@ window.FX = (function () {
     snd.last[name] = now;
     const c = ctx();
     if (c && name === "flip") { paperFlip(c); return; }
+    if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -67,6 +68,24 @@ window.FX = (function () {
     part(noise(c, 0.24, (x) => Math.sin(Math.PI * Math.min(1, x * 1.6)) * (0.6 + 0.4 * Math.sin(x * 60))), t0 + 0.02, "bandpass", 3000, 900, 0.8, 1);
     // laying down on the staple side: a soft low pat
     part(noise(c, 0.07, (x) => (1 - x) * (1 - x) * (1 - x)), t0 + 0.24, "lowpass", 900, 400, 0.6, 0.8);
+  }
+  // tearing along the perforation: a run of small fibre snaps, bright and dry, ending in a clean release
+  function paperTear(c, len) {
+    const t0 = c.currentTime + 0.005, pitch = 0.9 + Math.random() * 0.2;
+    const n = Math.floor(c.sampleRate * len), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    let i = 0;
+    while (i < n) {
+      const x = i / n, gap = Math.floor(c.sampleRate * (0.004 + Math.random() * 0.012 * (1 - 0.6 * x))), g = Math.floor(c.sampleRate * (0.0015 + Math.random() * 0.004)), amp = 0.35 + Math.random() * 0.65;
+      for (let k = 0; k < g && i + k < n; k++) d[i + k] += (Math.random() * 2 - 1) * amp * Math.pow(1 - k / g, 2);
+      i += gap;
+    }
+    for (let k = 0; k < n; k++) { const x = k / n; d[k] *= Math.min(1, x * 12) * (len > 0.2 && x > 0.85 ? 1.6 : 1) * (1 - Math.max(0, x - 0.9) * 8); }
+    const s = c.createBufferSource(), hp = c.createBiquadFilter(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; s.playbackRate.value = pitch;
+    hp.type = "highpass"; hp.frequency.value = 900;
+    bp.type = "peaking"; bp.frequency.value = 3200 * pitch; bp.gain.value = 5; bp.Q.value = 0.8;
+    g.gain.value = len > 0.2 ? 0.75 : 0.45;
+    s.connect(hp); hp.connect(bp); bp.connect(g); g.connect(snd.gain); s.start(t0);
   }
   function toggle() {
     snd.on = !snd.on;

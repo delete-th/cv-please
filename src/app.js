@@ -141,7 +141,8 @@
     const foot = n > 1 ? '<div class="pg-foot">' + (page > 0 ? '<button class="pg-back" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Back to page ' + page + '">Previous page</button>' : "") +
       '<span class="pg">Page ' + (page + 1) + " of " + n + "</span></div>" : "";
     return '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' +
-      '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></div></header>' +
+      '<button class="close icon-btn" data-act="to-box" data-id="' + id + '" aria-label="Return to box">' + SPR.draw("tobox", 2) + '<span class="ib-tip" aria-hidden="true">Return to box</span></button>' +
+      '<button class="close icon-btn" data-act="close-case" data-id="' + id + '" aria-label="Close file">' + SPR.draw("xmark", 2) + '<span class="ib-tip" aria-hidden="true">Close file</span></button></div></header>' +
       '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" + foot +
       (n > 1 && page < n - 1 ? '<button class="corner" data-act="flip" data-id="' + id + '" aria-label="Turn to page ' + (page + 2) + '">' + SPR.draw("corner", PX) + "</button>" : "");
   }
@@ -1266,7 +1267,7 @@
   function tearOff() {
     if (ui.slipTorn) return;
     const slip = $("#slip"), r = receiptEl(), area = $("#record-area");
-    ui.slipTorn = true; FX.play("lift");
+    ui.slipTorn = true; FX.play("tear");
     r.classList.add("torn"); $("#perf").remove();
     slip.classList.add("loose");
     slip.dataset.drag = ""; slip.tabIndex = 0;
@@ -2134,7 +2135,13 @@
     if (perfDrag) {
       const dx = Math.abs(ev.clientX - perfDrag.sx);
       if (dx > 6) perfMoved = true;
-      if (perfMoved) { setTear(clamp(perfDrag.start + (dx / perfDrag.w) * 1.2, 0, 1)); if (ui.torn >= 0.85) { perfDrag = null; tearOff(); } }
+      if (perfMoved) {
+        const was = ui.torn;
+        setTear(clamp(perfDrag.start + (dx / perfDrag.w) * 1.2, 0, 1));
+        // a short rip for each stretch of perforation that gives way
+        if (Math.floor(ui.torn * 8) > Math.floor(was * 8)) FX.play("rip");
+        if (ui.torn >= 0.85) { perfDrag = null; tearOff(); }
+      }
       return;
     }
     if (!drag || ev.pointerId !== drag.id) return;

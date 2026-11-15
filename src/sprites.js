@@ -89,6 +89,9 @@ window.SPR = (function () {
   S.left = ["...y.", "..yy.", ".yyy.", "yyyy.", ".yyy.", "..yy.", "...y."];
   S.right = S.left.map((r) => r.split("").reverse().join(""));
   S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
+  // header icons for an open case file: put it back in the box, and close it on the desk
+  S.tobox = ["....kkk....", "....kkk....", "....kkk....", "..kkkkkkk..", "...kkkkk...", "....kkk....", "k....k....k", "k.........k", "k.........k", "kkkkkkkkkkk", "kkkkkkkkkkk"];
+  S.xmark = ["kk.....kk", "kkk...kkk", ".kkk.kkk.", "..kkkkk..", "...kkk...", "..kkkkk..", ".kkk.kkk.", "kkk...kkk", "kk.....kk"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
   // a generic squiggle for the signature lines (no real signatures)

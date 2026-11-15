@@ -1748,6 +1748,21 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .pg-back:hover { color: var(--ink); }
 .pg-back:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .p-case.open:not(:has(.corner)) .pg-foot { right: 14px; }
+
+/* open case file: icon buttons with a hover label instead of worded buttons */
+.paper-head .icon-btn { position: relative; display: grid; place-items: center; width: 34px; height: 30px; padding: 0; }
+.paper-head .icon-btn .spr { display: block; }
+.ib-tip { position: absolute; top: calc(100% + 6px); right: 0; z-index: 5; display: none; padding: 3px 7px 4px; background: var(--paper); color: var(--ink); border: 1px solid var(--ink); white-space: nowrap; font: 600 12px/1 var(--sans); filter: var(--rest-shadow); pointer-events: none; }
+.icon-btn:hover .ib-tip, .icon-btn:focus-visible .ib-tip { display: block; }
+
+/* the entry record as a thermal receipt: cut teeth at the top, a faint print grain, a soft crease, thin paper */
+.room-record .receipt, .printer-area .receipt { --rcpt: color-mix(in srgb, var(--field) 88%, var(--paper)); background: var(--rcpt) repeating-linear-gradient(to bottom, transparent 0 5px, color-mix(in srgb, var(--rule) 9%, transparent) 5px 6px); box-shadow: 2px 3px 0 var(--shade-rest), inset 2px 0 0 color-mix(in srgb, var(--rule) 22%, transparent), inset -2px 0 0 color-mix(in srgb, var(--rule) 22%, transparent); rotate: -0.6deg; }
+.receipt::before { content: ""; position: absolute; left: 0; right: 0; top: -6px; height: 7px; background: var(--rcpt, var(--field)); clip-path: polygon(0 100%, 0 30%, 2.5% 0, 5% 30%, 7.5% 0, 10% 30%, 12.5% 0, 15% 30%, 17.5% 0, 20% 30%, 22.5% 0, 25% 30%, 27.5% 0, 30% 30%, 32.5% 0, 35% 30%, 37.5% 0, 40% 30%, 42.5% 0, 45% 30%, 47.5% 0, 50% 30%, 52.5% 0, 55% 30%, 57.5% 0, 60% 30%, 62.5% 0, 65% 30%, 67.5% 0, 70% 30%, 72.5% 0, 75% 30%, 77.5% 0, 80% 30%, 82.5% 0, 85% 30%, 87.5% 0, 90% 30%, 92.5% 0, 95% 30%, 97.5% 0, 100% 30%, 100% 100%); pointer-events: none; }
+.receipt.torn::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 7px; background: var(--rcpt, var(--field)); clip-path: polygon(0 0, 100% 0, 100% 60%, 96% 100%, 91% 40%, 86% 90%, 80% 30%, 74% 100%, 69% 50%, 63% 95%, 57% 35%, 51% 85%, 45% 40%, 39% 100%, 33% 45%, 27% 90%, 21% 30%, 15% 95%, 9% 45%, 4% 100%, 0 60%); pointer-events: none; }
+.rec { position: relative; background: linear-gradient(to bottom, transparent calc(50% - 1px), color-mix(in srgb, var(--rule) 18%, transparent) calc(50% - 1px) 50%, color-mix(in srgb, var(--field) 60%, transparent) 50% calc(50% + 1px), transparent calc(50% + 1px)); }
+.rec .r-title { text-align: center; letter-spacing: 0.04em; }
+.rec .r-title + p { text-align: center; padding-bottom: 8px; border-bottom: 1px dashed var(--rule); }
+.receipt .slip, .slip.loose { background: var(--rcpt, color-mix(in srgb, var(--field) 88%, var(--paper))); }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -2503,6 +2518,9 @@ window.SPR = (function () {
   S.left = ["...y.", "..yy.", ".yyy.", "yyyy.", ".yyy.", "..yy.", "...y."];
   S.right = S.left.map((r) => r.split("").reverse().join(""));
   S.pillstamp = ["...yyy...", "..yyyyy..", "...yyy...", "....y....", "....y....", ".yyyyyyy.", "yGGGGGGGy", "ygggggggy", "yyyyyyyyy"];
+  // header icons for an open case file: put it back in the box, and close it on the desk
+  S.tobox = ["....kkk....", "....kkk....", "....kkk....", "..kkkkkkk..", "...kkkkk...", "....kkk....", "k....k....k", "k.........k", "k.........k", "kkkkkkkkkkk", "kkkkkkkkkkk"];
+  S.xmark = ["kk.....kk", "kkk...kkk", ".kkk.kkk.", "..kkkkk..", "...kkk...", "..kkkkk..", ".kkk.kkk.", "kkk...kkk", "kk.....kk"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
   // a generic squiggle for the signature lines (no real signatures)
@@ -2768,6 +2786,7 @@ window.FX = (function () {
     snd.last[name] = now;
     const c = ctx();
     if (c && name === "flip") { paperFlip(c); return; }
+    if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -2802,6 +2821,24 @@ window.FX = (function () {
     part(noise(c, 0.24, (x) => Math.sin(Math.PI * Math.min(1, x * 1.6)) * (0.6 + 0.4 * Math.sin(x * 60))), t0 + 0.02, "bandpass", 3000, 900, 0.8, 1);
     // laying down on the staple side: a soft low pat
     part(noise(c, 0.07, (x) => (1 - x) * (1 - x) * (1 - x)), t0 + 0.24, "lowpass", 900, 400, 0.6, 0.8);
+  }
+  // tearing along the perforation: a run of small fibre snaps, bright and dry, ending in a clean release
+  function paperTear(c, len) {
+    const t0 = c.currentTime + 0.005, pitch = 0.9 + Math.random() * 0.2;
+    const n = Math.floor(c.sampleRate * len), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    let i = 0;
+    while (i < n) {
+      const x = i / n, gap = Math.floor(c.sampleRate * (0.004 + Math.random() * 0.012 * (1 - 0.6 * x))), g = Math.floor(c.sampleRate * (0.0015 + Math.random() * 0.004)), amp = 0.35 + Math.random() * 0.65;
+      for (let k = 0; k < g && i + k < n; k++) d[i + k] += (Math.random() * 2 - 1) * amp * Math.pow(1 - k / g, 2);
+      i += gap;
+    }
+    for (let k = 0; k < n; k++) { const x = k / n; d[k] *= Math.min(1, x * 12) * (len > 0.2 && x > 0.85 ? 1.6 : 1) * (1 - Math.max(0, x - 0.9) * 8); }
+    const s = c.createBufferSource(), hp = c.createBiquadFilter(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; s.playbackRate.value = pitch;
+    hp.type = "highpass"; hp.frequency.value = 900;
+    bp.type = "peaking"; bp.frequency.value = 3200 * pitch; bp.gain.value = 5; bp.Q.value = 0.8;
+    g.gain.value = len > 0.2 ? 0.75 : 0.45;
+    s.connect(hp); hp.connect(bp); bp.connect(g); g.connect(snd.gain); s.start(t0);
   }
   function toggle() {
     snd.on = !snd.on;
@@ -3119,7 +3156,8 @@ window.DEMOS = (function () {
     const foot = n > 1 ? '<div class="pg-foot">' + (page > 0 ? '<button class="pg-back" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Back to page ' + page + '">Previous page</button>' : "") +
       '<span class="pg">Page ' + (page + 1) + " of " + n + "</span></div>" : "";
     return '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' +
-      '<button class="close" data-act="to-box" data-id="' + id + '">Return to box</button><button class="close" data-act="close-case" data-id="' + id + '">Close file</button></div></header>' +
+      '<button class="close icon-btn" data-act="to-box" data-id="' + id + '" aria-label="Return to box">' + SPR.draw("tobox", 2) + '<span class="ib-tip" aria-hidden="true">Return to box</span></button>' +
+      '<button class="close icon-btn" data-act="close-case" data-id="' + id + '" aria-label="Close file">' + SPR.draw("xmark", 2) + '<span class="ib-tip" aria-hidden="true">Close file</span></button></div></header>' +
       '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" + foot +
       (n > 1 && page < n - 1 ? '<button class="corner" data-act="flip" data-id="' + id + '" aria-label="Turn to page ' + (page + 2) + '">' + SPR.draw("corner", PX) + "</button>" : "");
   }
@@ -4244,7 +4282,7 @@ window.DEMOS = (function () {
   function tearOff() {
     if (ui.slipTorn) return;
     const slip = $("#slip"), r = receiptEl(), area = $("#record-area");
-    ui.slipTorn = true; FX.play("lift");
+    ui.slipTorn = true; FX.play("tear");
     r.classList.add("torn"); $("#perf").remove();
     slip.classList.add("loose");
     slip.dataset.drag = ""; slip.tabIndex = 0;
@@ -5112,7 +5150,13 @@ window.DEMOS = (function () {
     if (perfDrag) {
       const dx = Math.abs(ev.clientX - perfDrag.sx);
       if (dx > 6) perfMoved = true;
-      if (perfMoved) { setTear(clamp(perfDrag.start + (dx / perfDrag.w) * 1.2, 0, 1)); if (ui.torn >= 0.85) { perfDrag = null; tearOff(); } }
+      if (perfMoved) {
+        const was = ui.torn;
+        setTear(clamp(perfDrag.start + (dx / perfDrag.w) * 1.2, 0, 1));
+        // a short rip for each stretch of perforation that gives way
+        if (Math.floor(ui.torn * 8) > Math.floor(was * 8)) FX.play("rip");
+        if (ui.torn >= 0.85) { perfDrag = null; tearOff(); }
+      }
       return;
     }
     if (!drag || ev.pointerId !== drag.id) return;

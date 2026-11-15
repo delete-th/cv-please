@@ -1744,3 +1744,18 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .pg-back:hover { color: var(--ink); }
 .pg-back:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .p-case.open:not(:has(.corner)) .pg-foot { right: 14px; }
+
+/* open case file: icon buttons with a hover label instead of worded buttons */
+.paper-head .icon-btn { position: relative; display: grid; place-items: center; width: 34px; height: 30px; padding: 0; }
+.paper-head .icon-btn .spr { display: block; }
+.ib-tip { position: absolute; top: calc(100% + 6px); right: 0; z-index: 5; display: none; padding: 3px 7px 4px; background: var(--paper); color: var(--ink); border: 1px solid var(--ink); white-space: nowrap; font: 600 12px/1 var(--sans); filter: var(--rest-shadow); pointer-events: none; }
+.icon-btn:hover .ib-tip, .icon-btn:focus-visible .ib-tip { display: block; }
+
+/* the entry record as a thermal receipt: cut teeth at the top, a faint print grain, a soft crease, thin paper */
+.room-record .receipt, .printer-area .receipt { --rcpt: color-mix(in srgb, var(--field) 88%, var(--paper)); background: var(--rcpt) repeating-linear-gradient(to bottom, transparent 0 5px, color-mix(in srgb, var(--rule) 9%, transparent) 5px 6px); box-shadow: 2px 3px 0 var(--shade-rest), inset 2px 0 0 color-mix(in srgb, var(--rule) 22%, transparent), inset -2px 0 0 color-mix(in srgb, var(--rule) 22%, transparent); rotate: -0.6deg; }
+.receipt::before { content: ""; position: absolute; left: 0; right: 0; top: -6px; height: 7px; background: var(--rcpt, var(--field)); clip-path: polygon(0 100%, 0 30%, 2.5% 0, 5% 30%, 7.5% 0, 10% 30%, 12.5% 0, 15% 30%, 17.5% 0, 20% 30%, 22.5% 0, 25% 30%, 27.5% 0, 30% 30%, 32.5% 0, 35% 30%, 37.5% 0, 40% 30%, 42.5% 0, 45% 30%, 47.5% 0, 50% 30%, 52.5% 0, 55% 30%, 57.5% 0, 60% 30%, 62.5% 0, 65% 30%, 67.5% 0, 70% 30%, 72.5% 0, 75% 30%, 77.5% 0, 80% 30%, 82.5% 0, 85% 30%, 87.5% 0, 90% 30%, 92.5% 0, 95% 30%, 97.5% 0, 100% 30%, 100% 100%); pointer-events: none; }
+.receipt.torn::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 7px; background: var(--rcpt, var(--field)); clip-path: polygon(0 0, 100% 0, 100% 60%, 96% 100%, 91% 40%, 86% 90%, 80% 30%, 74% 100%, 69% 50%, 63% 95%, 57% 35%, 51% 85%, 45% 40%, 39% 100%, 33% 45%, 27% 90%, 21% 30%, 15% 95%, 9% 45%, 4% 100%, 0 60%); pointer-events: none; }
+.rec { position: relative; background: linear-gradient(to bottom, transparent calc(50% - 1px), color-mix(in srgb, var(--rule) 18%, transparent) calc(50% - 1px) 50%, color-mix(in srgb, var(--field) 60%, transparent) 50% calc(50% + 1px), transparent calc(50% + 1px)); }
+.rec .r-title { text-align: center; letter-spacing: 0.04em; }
+.rec .r-title + p { text-align: center; padding-bottom: 8px; border-bottom: 1px dashed var(--rule); }
+.receipt .slip, .slip.loose { background: var(--rcpt, color-mix(in srgb, var(--field) 88%, var(--paper))); }
