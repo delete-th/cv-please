@@ -1789,3 +1789,10 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .receipt.cleared { visibility: hidden; }
 .receipt.feeding-down { animation: rec-grow 0.28s steps(5, end); transform-origin: 50% 0; }
 @keyframes rec-grow { from { scale: 0.14 0.1; } to { scale: 1 1; } }
+/* "Inspect passport": the passport screen slides in from the left as the booth slides away to the right */
+.site { transition: translate 0.45s ease-in-out; }
+.site.pushed { translate: 100vw 0; }
+.intro.from-left { animation: pass-in 0.45s ease-in-out; }
+@keyframes pass-in { from { translate: -100vw 0; } }
+.intro.to-left, .intro.to-left.leaving { opacity: 1; translate: -100vw 0; transition: translate 0.45s ease-in-out; }
+@media (prefers-reduced-motion: reduce) { .site, .intro.to-left { transition: none; } .intro.from-left { animation: none; } }

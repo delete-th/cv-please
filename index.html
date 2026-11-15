@@ -1793,6 +1793,13 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .receipt.cleared { visibility: hidden; }
 .receipt.feeding-down { animation: rec-grow 0.28s steps(5, end); transform-origin: 50% 0; }
 @keyframes rec-grow { from { scale: 0.14 0.1; } to { scale: 1 1; } }
+/* "Inspect passport": the passport screen slides in from the left as the booth slides away to the right */
+.site { transition: translate 0.45s ease-in-out; }
+.site.pushed { translate: 100vw 0; }
+.intro.from-left { animation: pass-in 0.45s ease-in-out; }
+@keyframes pass-in { from { translate: -100vw 0; } }
+.intro.to-left, .intro.to-left.leaving { opacity: 1; translate: -100vw 0; transition: translate 0.45s ease-in-out; }
+@media (prefers-reduced-motion: reduce) { .site, .intro.to-left { transition: none; } .intro.from-left { animation: none; } }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -4839,14 +4846,38 @@ window.DEMOS = (function () {
     FX.play("rustle");
     setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); setTimeout(keepBoxClear, reduced() ? 0 : 220); }, reduced() ? 0 : 500);
   }
+  function inspectPassport() {
+    hideTag(); hideNote();
+    renderIntro();
+    const it = $("#intro"), pp = $("#passport");
+    if (!it || !pp) return;
+    // already open on the data and visa pages
+    it.classList.add("opened", "inspect"); ui.introStep = 1; ui.inspecting = true;
+    const say = $("#say"); if (say) say.textContent = "";
+    setFrame(7); pp.classList.add("open");
+    const back = $('[data-act="intro-skip"]', it); if (back) back.textContent = "Back to the booth";
+    updateBar();
+    if (!reduced() && !isPhone()) {
+      const site = $(".site") || app; site.classList.remove("pushed"); void site.offsetWidth;
+      it.classList.add("from-left"); site.classList.add("pushed");
+      FX.play("dwslide");
+      // the stamp tray is fixed to the screen, so it waits until the passport has arrived
+      const bar = $("#stampbar"); if (bar) bar.style.visibility = "hidden";
+      setTimeout(() => { it.classList.remove("from-left"); if (bar) bar.style.visibility = ""; }, 460);
+    }
+    setTimeout(() => { const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); else pp.focus({ preventScroll: true }); }, reduced() ? 0 : 470);
+  }
   function closeIntro() {
     const el = $("#intro");
     if (!el || el.classList.contains("leaving")) return;
     if (held) springBack(true);
+    // back from inspecting: pan right to the booth again
+    if (ui.inspecting && !reduced() && !isPhone()) { el.classList.add("to-left"); ($(".site") || app).classList.remove("pushed"); FX.play("dwslide"); const bar = $("#stampbar"); if (bar) { bar.style.visibility = "hidden"; setTimeout(() => { bar.style.visibility = ""; }, 470); } }
+    ui.inspecting = false;
     el.classList.add("leaving");
     document.documentElement.classList.remove("locked");
     ui.introDone = true;
-    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); firstVisit(); }, reduced() ? 0 : 420);
+    setTimeout(() => { introRoot.innerHTML = ""; ($(".site") || app).classList.remove("pushed"); updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); firstVisit(); }, reduced() ? 0 : 460);
   }
 
   // ----- the first visit, once per visit: about two seconds, skippable with a click or any key -----
@@ -4994,7 +5025,7 @@ window.DEMOS = (function () {
   const ACTIONS = {
     "intro-next": introNext,
     "intro-skip": closeIntro,
-    passport: renderIntro,
+    passport: inspectPassport,
     "flip-pass": flipPass,
     bar() { toggleTray(); },
     print() { printRecord(); },

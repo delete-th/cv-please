@@ -1794,14 +1794,38 @@
     FX.play("rustle");
     setTimeout(() => { updateBar(); const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); setTimeout(keepBoxClear, reduced() ? 0 : 220); }, reduced() ? 0 : 500);
   }
+  function inspectPassport() {
+    hideTag(); hideNote();
+    renderIntro();
+    const it = $("#intro"), pp = $("#passport");
+    if (!it || !pp) return;
+    // already open on the data and visa pages
+    it.classList.add("opened", "inspect"); ui.introStep = 1; ui.inspecting = true;
+    const say = $("#say"); if (say) say.textContent = "";
+    setFrame(7); pp.classList.add("open");
+    const back = $('[data-act="intro-skip"]', it); if (back) back.textContent = "Back to the booth";
+    updateBar();
+    if (!reduced() && !isPhone()) {
+      const site = $(".site") || app; site.classList.remove("pushed"); void site.offsetWidth;
+      it.classList.add("from-left"); site.classList.add("pushed");
+      FX.play("dwslide");
+      // the stamp tray is fixed to the screen, so it waits until the passport has arrived
+      const bar = $("#stampbar"); if (bar) bar.style.visibility = "hidden";
+      setTimeout(() => { it.classList.remove("from-left"); if (bar) bar.style.visibility = ""; }, 460);
+    }
+    setTimeout(() => { const b = slotBtn("approved"); if (b) b.focus({ preventScroll: true }); else pp.focus({ preventScroll: true }); }, reduced() ? 0 : 470);
+  }
   function closeIntro() {
     const el = $("#intro");
     if (!el || el.classList.contains("leaving")) return;
     if (held) springBack(true);
+    // back from inspecting: pan right to the booth again
+    if (ui.inspecting && !reduced() && !isPhone()) { el.classList.add("to-left"); ($(".site") || app).classList.remove("pushed"); FX.play("dwslide"); const bar = $("#stampbar"); if (bar) { bar.style.visibility = "hidden"; setTimeout(() => { bar.style.visibility = ""; }, 470); } }
+    ui.inspecting = false;
     el.classList.add("leaving");
     document.documentElement.classList.remove("locked");
     ui.introDone = true;
-    setTimeout(() => { introRoot.innerHTML = ""; updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); firstVisit(); }, reduced() ? 0 : 420);
+    setTimeout(() => { introRoot.innerHTML = ""; ($(".site") || app).classList.remove("pushed"); updateBar(); revealNav(); const h = $("#hello"); if (h) h.focus({ preventScroll: true }); firstVisit(); }, reduced() ? 0 : 460);
   }
 
   // ----- the first visit, once per visit: about two seconds, skippable with a click or any key -----
@@ -1949,7 +1973,7 @@
   const ACTIONS = {
     "intro-next": introNext,
     "intro-skip": closeIntro,
-    passport: renderIntro,
+    passport: inspectPassport,
     "flip-pass": flipPass,
     bar() { toggleTray(); },
     print() { printRecord(); },
