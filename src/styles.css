@@ -1848,3 +1848,22 @@ html.desk-mode .pills, html.locked .pills { display: flex; }
 .ts-text { padding: 13px 18px 14px; border-width: 3px; font: 400 19px/1.4 var(--sans); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cover-ink) 35%, transparent), 0 0 22px 6px color-mix(in srgb, var(--cover-ink) 28%, transparent); }
 .ts-text::before { left: -11px; top: 15px; width: 13px; height: 13px; border-width: 3px; }
 .thea-say.own .ts-face { padding: 4px; }
+/* skill index cards: real card stock. Die-cut tabs with slanted shoulders, faint ruled lines under a red header line,
+   each card a touch out of line, and the outline and shadow follow the card and tab shape */
+.icard { --tilt: calc((var(--i) - 3.5) * 0.12deg); border: 0; border-radius: 3px 3px 0 0; rotate: var(--tilt); translate: calc(((var(--i) * 7) - 21) * 0.15px) 0;
+  background-color: color-mix(in srgb, var(--field) 92%, var(--folder-tan));
+  background-image: linear-gradient(to bottom, transparent 22px, color-mix(in srgb, var(--stamp-red) 55%, transparent) 22px 23px, transparent 23px), repeating-linear-gradient(to bottom, transparent 0 21px, color-mix(in srgb, var(--rule) 55%, transparent) 21px 22px);
+  background-repeat: no-repeat, repeat; background-position: 0 0, 0 30px;
+  filter: drop-shadow(1px 0 0 var(--ink-soft)) drop-shadow(-1px 0 0 var(--ink-soft)) drop-shadow(0 -1px 0 var(--ink-soft)) drop-shadow(0 -3px 3px var(--shade-rest)); }
+.icard::after { display: none; }
+.ic-tab { top: -25px; height: 26px; padding: 4px 18px 0; border: 0; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--field) 92%, var(--folder-tan)); font: 700 14px/1.2 var(--typed); letter-spacing: 0.01em; -webkit-font-smoothing: auto;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 100%, 0 100%); }
+.ic-tab.used { background: color-mix(in srgb, var(--mark-hash) 75%, var(--field)); }
+.ic-tab.hot { background: color-mix(in srgb, var(--cover-ink) 80%, var(--field)); }
+.ic-tab:focus-visible { outline: none; text-decoration: underline 2px; text-underline-offset: 3px; }
+/* the lifted card matches: same card stock, red header line, die-cut tab, outline that follows the tab */
+.sk-lift-card { border: 0; border-radius: 3px; rotate: -0.4deg; background-color: color-mix(in srgb, var(--field) 92%, var(--folder-tan));
+  background-image: linear-gradient(to bottom, transparent 16px, color-mix(in srgb, var(--stamp-red) 55%, transparent) 16px 17px, transparent 17px), repeating-linear-gradient(to bottom, transparent 0 25px, color-mix(in srgb, var(--rule) 55%, transparent) 25px 26px);
+  background-repeat: no-repeat, repeat; background-position: 0 0, 0 52px;
+  filter: drop-shadow(1px 0 0 var(--ink-soft)) drop-shadow(-1px 0 0 var(--ink-soft)) drop-shadow(0 -1px 0 var(--ink-soft)) drop-shadow(0 1px 0 var(--ink-soft)) var(--lift-shadow); }
+.sl-tab { top: -29px; padding: 6px 22px 4px; border: 0; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--field) 92%, var(--folder-tan)); font: 700 15px/1.2 var(--typed); -webkit-font-smoothing: auto; clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 100%, 0 100%); }
