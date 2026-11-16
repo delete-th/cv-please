@@ -295,7 +295,7 @@
       '<p class="vn-count" id="vn-count" aria-live="polite">0 of 280</p><div class="vn-row"><a class="btn-main" id="vn-send" href="#">Leave note</a><button type="button" class="btn-quiet" data-act="note-cancel">Put it back</button></div></form>' +
       '<p class="vsent" id="vsent"' + (ui.noteSent ? "" : " hidden") + '><span class="vs-text" id="vs-text"></span><span class="vs-tag">Sent</span></p>' + '<span class="ring cup-ring" aria-hidden="true">' + SPR.ring(PX) + "</span>" +
       '<div class="lamp" id="lamp">' + SPR.art("lamp", SC) + '<button class="lamp-switch" id="lamp-switch" data-act="lamp" aria-pressed="' + ui.lampOn + '" aria-label="Desk lamp switch"></button></div>' +
-      '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.art("envelope", SC) + '<span class="env-stamp">Applicant<br>file</span></div>' +
+      '<div class="envelope" id="envelope" aria-hidden="true">' + SPR.art("envelope", SC) + '<span class="env-inside"></span><span class="env-flap">' + SPR.art("envelope", SC) + '</span><span class="env-stamp">Applicant<br>file</span></div>' +
       '<div class="unpack-hint" id="unpack-hint"><p id="unpack-say">The applicant file is still sealed.</p><button class="btn-main" data-act="open-file">Open the file</button></div>' +
       paperIds().map(paperHTML).join("") +
       '<div class="desk-edge" aria-hidden="true"></div>' + drawerHTML("skills", "Skills") + drawerHTML("personal", "Personal") +
@@ -409,6 +409,8 @@
       if (want) { if (ui.stagger && !force) setTimeout(() => unpack(id, false, i), i * ui.stagger); else unpack(id, force, i); } else pack(id, force);
     });
     $("#envelope").classList.toggle("folded", s.out >= n);
+    // the flap is open whenever any paper is out of the folder
+    if (s.out > 0) $("#envelope").classList.add("open"); else if (!ui.firstFlap) $("#envelope").classList.remove("open");
     $("#unpack-hint").hidden = s.out >= n;
     $("#unpack-say").hidden = s.out > 0;
     if (s.shut === 4 && s.board && prev.board !== true) say("arrive");
@@ -1988,6 +1990,7 @@
     at(60, () => { ui.boothForced = true; applyScene(); });
     at(520, () => { if (ui.lampOn) FX.play("lamp"); });
     const desk = $("#desk"); if (desk) desk.classList.add("slow-unpack");
+    at(1150, () => { const e = $("#envelope"); if (e) { ui.firstFlap = true; e.classList.add("open"); FX.play("flip"); } });
     at(1700, () => { ui.forced = true; ui.stagger = 240; applyScene(); ui.stagger = 0; });
     at(3300, () => { $$(".arriving").forEach((e) => e.classList.remove("hold")); FX.play("dwslide"); });
     at(3900, () => { $$(".arriving").forEach((e) => e.classList.remove("arriving")); if (desk) desk.classList.remove("slow-unpack"); firstRun.timers = []; finish(); });
