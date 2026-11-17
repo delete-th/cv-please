@@ -5,8 +5,9 @@ window.FX = (function () {
   // the handling sounds are the most frequent, so they are the quietest, low-passed, with less pitch spread
   const SOFT = { lift: true, settle: true, tap: true, dwslide: true, peel: true };
   const GAP = { tick: 40, lift: 120 };
-  const snd = { on: false, ctx: null, last: {}, bufs: {}, gain: null, rate: 1 };
-  try { snd.on = sessionStorage.getItem("cvp-sound") === "on"; } catch (err) { /* storage can be blocked */ }
+  // sound is on unless the visitor has switched it off this visit
+  const snd = { on: true, ctx: null, last: {}, bufs: {}, gain: null, rate: 1 };
+  try { snd.on = sessionStorage.getItem("cvp-sound") !== "off"; } catch (err) { /* storage can be blocked */ }
 
   function ctx() {
     if (!snd.ctx) {
@@ -283,6 +284,10 @@ window.FX = (function () {
     music.on = false; clearInterval(music.timer);
     const c = snd.ctx; if (c && music.bus) { music.bus.gain.cancelScheduledValues(c.currentTime); music.bus.gain.setValueAtTime(music.bus.gain.value, c.currentTime); music.bus.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.4); }
   }
+  // get the sounds ready straight away, so the walk-in can be heard where the browser allows sound before a click;
+  // elsewhere the first click or key wakes the sound up
+  if (snd.on) setTimeout(ctx, 0);
+  ["pointerdown", "keydown"].forEach((ev) => document.addEventListener(ev, () => { if (snd.on && snd.ctx && snd.ctx.state === "suspended") snd.ctx.resume(); }, true));
   // browsers only let sound start after a click or key, so a remembered "on" waits for the first one
   ["pointerdown", "keydown"].forEach((ev) => document.addEventListener(ev, () => { if (snd.on && !music.on && !document.hidden) startMusic(); }, true));
   document.addEventListener("visibilitychange", () => { if (document.hidden) stopMusic(); else if (snd.on && snd.ctx) startMusic(); });
