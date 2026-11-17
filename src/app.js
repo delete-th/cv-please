@@ -191,7 +191,7 @@
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
         '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") +
       '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="summary">Summary</button><button class="btn-quiet" data-act="view" data-v="list">Simplify</button>' +
-      '<button class="btn-quiet" data-act="passport">Inspect passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
+      '<button class="btn-quiet" data-act="passport">Inspect passport</button><button class="btn-quiet replay" data-act="replay-intro">Replay intro</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
       '<div class="booth-side">' + pinboardHTML() + "</div>" +
       '<div class="booth-meta">' +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
@@ -2681,6 +2681,8 @@
     "wb-case"(b) { const id = b.dataset.id; closeWall(); setTimeout(() => { goRoom(0, true); openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); }, reduced() ? 0 : 640); },
     "wb-erase"() { wbWipe(() => wbDraw(true)); },
     "walkin-skip"() { walkDone(); },
+    // the walk-in plays once per visit; this forgets that it has played and starts the visit over
+    "replay-intro"() { try { sessionStorage.removeItem("cvp-walkin"); } catch (err) { /* storage can be blocked */ } location.reload(); },
     "open-booth"() { ui.boothForced = true; applyScene(); $("#hello").focus({ preventScroll: true }); },
     "open-file"() {
       ui.forced = true; ui.boothForced = true; applyScene();

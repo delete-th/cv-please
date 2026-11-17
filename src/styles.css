@@ -2263,3 +2263,7 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .icq { width: auto; max-width: min(340px, calc(100vw - 32px)); padding: 12px 40px 12px 12px; }
 .icq-chips { flex-direction: column; align-items: stretch; gap: 6px; }
 .icq-chip { justify-content: flex-start; text-align: left; }
+
+/* a quieter link than the shortcuts beside it */
+.booth-links .replay { opacity: 0.75; font-size: 0.85em; }
+.booth-links .replay:hover, .booth-links .replay:focus-visible { opacity: 1; }
