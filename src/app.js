@@ -239,7 +239,7 @@
   // the portable speaker is the sound switch: light off when the site is quiet, amber light on when it makes sounds
   function speakerHTML() {
     const on = FX.soundOn;
-    return '<button class="spk' + (on ? " on" : "") + '" data-act="sound" aria-pressed="' + on + '" aria-label="Sound and music" data-tag="' + (on ? "Sound and jazz on" : "Sound off") + '">' +
+    return '<button class="spk' + (on ? " on" : "") + '" data-act="sound" aria-pressed="' + on + '" aria-label="Sound and music" data-tag="' + (on ? "Music on" : "Music off") + '">' +
       SPR.art("speaker-off", 2, "spk-off") + SPR.art("speaker-on", 2, "spk-on") + '<span class="spk-light" aria-hidden="true"></span></button>';
   }
   // The pinboard: the prize voucher, an index card with the roles Thea is open to, and an optional "Currently" note.
@@ -2453,7 +2453,7 @@
     snooze(b) { snooze(b); },
     sound(b) {
       const on = FX.toggle();
-      b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); b.dataset.tag = on ? "Sound and jazz on" : "Sound off";
+      b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); b.dataset.tag = on ? "Music on" : "Music off";
       if (tagFor === b) showTag(b, true);
       b.classList.remove("press"); void b.offsetWidth; b.classList.add("press"); setTimeout(() => b.classList.remove("press"), 80);
       if (on) FX.play("spkon");
