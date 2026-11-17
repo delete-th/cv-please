@@ -47,6 +47,9 @@ window.FX = (function () {
     if (c && name === "snooze") { tick(c, 0.012, 1900, 0.4); tick(c, 0.03, 700, 0.35, c.currentTime + 0.012); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
+    if (c && name === "beep") { pcBeep(c, 1180, 0.055, 0); return; }
+    if (c && name === "boop") { pcBeep(c, 520, 0.07, 0); return; }
+    if (c && name === "chirp") { pcBeep(c, 880, 0.05, 0); pcBeep(c, 1320, 0.07, 0.07); return; }
     if (!c || !snd.bufs[name]) return;
     const src = c.createBufferSource(), g = c.createGain();
     src.buffer = snd.bufs[name];
@@ -116,6 +119,13 @@ window.FX = (function () {
     note(t0 + 0.12, 2350, 2350, 0.12, 0.06, "sine");
   }
   // a short filtered noise tick: the building block for the small sounds below
+  // the old computer's own beep: a short square tone through a small, muffled speaker
+  function pcBeep(c, freq, len, delay) {
+    const t0 = c.currentTime + 0.003 + (delay || 0), o = c.createOscillator(), lp = c.createBiquadFilter(), g = c.createGain();
+    o.type = "square"; o.frequency.value = freq; lp.type = "lowpass"; lp.frequency.value = 2400;
+    g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.07, t0 + 0.004); g.gain.setValueAtTime(0.07, t0 + len - 0.01); g.gain.linearRampToValueAtTime(0.0001, t0 + len);
+    o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(t0); o.stop(t0 + len + 0.02);
+  }
   function tick(c, len, freq, vol, at) {
     const t0 = (at || c.currentTime) + 0.003, n = Math.max(1, Math.floor(c.sampleRate * len)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);

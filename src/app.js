@@ -1567,6 +1567,12 @@
     setTimeout(() => { if (first) first.focus({ preventScroll: true }); }, reduced() ? 0 : 200);
   }
   // Content larger than the screen is scaled down, never the computer itself.
+  // buttons on the computer's screen beep: Send chirps, closing the browser is a lower blip
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest && ev.target.closest(".cm-screen button, .cm-screen a");
+    if (!b) return;
+    FX.play(b.id === "cm-send" || b.classList.contains("cm-send") ? "chirp" : b.matches(".br-x, [data-act=br-close]") ? "boop" : "beep");
+  }, true);
   function fitContact(w, h) {
     const c = $("#cm-content");
     c.style.transform = ""; c.style.width = w + "px"; c.style.height = "";
