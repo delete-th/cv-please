@@ -9,7 +9,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).parent
 SRC = ROOT / "src"
-FONTS = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Jacquard+24&family=Jersey+10&family=Libre+Caslon+Text:ital@0;1&family=Patrick+Hand&family=Permanent+Marker&family=Tiny5&display=swap"
+FONTS = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Jacquard+24&family=Jersey+10&family=Kalam:wght@400;700&family=Libre+Caslon+Text:ital@0;1&family=Tiny5&display=swap"
 
 
 def read(name):

@@ -445,7 +445,11 @@
           },
           {
             "t": "Test",
-            "n": "Break it on purpose: bad input, API down, rate limits"
+            "n": "Break it on purpose: bad input, API down, rate limits",
+            "x": {
+              "label": "Edge case",
+              "text": "IOC Enricher: what if VirusTotal, AbuseIPDB or Shodan is down?"
+            }
           },
           {
             "t": "Write it up",
@@ -456,7 +460,7 @@
       {
         "id": "lead",
         "label": "Team lead",
-        "title": "How I run a team build",
+        "title": "How I lead a team",
         "case": "Scure",
         "steps": [
           {
@@ -465,7 +469,11 @@
           },
           {
             "t": "Break it down",
-            "n": "Tasks on a board, sized small, with owners"
+            "n": "Tasks on a board, sized small, with owners",
+            "x": {
+              "label": "Task breakdown",
+              "text": "Scure: QR scan, threat engine, sandbox, verdict, auth"
+            }
           },
           {
             "t": "Set the rules",
@@ -481,23 +489,13 @@
           },
           {
             "t": "Demo and retro",
-            "n": "Show it, then what to keep and change"
+            "n": "Show it, then what to keep and change",
+            "x": {
+              "label": "Retro",
+              "text": "Scure: changed features after user testing and advisor feedback"
+            }
           }
         ]
-      }
-    ],
-    "stickies": [
-      {
-        "label": "Task breakdown",
-        "text": "Scure: QR scan, threat engine, sandbox, verdict, auth"
-      },
-      {
-        "label": "Edge case",
-        "text": "IOC Enricher: what if VirusTotal, AbuseIPDB or Shodan is down?"
-      },
-      {
-        "label": "Retro",
-        "text": "Scure: changed features after user testing and advisor feedback"
       }
     ]
   },

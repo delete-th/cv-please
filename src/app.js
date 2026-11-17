@@ -1628,54 +1628,60 @@
     lamp.classList.toggle("faded", over);
   }
 
-  // ----- the walk-in: from inside the booth, Thea walks up close to the glass, holds up her passport and slides it into the tray -----
-  // The booth scene is 111x71 art pixels: glass x 10 to 101, y 5 to 55; the counter below it, with the tray recess at x 38 to 73.
-  // Her frames share one aligned 57x79 canvas and are drawn at the scene's own scale, behind the counter and in front of the glass.
+  // ----- the walk-in: the visitor calls "Next applicant.", Thea walks up behind the glass, holds up her passport and slides it into the tray -----
+  // The booth scene is 111x71 art pixels: glass x 10 to 100, y 5 to 55; the counter's top edge at y 56; the tray recess under the glass.
+  // Layers, back to front: sky and skyline, Thea, the glass reflections, the frame and counter, the tray.
+  // Thea is drawn at two thirds of the scene's scale (scene 9x / her 6x, 6x / 4x, or 3x / 2x), so she reads as a step back from the glass.
   let walk = null;
   function walkIn() {
     let seen = false;
     try { seen = sessionStorage.getItem("cvp-walkin") === "1"; } catch (err) { /* storage can be blocked */ }
     if (seen || !$("#intro")) return;
     try { sessionStorage.setItem("cvp-walkin", "1"); } catch (err) { /* storage can be blocked */ }
-    const a = ART["booth-scene"], k = clamp(Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 96) / a.h)), 1, 12), P = (v) => v * k + "px";
+    // reduced motion: straight to the passport on the desk
+    if (reduced()) return;
+    const a = ART["booth-scene"], fit = Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 96) / a.h));
+    const S = Math.max(3, Math.min(9, fit - (fit % 3))), T = (S / 3) * 2, P = (v) => Math.round(v * S) + "px";
     const el = document.createElement("div");
     el.className = "walkin"; el.id = "walkin";
-    el.innerHTML = '<div class="wk-stage sky-' + dayPhase() + '" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' + SPR.art("booth-scene", k, "wk-scene", "Inside the booth, looking out through the window") +
-      '<div class="wk-person"><img class="wk-thea" alt="" aria-hidden="true" draggable="false"></div>' +
-      '<span class="wk-tray open" style="left:' + P(42) + ";top:" + P(52) + '">' + SPR.art("tray-closed", k, "wk-closed") + SPR.art("tray-open", k, "wk-open") + "</span></div>" +
-      '<p class="sr-only" aria-live="polite">Thea walks up to the booth window and hands over her passport.</p>' +
+    el.innerHTML = '<div class="wk-stage sky-' + dayPhase() + '" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' +
+      SPR.art("booth-scene", S, "wk-scene", "Inside the booth, looking out through the window") +
+      '<img class="wk-thea" alt="" aria-hidden="true" draggable="false" hidden>' +
+      SPR.art("booth-glare", S, "wk-glare") + SPR.art("booth-front", S, "wk-front") +
+      '<span class="wk-tray" style="left:' + P(42) + ";top:" + P(56) + '">' + SPR.art("tray-open", S, "wk-t-open") + SPR.art("tray-passport", S, "wk-t-pass") + SPR.art("tray-closed", S, "wk-t-closed") + "</span></div>" +
+      '<p class="wk-call" aria-live="polite" hidden>Next applicant.</p>' +
       '<button class="btn-quiet wk-skip" data-act="walkin-skip">Skip intro</button>';
-    fixedRoot.appendChild(el); el.style.setProperty("--wk-k", k);
-    const person = $(".wk-person", el), img = $(".wk-thea", el), tray = $(".wk-tray", el);
-    const poly = (pts) => "polygon(" + pts.map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
-    const glass = poly([[10, 5], [102, 5], [102, 56], [10, 56]]);
-    // pushing the passport down, her hand shows in the tray recess under the glass
-    const glassTray = poly([[10, 5], [102, 5], [102, 56], [73, 56], [73, 71], [38, 71], [38, 56], [10, 56]]);
-    const Y = 0, X = 33;
-    const show = (name, x, clip) => {
-      const sp = ART[name]; img.src = sp.src; img.width = sp.w * k; img.height = sp.h * k;
-      img.style.left = P(x); img.style.top = P(Y); img.hidden = false; person.style.clipPath = clip || glass;
+    fixedRoot.appendChild(el); el.style.setProperty("--wk-s", S);
+    const img = $(".wk-thea", el), tray = $(".wk-tray", el), call = $(".wk-call", el);
+    // her hair top sits about 8% of the glass height under its top edge; the held passport (her art rows 50 to 66)
+    // then ends a little over 2 scene pixels above the counter's top edge
+    const top = Math.round(9 * S), cx = 56 * S;
+    const show = (name, x) => {
+      const sp = ART[name]; img.src = sp.src; img.width = sp.w * T; img.height = sp.h * T;
+      img.style.left = Math.round(x) + "px"; img.style.top = top + "px"; img.hidden = false;
     };
-    img.hidden = true;
+    // centred on the glass: the middle of her figure (art x 27) over the middle of the glass
+    const X = cx - 27 * T;
+    const trayState = (st) => { tray.dataset.st = st; };
+    trayState("open");
     walk = { el: el, timers: [] };
     const at = (ms, fn) => walk.timers.push(setTimeout(fn, ms));
-    if (reduced()) {
-      // no walking: she is already at the window, holding up her passport, then the desk
-      show("thea-hold", X);
-      at(1000, () => walkDone(true));
-    } else {
-      // 1. the empty window for a moment; 2. she walks in from the left, two frames 140ms apart, about 1.2s to the middle of the glass
-      const x0 = 10 - 57, t0 = 300, dur = 1200;
-      for (let t = 0; t <= dur; t += 70) at(t0 + t, () => { show(Math.floor(t / 140) % 2 ? "thea-walk-1" : "thea-walk-0", Math.round(x0 + (X - x0) * Math.min(1, t / dur))); if (t % 280 === 0) FX.play("step"); });
-      // 3. turn, 4. hold up the passport, 5. slide it into the tray, which closes and slides toward you
-      at(t0 + dur + 70, () => show("thea-turn", X));
-      at(t0 + dur + 370, () => { show("thea-hold", X); FX.play("rustle"); });
-      at(t0 + dur + 970, () => show("thea-push", X, glassTray));
-      at(t0 + dur + 1270, () => { tray.classList.remove("open"); tray.classList.add("shut"); FX.play("clunk"); });
-      // 6. the camera tilts down to the desk, where the closed passport slides out of the tray
-      at(t0 + dur + 1600, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
-      at(t0 + dur + 2100, () => walkDone(true));
-    }
+    // 1. the empty booth; 2. the visitor calls her in, from their side of the counter
+    at(800, () => { call.hidden = false; call.classList.add("up"); FX.play("chime"); });
+    at(2000, () => { call.classList.remove("up"); call.classList.add("away"); });
+    at(2300, () => { call.hidden = true; });
+    // 3. she walks in from the left, two frames 160ms apart, over about 1.8s
+    const t0 = 2000, dur = 1800, x0 = 10 * S - 57 * T;
+    for (let t = 0; t <= dur; t += 80) at(t0 + t, () => { show(Math.floor(t / 160) % 2 ? "thea-walk-1" : "thea-walk-0", x0 + (X - x0) * Math.min(1, t / dur)); if (t % 320 === 0) FX.play("step"); });
+    // 4. turn, 5. hold up the passport, 6. push it through under the glass
+    at(t0 + dur + 80, () => show("thea-turn", X));
+    at(t0 + dur + 480, () => { show("thea-hold", X); FX.play("rustle"); });
+    at(t0 + dur + 1380, () => show("thea-push", X));
+    at(t0 + dur + 1630, () => { trayState("pass"); FX.play("tap"); });
+    at(t0 + dur + 2130, () => { trayState("closed"); tray.classList.add("shut"); FX.play("clunk"); });
+    // 7. the camera tilts down to the desk, where the closed passport lands
+    at(t0 + dur + 2450, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
+    at(t0 + dur + 2950, () => walkDone(true));
     document.addEventListener("keydown", walkKey, true);
     document.addEventListener("pointerdown", walkPoint, true);
   }
@@ -1699,20 +1705,25 @@
 
   // ----- the whiteboard on the wall above the desk -----
   // The board sprite is 106x84 art pixels: writing surface x 7 to 96, y 12 to 69; the marker tray along y 71 to 79.
-  const WB = () => state.whiteboard || { modes: [], stickies: [] };
+  // The board shows only the switch, the title, the example line, six numbered steps and one step note;
+  // the magnets, markers and eraser are small things at 2x.
+  const WB = () => state.whiteboard || { modes: [] };
+  const TOOL = 2;
   const wbModeOf = () => WB().modes.find((x) => x.id === ui.wbMode) || WB().modes[0];
   const caseByName = (n) => { const i = state.projects.findIndex((x) => x.name.toLowerCase().startsWith(String(n || "").toLowerCase())); return i < 0 ? null : "case-" + i; };
-  const arrowSVG = (dir) => '<svg class="wb-arrow-svg ' + dir + '" viewBox="0 0 40 20" aria-hidden="true"><path d="M3 11 Q20 7 34 10 M26 4 L35 10 L27 16"/></svg>';
+  // a hand-drawn circle: two loose strokes that do not quite meet
+  const ringSVG = '<svg class="wb-ring" viewBox="0 0 40 40" aria-hidden="true"><path d="M21 4 C31 4 37 11 36 21 C35 31 27 36 19 36 C10 35 4 28 4 19 C5 10 12 5 23 6"/></svg>';
   function wallHTML() {
     const w = WB();
     return '<div class="wall-pan"><div class="wb" id="wb">' + SPR.art("whiteboard", 1, "wb-art", "") +
-      '<div class="wb-surface"><div class="wb-head"><p class="wb-title wb-i" id="wb-title"></p><div class="wb-mags" role="group" aria-label="Switch the board">' +
-      w.modes.map((md, i) => '<button class="wb-mag" data-act="wb-mode" data-m="' + md.id + '" aria-pressed="false">' + SPR.art(i ? "magnet-red" : "magnet-green", 1, "wb-mag-art") + "<span>" + esc(md.label) + "</span></button>").join("") +
-      '</div></div><p class="wb-eg wb-i" id="wb-eg"></p><div class="wb-flow" id="wb-flow"></div></div>' +
-      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", 1, "wb-mk wb-mk-1") + SPR.art("marker-blue", 1, "wb-mk wb-mk-2") + SPR.art("marker-red", 1, "wb-mk wb-mk-3") + "</span>" +
-      '<button class="wb-eraser" data-act="wb-erase" aria-label="Eraser: rub out the board. Drag it across the board, or press Enter.">' + SPR.art("eraser", 1, "wb-er-art") + "</button>" +
-      w.stickies.map((st, i) => '<p class="wb-sticky wb-s' + i + '"><b>' + esc(st.label) + "</b>" + esc(st.text) + "</p>").join("") +
-      '<div class="wb-card" id="wb-card" role="dialog" aria-label="Step note" hidden></div></div></div>' +
+      '<div class="wb-surface"><div class="wb-mags" role="group" aria-label="Switch the board">' +
+      w.modes.map((md, i) => '<button class="wb-mag" data-act="wb-mode" data-m="' + md.id + '" aria-pressed="false">' + SPR.art(i ? "magnet-red" : "magnet-green", TOOL, "wb-mag-art") + "<span>" + esc(md.label) + "</span></button>").join("") +
+      '</div><p class="wb-title wb-i" id="wb-title"></p><p class="wb-eg wb-i" id="wb-eg"></p>' +
+      '<div class="wb-steps" id="wb-steps" role="group" aria-label="Steps"></div></div>' +
+      '<div class="wb-pin" id="wb-pin" role="note" aria-live="polite" hidden></div>' +
+      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", TOOL, "wb-mk wb-mk-1") + SPR.art("marker-blue", TOOL, "wb-mk wb-mk-2") + SPR.art("marker-red", TOOL, "wb-mk wb-mk-3") + "</span>" +
+      '<button class="wb-eraser" data-act="wb-erase" aria-label="Eraser: rub out the board. Drag it across the board, or press Enter.">' + SPR.art("eraser", TOOL, "wb-er-art") + "</button>" +
+      "</div></div>" +
       '<span class="wall-strip" aria-hidden="true" style="background-image: url(' + ART["wall-strip-fill"].src + ')"></span>' +
       '<button class="wall-down" data-act="wall-down" aria-label="Back to the desk">' + SPR.draw("caretdown", 3) + "<span>Desk</span></button>";
   }
@@ -1728,18 +1739,16 @@
     sizeWall(); wbDraw(false, true);
     return w;
   }
-  // the board at the largest whole-number scale that fits above the desk-edge strip
+  // the board at about three quarters of the wall's width (at most about 920px), at a whole-number scale,
+  // centred over the desk-edge strip; on a short screen it grows to keep the writing at its size
   function sizeWall() {
     const w = $("#wall"); if (!w) return;
     const a = ART.whiteboard, ss = window.innerHeight < 760 ? 2 : 3, strip = isPhone() ? 0 : 42 * ss;
-    const k = clamp(Math.floor(Math.min((window.innerWidth - (isPhone() ? 24 : 420)) / a.w, (window.innerHeight - strip - (isPhone() ? 120 : 24)) / a.h)), 3, 12);
+    const byW = isPhone() ? (window.innerWidth - 24) / a.w : Math.min(window.innerWidth * 0.75, 920) / a.w;
+    const k = clamp(Math.floor(Math.min(byW, (window.innerHeight - strip - (isPhone() ? 120 : 24)) / a.h)), 3, 12);
     const wb = $("#wb", w), img = $(".wb-art", wb);
     w.style.setProperty("--k", k); w.style.setProperty("--ss", ss);
     img.width = a.w * k; img.height = a.h * k;
-    $$(".wb-mk, .wb-er-art", w).forEach((im) => { const n = [...im.classList].find((c) => c.startsWith("art-")).slice(4), s = ART[n]; im.width = s.w * k; im.height = s.h * k; });
-    const mk = clamp(Math.round(27 / ART["magnet-green"].w), 2, 4);
-    w.style.setProperty("--mk", mk);
-    $$(".wb-mag-art", w).forEach((im) => { im.width = ART["magnet-green"].w * mk; im.height = ART["magnet-green"].h * mk; });
     wb.style.width = a.w * k + "px"; wb.style.height = a.h * k + "px";
     wb.style.left = Math.round((window.innerWidth - a.w * k) / 2) + "px";
     wb.style.top = Math.max(8, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 0) - a.h * k) / 2)) + "px";
@@ -1756,98 +1765,93 @@
       FX.play("dwslide"); updatePill();
       setTimeout(() => {
         if (!ui.wbShown) { ui.wbShown = true; wbDraw(true); }
-        const m = $('.wb-mag[aria-pressed="true"]'); if (m) m.focus({ preventScroll: true });
+        const m = $(".wb-step.sel") || $(".wb-step"); if (m) m.focus({ preventScroll: true });
       }, reduced() ? 0 : 1000);
     };
     if (ui.room !== 0 && !isPhone()) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 470); } else go();
   }
   function closeWall() {
     if (!ui.wall) return;
-    ui.wall = false; wbCard(null);
+    ui.wall = false;
     document.documentElement.classList.remove("on-wall");
     const site = $(".site"); if (site) site.inert = false;
     const w = $("#wall"); if (w) w.inert = true;
     FX.play("dwslide"); updatePill();
     setTimeout(() => { const b = $(".to-wall"); if (b && !isPhone()) b.focus({ preventScroll: true }); }, reduced() ? 0 : 620);
   }
-  // write the current mode on the board: each piece appears in turn, about 60ms apart, like it is being written
+  // write the current mode on the board: each piece appears in turn, about 80ms apart, like it is being written
   function wbDraw(animate, quiet) {
     const md = wbModeOf(); if (!md) return;
     $$(".wb-mag").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === md.id)));
     $("#wb-title").textContent = md.title;
     $("#wb-eg").textContent = "e.g. " + md.case;
-    const st = md.steps, cell = (i) => '<button class="wb-step wb-i" data-act="wb-step" data-i="' + i + '"><span class="wb-box"><b>' + (i + 1) + "</b>" + esc(st[i].t) + '</span><span class="wb-note">' + esc(st[i].n) + "</span></button>";
-    const ar = (dir) => '<span class="wb-arrow wb-i ' + dir + '">' + arrowSVG(dir) + "</span>";
-    const gap = '<span class="wb-gap"></span>';
-    // a snake: 1 to 3 left to right, down, then 4 to 6 right to left
-    const order = [cell(0), ar("r"), cell(1), ar("r"), cell(2), gap, gap, gap, gap, ar("d"), st[5] ? cell(5) : gap, st[5] ? ar("l") : gap, cell(4), ar("l"), cell(3)];
-    $("#wb-flow").innerHTML = order.join("");
-    const items = [$("#wb-title"), $("#wb-eg")].concat($$("#wb-flow .wb-i").sort((x, y) => wbRank(x) - wbRank(y)));
-    if (!animate || reduced()) { items.forEach((x) => x.classList.add("on")); return; }
-    items.forEach((x) => x.classList.remove("on"));
-    items.forEach((x, n) => setTimeout(() => { x.classList.add("on"); if (n % 2 === 0) FX.play("marker"); }, 60 + n * 60));
+    $("#wb-steps").innerHTML = md.steps.map((st, i) => '<button class="wb-step wb-i" data-act="wb-step" data-i="' + i + '" aria-pressed="false"><span class="wb-num">' + ringSVG + "<b>" + (i + 1) + '</b></span><span class="wb-name">' + esc(st.t) + "</span></button>").join("");
+    // step 1 is chosen when the board is first written, so the note is never empty
+    wbSelect(0, true);
+    const items = [$("#wb-title"), $("#wb-eg")].concat($$("#wb-steps .wb-i"));
+    const pin = $("#wb-pin");
+    if (!animate || reduced()) { items.forEach((x) => x.classList.add("on")); if (pin) pin.classList.add("on"); return; }
+    items.forEach((x) => x.classList.remove("on")); if (pin) pin.classList.remove("on");
+    items.forEach((x, n) => setTimeout(() => { x.classList.add("on"); if (n % 2 === 0) FX.play("marker"); }, 60 + n * 80));
+    setTimeout(() => { if (pin) { pin.classList.add("on"); FX.play("peel"); } }, 60 + items.length * 80 + 120);
   }
-  // drawing order: along the snake
-  function wbRank(x) {
-    if (x.classList.contains("wb-step")) return +x.dataset.i * 2;
-    const all = $$("#wb-flow > *"), i = all.indexOf(x), before = all.slice(0, i).reverse().find((y) => y.classList.contains("wb-step"));
-    if (x.classList.contains("d")) return 2 * 2 + 1;
-    if (x.classList.contains("l")) { const after = all.slice(i + 1).find((y) => y.classList.contains("wb-step")); return +after.dataset.i * 2 + 1; }
-    return before ? +before.dataset.i * 2 + 1 : 0;
-  }
+  // drawing order: title, example, then the steps
+  function wbRank(x) { return x.id === "wb-title" ? 0 : x.id === "wb-eg" ? 1 : 2 + +(x.dataset.i || 0); }
   function wbMode(id) {
     if (id === ui.wbMode && ui.wbShown) return;
-    wbCard(null);
     ui.wbMode = id;
     wbWipe(() => wbDraw(true));
   }
   // the eraser sweeps across the board in two-frame strokes, and whatever it passes is gone
   function wbWipe(then) {
     const wb = $("#wb"); if (!wb) return;
+    const pin = $("#wb-pin");
     if (reduced()) { $$(".wb-i", wb).forEach((x) => x.classList.remove("on")); then && then(); return; }
-    const k = +getComputedStyle($("#wall")).getPropertyValue("--k") || 4, sr = rectOf($(".wb-surface", wb)), wr = rectOf(wb);
+    const k = TOOL, sr = rectOf($(".wb-surface", wb)), wr = rectOf(wb);
     const er = document.createElement("img"); er.className = "wb-wiper"; er.alt = ""; er.setAttribute("aria-hidden", "true");
     wb.appendChild(er);
-    const steps = 10, rows = [0.25, 0.6];
+    if (pin) pin.classList.remove("on");
+    const steps = 12, rows = [0.2, 0.45, 0.75];
     FX.play("wipe");
     let n = 0;
     const tick = () => {
       const row = rows[Math.floor(n / steps)], j = n % steps, ltr = Math.floor(n / steps) % 2 === 0, f = ltr ? j / (steps - 1) : 1 - j / (steps - 1);
-      const s = ART[n % 2 ? "eraser-wipe-r" : "eraser-wipe-l"];
-      er.src = s.src; er.width = s.w * k; er.height = s.h * k;
-      const x = sr.left - wr.left + f * (sr.width - s.w * k), y = sr.top - wr.top + row * sr.height - (s.h * k) / 2;
+      const sp = ART[n % 2 ? "eraser-wipe-r" : "eraser-wipe-l"];
+      er.src = sp.src; er.width = sp.w * k; er.height = sp.h * k;
+      const x = sr.left - wr.left + f * (sr.width - sp.w * k), y = sr.top - wr.top + row * sr.height - (sp.h * k) / 2;
       er.style.left = Math.round(x) + "px"; er.style.top = Math.round(y) + "px";
-      const ex = sr.left + x - (sr.left - wr.left) + (s.w * k) / 2;
-      $$(".wb-i.on", wb).forEach((it) => { const r = rectOf(it), cx = r.left + r.width / 2; if (ltr ? cx < ex : cx > ex) it.classList.remove("on"); });
+      const ex = wr.left + x + (sp.w * k) / 2;
+      $$(".wb-i.on", wb).forEach((it) => { const r = rectOf(it), cx = r.left + r.width / 2, cy = r.top + r.height / 2; if (Math.abs(cy - (wr.top + y + (sp.h * k) / 2)) < sr.height * 0.2 && (ltr ? cx < ex : cx > ex)) it.classList.remove("on"); });
       n++;
-      if (n < steps * rows.length) setTimeout(tick, 45);
+      if (n < steps * rows.length) setTimeout(tick, 35);
       else { $$(".wb-i", wb).forEach((x2) => x2.classList.remove("on")); er.remove(); setTimeout(() => then && then(), 120); }
     };
     tick();
   }
-  // a note card for one step, with a way into the case file that shows it
-  function wbCard(i, from) {
-    const c = $("#wb-card"); if (!c) return;
-    if (i == null) { c.hidden = true; return; }
-    const md = wbModeOf(), st = md.steps[i], id = caseByName(md.case);
-    c.innerHTML = '<p class="wbc-step">Step ' + (i + 1) + ": " + esc(st.t) + '</p><p class="wbc-note">' + esc(st.n) + "</p>" +
-      (id ? '<button class="wbc-case" data-act="wb-case" data-id="' + id + '">See it in the ' + esc(md.case) + " case file</button>" : "") +
-      '<button class="close icon-btn wbc-x" data-act="wb-card-close" aria-label="Close the note">' + SPR.draw("xmark", 2) + "</button>";
-    c.hidden = false;
-    const wb = rectOf($("#wb")), r = rectOf(from);
-    const left = clamp(r.left - wb.left, 8, wb.width - c.offsetWidth - 8), below = r.bottom - wb.top + 8;
-    c.style.left = Math.round(left) + "px";
-    c.style.top = Math.round(below + c.offsetHeight > wb.height ? r.top - wb.top - c.offsetHeight - 8 : below) + "px";
-    FX.play("tap");
-    const btn = $(".wbc-case", c) || $(".wbc-x", c); if (btn) btn.focus({ preventScroll: true });
+  // choosing a step: its name in blue marker, underlined, and its note pinned to the board's top-right corner;
+  // choosing it again (or Esc) takes the note down
+  function wbSelect(i, quiet) {
+    const md = wbModeOf(), pin = $("#wb-pin"); if (!md || !pin) return;
+    if (i != null && i === ui.wbSel && !quiet && !pin.hidden) i = null;
+    ui.wbSel = i;
+    $$(".wb-step").forEach((b) => { const on = i != null && +b.dataset.i === i; b.classList.toggle("sel", on); b.setAttribute("aria-pressed", String(on)); });
+    if (i == null) { pin.hidden = true; if (!quiet) FX.play("peel"); return; }
+    const st = md.steps[i], id = caseByName(md.case);
+    pin.innerHTML = '<b class="wbp-h">' + (i + 1) + ". " + esc(st.t) + '</b><p class="wbp-n">' + esc(st.n) + "</p>" +
+      (st.x ? '<p class="wbp-x"><b>' + esc(st.x.label) + "</b> " + esc(st.x.text) + "</p>" : "") +
+      (id ? '<button class="wbp-case" data-act="wb-case" data-id="' + id + '">Open the ' + esc(md.case) + " file</button>" : "");
+    pin.hidden = false;
+    if (!quiet) { FX.play("peel"); pin.classList.remove("swap"); void pin.offsetWidth; pin.classList.add("swap", "on"); }
   }
+  // the step note stands in for the old pop-up card (Esc and closing the wall take it down)
+  function wbCard(i) { if (i == null) wbSelect(null, true); }
   // picking up the eraser: rub out whatever it passes over; the board writes itself back a moment after it is put down
   let rub = null;
   document.addEventListener("pointerdown", (ev) => {
     const b = ev.target.closest && ev.target.closest(".wb-eraser");
     if (!b || !ui.wall || ev.button !== 0) return;
     ev.preventDefault();
-    const k = +getComputedStyle($("#wall")).getPropertyValue("--k") || 4, er = document.createElement("img");
+    const k = TOOL, er = document.createElement("img");
     er.className = "wb-held"; er.alt = ""; er.setAttribute("aria-hidden", "true");
     fixedRoot.appendChild(er);
     rub = { er: er, k: k, x: ev.clientX, moved: false, f: 0, id: ev.pointerId, b: b };
@@ -2657,7 +2661,7 @@
     wall() { openWall(); },
     "wall-down"() { closeWall(); },
     "wb-mode"(b) { wbMode(b.dataset.m); },
-    "wb-step"(b) { wbCard(+b.dataset.i, b); },
+    "wb-step"(b) { wbSelect(+b.dataset.i); },
     "wb-card-close"() { wbCard(null); },
     "wb-case"(b) { const id = b.dataset.id; closeWall(); setTimeout(() => { goRoom(0, true); openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); }, reduced() ? 0 : 640); },
     "wb-erase"() { wbWipe(() => wbDraw(true)); },
@@ -2942,7 +2946,7 @@
     const po = ev.target.closest && ev.target.closest(".pobj");
     const freeKey = ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"));
-    if (ui.wall && (ev.key === "ArrowDown" || ev.key === "Escape")) { ev.preventDefault(); if ($(".wb-card") && !$(".wb-card").hidden) wbCard(null); else closeWall(); return; }
+    if (ui.wall && (ev.key === "ArrowDown" || ev.key === "Escape")) { ev.preventDefault(); if (ev.key === "Escape" && $("#wb-pin") && !$("#wb-pin").hidden) wbSelect(null); else closeWall(); return; }
     if (ev.key === "ArrowUp" && freeKey && !ui.wall && !ui.dwOpen && !$(".p-case.open")) { ev.preventDefault(); openWall(); return; }
     if (ui.wall && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && freeKey) return;
     if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !isPhone() && ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
