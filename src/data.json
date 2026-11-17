@@ -418,5 +418,87 @@
       "note": "Go on, click it. Nobody is counting.|It is quieter than my actual keyboard."
     }
   ],
-  "sketches": []
+  "sketches": [],
+  "whiteboard": {
+    "modes": [
+      {
+        "id": "solo",
+        "label": "Solo",
+        "title": "How I build on my own",
+        "case": "IOC Enricher",
+        "steps": [
+          {
+            "t": "Understand",
+            "n": "What's the actual problem, and who has it?"
+          },
+          {
+            "t": "Sketch",
+            "n": "Inputs, outputs, edge cases on paper first"
+          },
+          {
+            "t": "Spike",
+            "n": "Smallest thing that proves the risky part works"
+          },
+          {
+            "t": "Build",
+            "n": "Small commits, one feature at a time"
+          },
+          {
+            "t": "Test",
+            "n": "Break it on purpose: bad input, API down, rate limits"
+          },
+          {
+            "t": "Write it up",
+            "n": "README, report, what I'd do next"
+          }
+        ]
+      },
+      {
+        "id": "lead",
+        "label": "Team lead",
+        "title": "How I run a team build",
+        "case": "Scure",
+        "steps": [
+          {
+            "t": "Kickoff",
+            "n": "Agree the goal, scope and what \"done\" means"
+          },
+          {
+            "t": "Break it down",
+            "n": "Tasks on a board, sized small, with owners"
+          },
+          {
+            "t": "Set the rules",
+            "n": "Branches, small PRs, review before merge"
+          },
+          {
+            "t": "Check in",
+            "n": "Short stand-ups, and unblock people first"
+          },
+          {
+            "t": "Review and integrate",
+            "n": "PR reviews, pull often, fix conflicts early"
+          },
+          {
+            "t": "Demo and retro",
+            "n": "Show it, then what to keep and change"
+          }
+        ]
+      }
+    ],
+    "stickies": [
+      {
+        "label": "Task breakdown",
+        "text": "Scure: QR scan, threat engine, sandbox, verdict, auth"
+      },
+      {
+        "label": "Edge case",
+        "text": "IOC Enricher: what if VirusTotal, AbuseIPDB or Shodan is down?"
+      },
+      {
+        "label": "Retro",
+        "text": "Scure: changed features after user testing and advisor feedback"
+      }
+    ]
+  }
 }

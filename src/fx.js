@@ -39,6 +39,10 @@ window.FX = (function () {
     if (c && name === "talk") { talkBlip(c); return; }
     if (c && name === "scan") { scanSound(c); return; }
     if (c && name === "spkon") { speakerOn(c); return; }
+    if (c && name === "step") { tick(c, 0.03, 380, 0.22); return; }
+    if (c && name === "clunk") { metalClunk(c); return; }
+    if (c && name === "marker") { tick(c, 0.02, 3600 + Math.random() * 900, 0.12); return; }
+    if (c && (name === "wipe" || name === "wipe-soft")) { swish(c, name === "wipe" ? 0.7 : 0.09, name === "wipe" ? 0.18 : 0.08); return; }
     if (c && name === "snooze") { tick(c, 0.012, 1900, 0.4); tick(c, 0.03, 700, 0.35, c.currentTime + 0.012); return; }
     if (c && name === "keyclack") { keyClack(c); return; }
     if (c && name === "usbclick") { tick(c, 0.012, 2600, 0.25); return; }
@@ -173,6 +177,25 @@ window.FX = (function () {
     lp.type = "lowpass"; lp.frequency.value = 600;
     g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.22, at + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
     o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o2.start(at); o.stop(at + len + 0.02); o2.stop(at + len + 0.02);
+  }
+  // the tray sliding home: a dull metal knock with a short ring
+  function metalClunk(c) {
+    const t0 = c.currentTime;
+    tick(c, 0.05, 520, 0.6);
+    const o = c.createOscillator(), g = c.createGain(), at = t0 + 0.005;
+    o.type = "square"; o.frequency.setValueAtTime(150, at); o.frequency.exponentialRampToValueAtTime(110, at + 0.12);
+    const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.12, at + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.16);
+    o.connect(lp); lp.connect(g); g.connect(snd.gain); o.start(at); o.stop(at + 0.18);
+    tick(c, 0.08, 2300, 0.1, t0 + 0.02);
+  }
+  // felt on a whiteboard: soft filtered noise that rises and falls
+  function swish(c, len, vol) {
+    const n = Math.floor(c.sampleRate * len), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) { const x = i / n; d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * x) * (0.7 + 0.3 * Math.sin(x * 40)); }
+    const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 1300; bp.Q.value = 0.6; g.gain.value = vol;
+    s.connect(bp); bp.connect(g); g.connect(snd.gain); s.start();
   }
   function toggle() {
     snd.on = !snd.on;

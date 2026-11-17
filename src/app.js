@@ -283,7 +283,7 @@
     const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + (id === "mug" ? '<span class="steam">' + SPR.draw("steam1", PX) + SPR.draw("steam2", PX) + "</span>" : "") + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
-      '<div class="counter" id="counter"><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
+      '<div class="counter" id="counter"><button class="to-wall" data-act="wall" aria-label="Look up at the whiteboard">' + SPR.draw("caretup", 3) + '<span class="tip" aria-hidden="true">Whiteboard</span></button><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
       '<div class="filebox" id="filebox" data-act="all-back"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", BX) + "</span></div>" +
       '<div class="filebox-front" id="filebox-front">' + SPR.art("filebox-front", BX) + '<button class="box-plate" data-act="all-back" aria-label="Put all files back"></button></div>' +
       '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
@@ -1593,16 +1593,259 @@
     lamp.classList.toggle("faded", over);
   }
 
+  // ----- the walk-in: from inside the booth, Thea walks up, turns to the glass and hands her passport through the tray -----
+  // The booth scene is 111x71 art pixels: glass x 10 to 100, y 5 to 55; the counter below; the tray slot under the glass.
+  let walk = null;
+  function walkIn() {
+    let seen = false;
+    try { seen = sessionStorage.getItem("cvp-walkin") === "1"; } catch (err) { /* storage can be blocked */ }
+    if (seen || reduced() || !$("#intro")) return;
+    try { sessionStorage.setItem("cvp-walkin", "1"); } catch (err) { /* storage can be blocked */ }
+    // the scene is drawn at twice the figure's scale (both whole numbers), so she stands at a believable size behind the glass
+    const a = ART["booth-scene"], m = clamp(Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 110) / a.h) / 2), 1, 6), k = 2 * m, P = (v) => v * k + "px";
+    const el = document.createElement("div");
+    el.className = "walkin"; el.id = "walkin";
+    el.innerHTML = '<div class="wk-stage" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' + SPR.art("booth-scene", k, "wk-scene", "Inside the booth, looking out through the window at the queue area") +
+      '<div class="wk-person"><img class="wk-thea" alt="" aria-hidden="true" draggable="false"></div>' +
+      '<span class="wk-tray" style="left:' + P(42) + ";top:" + P(52) + '">' + SPR.art("tray-closed", k, "wk-closed") + SPR.art("tray-open", k, "wk-open") + "</span></div>" +
+      '<button class="btn-quiet wk-skip" data-act="walkin-skip">Skip intro</button>';
+    fixedRoot.appendChild(el);
+    const person = $(".wk-person", el), img = $(".wk-thea", el), tray = $(".wk-tray", el);
+    const glass = "polygon(" + [[10, 5], [101, 5], [101, 56], [10, 56]].map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
+    const glassTray = "polygon(" + [[10, 5], [101, 5], [101, 56], [73, 56], [73, 71], [38, 71], [38, 56], [10, 56]].map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
+    const show = (name, x, y, clip) => {
+      const s = ART[name]; img.src = s.src; img.width = s.w * m; img.height = s.h * m;
+      img.style.left = P(x); img.style.top = P(y); img.hidden = false; person.style.clipPath = clip || glass; person.classList.toggle("front", !!clip);
+    };
+    img.hidden = true;
+    walk = { el: el, timers: [] };
+    const at = (ms, fn) => walk.timers.push(setTimeout(fn, ms));
+    // walking in from the left along the pavement, feet on the line at y 53
+    // positions are in scene pixels; the figure sprites are half that size, so the walk frames are 11x21 here
+    for (let i = 0; i <= 12; i++) at(150 + i * 125, () => { show("walk-" + (i % 4), -11 + i * 5, 32); if (i % 2 === 0) FX.play("step"); });
+    at(1780, () => show("thea-turn", 49, 32));
+    // at the glass, facing you; then the passport comes up, and goes down into the tray
+    at(2100, () => show("window-0", 41.5, 22));
+    at(2500, () => { show("window-1", 41.5, 22); tray.classList.add("open"); FX.play("tap"); });
+    at(2900, () => show("window-2", 41.5, 22, glassTray));
+    at(3250, () => { show("window-0", 41.5, 22); tray.classList.remove("open"); FX.play("clunk"); });
+    // the camera tilts down from the window to the desk, where the passport lands
+    at(3500, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
+    at(4150, () => walkDone(true));
+    document.addEventListener("keydown", walkKey, true);
+    document.addEventListener("pointerdown", walkPoint, true);
+  }
+  function walkKey(ev) { if (!walk) return; ev.preventDefault(); ev.stopPropagation(); walkDone(); }
+  function walkPoint(ev) {
+    if (!walk) return;
+    ev.preventDefault(); ev.stopPropagation();
+    // the click that ends the walk-in does nothing else
+    const eat = (e) => { e.stopPropagation(); e.preventDefault(); document.removeEventListener("click", eat, true); };
+    document.addEventListener("click", eat, true); setTimeout(() => document.removeEventListener("click", eat, true), 400);
+    walkDone();
+  }
+  function walkDone(natural) {
+    if (!walk) return;
+    walk.timers.forEach(clearTimeout);
+    walk.el.remove(); walk = null;
+    document.removeEventListener("keydown", walkKey, true);
+    document.removeEventListener("pointerdown", walkPoint, true);
+    const pp = $("#passport"); if (pp) { if (!natural) pp.classList.remove("drop-in"); pp.focus({ preventScroll: true }); }
+  }
+
+  // ----- the whiteboard on the wall above the desk -----
+  // The board sprite is 106x84 art pixels: writing surface x 7 to 96, y 12 to 69; the marker tray along y 71 to 79.
+  const WB = () => state.whiteboard || { modes: [], stickies: [] };
+  const wbModeOf = () => WB().modes.find((x) => x.id === ui.wbMode) || WB().modes[0];
+  const caseByName = (n) => { const i = state.projects.findIndex((x) => x.name.toLowerCase().startsWith(String(n || "").toLowerCase())); return i < 0 ? null : "case-" + i; };
+  const arrowSVG = (dir) => '<svg class="wb-arrow-svg ' + dir + '" viewBox="0 0 40 20" aria-hidden="true"><path d="M3 11 Q20 7 34 10 M26 4 L35 10 L27 16"/></svg>';
+  function wallHTML() {
+    const w = WB();
+    return '<div class="wall-pan"><div class="wb" id="wb">' + SPR.art("whiteboard", 1, "wb-art", "") +
+      '<div class="wb-surface"><div class="wb-head"><p class="wb-title wb-i" id="wb-title"></p><div class="wb-mags" role="group" aria-label="Switch the board">' +
+      w.modes.map((md, i) => '<button class="wb-mag" data-act="wb-mode" data-m="' + md.id + '" aria-pressed="false">' + SPR.art(i ? "magnet-red" : "magnet-green", 1, "wb-mag-art") + "<span>" + esc(md.label) + "</span></button>").join("") +
+      '</div></div><p class="wb-eg wb-i" id="wb-eg"></p><div class="wb-flow" id="wb-flow"></div></div>' +
+      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", 1, "wb-mk wb-mk-1") + SPR.art("marker-red", 1, "wb-mk wb-mk-2") + "</span>" +
+      '<button class="wb-eraser" data-act="wb-erase" aria-label="Eraser: rub out the board. Drag it across the board, or press Enter.">' + SPR.art("eraser", 1, "wb-er-art") + "</button>" +
+      w.stickies.map((st, i) => '<p class="wb-sticky wb-s' + i + '"><b>' + esc(st.label) + "</b>" + esc(st.text) + "</p>").join("") +
+      '<div class="wb-card" id="wb-card" role="dialog" aria-label="Step note" hidden></div></div></div>' +
+      '<span class="wall-strip" aria-hidden="true" style="background-image: url(' + ART["wall-strip"].src + ')"></span>' +
+      '<button class="wall-down" data-act="wall-down" aria-label="Back to the desk">' + SPR.draw("caretdown", 3) + "<span>Desk</span></button>";
+  }
+  function wallEl() {
+    let w = $("#wall");
+    if (w) return w;
+    w = document.createElement("div");
+    w.id = "wall"; w.className = "wall"; w.setAttribute("role", "region"); w.setAttribute("aria-label", "Whiteboard");
+    w.inert = true;
+    w.innerHTML = wallHTML();
+    fixedRoot.prepend(w);
+    ui.wbMode = ui.wbMode || (WB().modes[0] || {}).id;
+    sizeWall(); wbDraw(false, true);
+    return w;
+  }
+  // the board at the largest whole-number scale that fits above the desk-edge strip
+  function sizeWall() {
+    const w = $("#wall"); if (!w) return;
+    const a = ART.whiteboard, strip = isPhone() ? 0 : 126;
+    const k = clamp(Math.floor(Math.min((window.innerWidth - (isPhone() ? 24 : 64)) / a.w, (window.innerHeight - strip - (isPhone() ? 120 : 60)) / a.h)), 3, 12);
+    const wb = $("#wb", w), img = $(".wb-art", wb);
+    w.style.setProperty("--k", k);
+    img.width = a.w * k; img.height = a.h * k;
+    $$(".wb-mag-art, .wb-mk, .wb-er-art", w).forEach((im) => { const n = [...im.classList].find((c) => c.startsWith("art-")).slice(4), s = ART[n]; im.width = s.w * k; im.height = s.h * k; });
+    wb.style.width = a.w * k + "px"; wb.style.height = a.h * k + "px";
+    wb.style.left = Math.round((window.innerWidth - a.w * k) / 2) + "px";
+    wb.style.top = Math.max(16, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 20) - a.h * k) / 2)) + "px";
+  }
+  function openWall() {
+    if (ui.wall || ui.view !== "desk" || $("#intro") || editing) return;
+    if (ui.dwOpen) setDrawer(null);
+    const go = () => {
+      const w = wallEl();
+      ui.wall = true; hideTag(); hideNote(); sizeWall();
+      w.inert = false; void w.offsetWidth;
+      document.documentElement.classList.add("on-wall");
+      const site = $(".site"); if (site) site.inert = true;
+      FX.play("dwslide"); updatePill();
+      setTimeout(() => {
+        if (!ui.wbShown) { ui.wbShown = true; wbDraw(true); }
+        const m = $('.wb-mag[aria-pressed="true"]'); if (m) m.focus({ preventScroll: true });
+      }, reduced() ? 0 : 1000);
+    };
+    if (ui.room !== 0 && !isPhone()) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 470); } else go();
+  }
+  function closeWall() {
+    if (!ui.wall) return;
+    ui.wall = false; wbCard(null);
+    document.documentElement.classList.remove("on-wall");
+    const site = $(".site"); if (site) site.inert = false;
+    const w = $("#wall"); if (w) w.inert = true;
+    FX.play("dwslide"); updatePill();
+    setTimeout(() => { const b = $(".to-wall"); if (b && !isPhone()) b.focus({ preventScroll: true }); }, reduced() ? 0 : 620);
+  }
+  // write the current mode on the board: each piece appears in turn, about 60ms apart, like it is being written
+  function wbDraw(animate, quiet) {
+    const md = wbModeOf(); if (!md) return;
+    $$(".wb-mag").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === md.id)));
+    $("#wb-title").textContent = md.title;
+    $("#wb-eg").textContent = "e.g. " + md.case;
+    const st = md.steps, cell = (i) => '<button class="wb-step wb-i" data-act="wb-step" data-i="' + i + '"><span class="wb-box"><b>' + (i + 1) + "</b>" + esc(st[i].t) + '</span><span class="wb-note">' + esc(st[i].n) + "</span></button>";
+    const ar = (dir) => '<span class="wb-arrow wb-i ' + dir + '">' + arrowSVG(dir) + "</span>";
+    const gap = '<span class="wb-gap"></span>';
+    // a snake: 1 to 3 left to right, down, then 4 to 6 right to left
+    const order = [cell(0), ar("r"), cell(1), ar("r"), cell(2), gap, gap, gap, gap, ar("d"), st[5] ? cell(5) : gap, st[5] ? ar("l") : gap, cell(4), ar("l"), cell(3)];
+    $("#wb-flow").innerHTML = order.join("");
+    const items = [$("#wb-title"), $("#wb-eg")].concat($$("#wb-flow .wb-i").sort((x, y) => wbRank(x) - wbRank(y)));
+    if (!animate || reduced()) { items.forEach((x) => x.classList.add("on")); return; }
+    items.forEach((x) => x.classList.remove("on"));
+    items.forEach((x, n) => setTimeout(() => { x.classList.add("on"); if (n % 2 === 0) FX.play("marker"); }, 60 + n * 60));
+  }
+  // drawing order: along the snake
+  function wbRank(x) {
+    if (x.classList.contains("wb-step")) return +x.dataset.i * 2;
+    const all = $$("#wb-flow > *"), i = all.indexOf(x), before = all.slice(0, i).reverse().find((y) => y.classList.contains("wb-step"));
+    if (x.classList.contains("d")) return 2 * 2 + 1;
+    if (x.classList.contains("l")) { const after = all.slice(i + 1).find((y) => y.classList.contains("wb-step")); return +after.dataset.i * 2 + 1; }
+    return before ? +before.dataset.i * 2 + 1 : 0;
+  }
+  function wbMode(id) {
+    if (id === ui.wbMode && ui.wbShown) return;
+    wbCard(null);
+    ui.wbMode = id;
+    wbWipe(() => wbDraw(true));
+  }
+  // the eraser sweeps across the board in two-frame strokes, and whatever it passes is gone
+  function wbWipe(then) {
+    const wb = $("#wb"); if (!wb) return;
+    if (reduced()) { $$(".wb-i", wb).forEach((x) => x.classList.remove("on")); then && then(); return; }
+    const k = +getComputedStyle($("#wall")).getPropertyValue("--k") || 4, sr = rectOf($(".wb-surface", wb)), wr = rectOf(wb);
+    const er = document.createElement("img"); er.className = "wb-wiper"; er.alt = ""; er.setAttribute("aria-hidden", "true");
+    wb.appendChild(er);
+    const steps = 10, rows = [0.25, 0.6];
+    FX.play("wipe");
+    let n = 0;
+    const tick = () => {
+      const row = rows[Math.floor(n / steps)], j = n % steps, ltr = Math.floor(n / steps) % 2 === 0, f = ltr ? j / (steps - 1) : 1 - j / (steps - 1);
+      const s = ART[n % 2 ? "eraser-wipe-r" : "eraser-wipe-l"];
+      er.src = s.src; er.width = s.w * k; er.height = s.h * k;
+      const x = sr.left - wr.left + f * (sr.width - s.w * k), y = sr.top - wr.top + row * sr.height - (s.h * k) / 2;
+      er.style.left = Math.round(x) + "px"; er.style.top = Math.round(y) + "px";
+      const ex = sr.left + x - (sr.left - wr.left) + (s.w * k) / 2;
+      $$(".wb-i.on", wb).forEach((it) => { const r = rectOf(it), cx = r.left + r.width / 2; if (ltr ? cx < ex : cx > ex) it.classList.remove("on"); });
+      n++;
+      if (n < steps * rows.length) setTimeout(tick, 45);
+      else { $$(".wb-i", wb).forEach((x2) => x2.classList.remove("on")); er.remove(); setTimeout(() => then && then(), 120); }
+    };
+    tick();
+  }
+  // a note card for one step, with a way into the case file that shows it
+  function wbCard(i, from) {
+    const c = $("#wb-card"); if (!c) return;
+    if (i == null) { c.hidden = true; return; }
+    const md = wbModeOf(), st = md.steps[i], id = caseByName(md.case);
+    c.innerHTML = '<p class="wbc-step">Step ' + (i + 1) + ": " + esc(st.t) + '</p><p class="wbc-note">' + esc(st.n) + "</p>" +
+      (id ? '<button class="wbc-case" data-act="wb-case" data-id="' + id + '">See it in the ' + esc(md.case) + " case file</button>" : "") +
+      '<button class="close icon-btn wbc-x" data-act="wb-card-close" aria-label="Close the note">' + SPR.draw("xmark", 2) + "</button>";
+    c.hidden = false;
+    const wb = rectOf($("#wb")), r = rectOf(from);
+    const left = clamp(r.left - wb.left, 8, wb.width - c.offsetWidth - 8), below = r.bottom - wb.top + 8;
+    c.style.left = Math.round(left) + "px";
+    c.style.top = Math.round(below + c.offsetHeight > wb.height ? r.top - wb.top - c.offsetHeight - 8 : below) + "px";
+    FX.play("tap");
+    const btn = $(".wbc-case", c) || $(".wbc-x", c); if (btn) btn.focus({ preventScroll: true });
+  }
+  // picking up the eraser: rub out whatever it passes over; the board writes itself back a moment after it is put down
+  let rub = null;
+  document.addEventListener("pointerdown", (ev) => {
+    const b = ev.target.closest && ev.target.closest(".wb-eraser");
+    if (!b || !ui.wall || ev.button !== 0) return;
+    ev.preventDefault();
+    const k = +getComputedStyle($("#wall")).getPropertyValue("--k") || 4, er = document.createElement("img");
+    er.className = "wb-held"; er.alt = ""; er.setAttribute("aria-hidden", "true");
+    fixedRoot.appendChild(er);
+    rub = { er: er, k: k, x: ev.clientX, moved: false, f: 0, id: ev.pointerId, b: b };
+    b.classList.add("lifted");
+    rubMove(ev);
+  });
+  function rubMove(ev) {
+    const s = ART[rub.f % 2 ? "eraser-wipe-r" : "eraser-wipe-l"], w = s.w * rub.k, h = s.h * rub.k;
+    rub.er.src = s.src; rub.er.width = w; rub.er.height = h;
+    rub.er.style.left = Math.round(ev.clientX - w / 2) + "px"; rub.er.style.top = Math.round(ev.clientY - h / 2) + "px";
+    const r = { left: ev.clientX - w / 2, right: ev.clientX + w / 2, top: ev.clientY - h / 2, bottom: ev.clientY + h / 2 };
+    $$("#wb .wb-i.on").forEach((it) => { const q = rectOf(it); if (q.left < r.right && r.left < q.right && q.top < r.bottom && r.top < q.bottom) { it.classList.remove("on"); it.classList.add("rubbed"); } });
+  }
+  document.addEventListener("pointermove", (ev) => {
+    if (!rub || ev.pointerId !== rub.id) return;
+    if (Math.abs(ev.clientX - rub.x) > 6) { rub.f++; rub.x = ev.clientX; rub.moved = true; FX.play("wipe-soft"); }
+    rubMove(ev);
+  });
+  document.addEventListener("pointerup", (ev) => {
+    if (!rub || ev.pointerId !== rub.id) return;
+    const r = rub; rub = null;
+    r.er.remove(); r.b.classList.remove("lifted");
+    if (!r.moved) return;
+    swallowNextClick();
+    setTimeout(() => {
+      const back = $$("#wb .wb-i.rubbed").sort((x, y) => wbRank(x) - wbRank(y));
+      back.forEach((x, n) => setTimeout(() => { x.classList.remove("rubbed"); x.classList.add("on"); if (n % 2 === 0) FX.play("marker"); }, n * 60));
+    }, 900);
+  });
+  function swallowNextClick() {
+    const eat = (e) => { e.stopPropagation(); e.preventDefault(); document.removeEventListener("click", eat, true); };
+    document.addEventListener("click", eat, true); setTimeout(() => document.removeEventListener("click", eat, true), 300);
+  }
+
   // ----- pill nav -----
-  const AREAS = [["desk", "Desk"], ["record", "Records"]];
+  const AREAS = [["desk", "Desk"], ["wall", "Whiteboard"], ["record", "Records"]];
   function currentArea() {
     if (ui.view !== "desk" || !$("#scene")) return 0;
-    if (!isPhone()) return ui.room;
-    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 1 : 0;
+    if (ui.wall) return 1;
+    if (!isPhone()) return ui.room === 1 ? 2 : 0;
+    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 2 : 0;
   }
   // The camera pans sideways between the rooms; with reduced motion they swap with a quick fade.
   function goRoom(i, quiet) {
-    i = clamp(i, 0, AREAS.length - 1);
+    i = clamp(i, 0, 1);
     if (isPhone()) { deskScroll(i ? docTop($("#record")) : docTop($("#scene")), behavior()); return; }
     if (i === ui.room) return;
     const rooms = $("#rooms");
@@ -1616,6 +1859,8 @@
   }
   function goArea(i) {
     const id = AREAS[i][0];
+    if (id === "wall") { openWall(); return; }
+    if (ui.wall) { closeWall(); if (id !== "desk") setTimeout(() => goArea(i), reduced() ? 0 : 640); return; }
     if (id === "desk") { goRoom(0); return; }
     // the record room: print first if nothing is printed yet, otherwise just go there
     if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
@@ -2182,7 +2427,15 @@
       setTimeout(() => sc.remove(), 1000);
     },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
-    step(b) { goRoom(currentArea() + +b.dataset.dir); },
+    step(b) { goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
+    wall() { openWall(); },
+    "wall-down"() { closeWall(); },
+    "wb-mode"(b) { wbMode(b.dataset.m); },
+    "wb-step"(b) { wbCard(+b.dataset.i, b); },
+    "wb-card-close"() { wbCard(null); },
+    "wb-case"(b) { const id = b.dataset.id; closeWall(); setTimeout(() => { goRoom(0, true); openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); }, reduced() ? 0 : 640); },
+    "wb-erase"() { wbWipe(() => wbDraw(true)); },
+    "walkin-skip"() { walkDone(); },
     "open-booth"() { ui.boothForced = true; applyScene(); $("#hello").focus({ preventScroll: true }); },
     "open-file"() {
       ui.forced = true; ui.boothForced = true; applyScene();
@@ -2461,6 +2714,11 @@
     if (!ui.contactOpen && !editing && ui.view === "desk" && !$("#intro") && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable], .f"))) hireEgg(ev);
     if ((ev.key === "Enter" || ev.key === " ") && ev.target.id === "passport" && ui.introStep === 0) { ev.preventDefault(); introNext(); return; }
     const po = ev.target.closest && ev.target.closest(".pobj");
+    const freeKey = ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
+      !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"));
+    if (ui.wall && (ev.key === "ArrowDown" || ev.key === "Escape")) { ev.preventDefault(); if ($(".wb-card") && !$(".wb-card").hidden) wbCard(null); else closeWall(); return; }
+    if (ev.key === "ArrowUp" && freeKey && !ui.wall && !ui.dwOpen && (isPhone() || ui.room === 0) && !$(".p-case.open")) { ev.preventDefault(); openWall(); return; }
+    if (ui.wall && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && freeKey) return;
     if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !isPhone() && ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
       ev.preventDefault(); goRoom(ui.room + (ev.key === "ArrowRight" ? 1 : -1)); return;
@@ -2558,7 +2816,8 @@
   document.addEventListener("pointerup", (ev) => {
     if (!swipe || ev.pointerId !== swipe.id) return;
     const dx = ev.clientX - swipe.x, dy = ev.clientY - swipe.y; swipe = null;
-    if (Math.abs(dx) > 60 && Math.abs(dy) < 50) goRoom(ui.room + (dx < 0 ? 1 : -1));
+    if (Math.abs(dy) > 70 && Math.abs(dx) < 50) { if (dy > 0 && !ui.wall && ui.room === 0) openWall(); else if (dy < 0 && ui.wall) closeWall(); return; }
+    if (!ui.wall && Math.abs(dx) > 60 && Math.abs(dy) < 50) goRoom(ui.room + (dx < 0 ? 1 : -1));
   });
   let ticking = false;
   window.addEventListener("scroll", () => {
@@ -2571,7 +2830,7 @@
     });
   }, { passive: true });
   let rz = null;
-  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(onResize, 120); });
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { onResize(); sizeWall(); }, 120); });
   narrow.addEventListener("change", () => { if (ui.view === "desk" && !editing) render(); });
 
 
@@ -2610,6 +2869,7 @@
   renderFixed();
   render();
   renderIntro();
+  walkIn();
 
   (async function () {
     if (!window.claude || !window.claude.use) return;
