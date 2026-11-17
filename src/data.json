@@ -501,91 +501,44 @@
   },
   "intercom": [
     {
-      "id": "purpose",
-      "q": "Purpose of your visit?",
+      "id": "ask",
       "a": [
         {
-          "t": "Hiring",
-          "next": "duration"
+          "t": "What do you do?",
+          "say": "I'm a Computer Science graduate building secure software, AI tools and threat detection."
         },
         {
-          "t": "Reviewing my work",
-          "say": "Oh, a reviewer! My process is pinned up on the wall. Look up.",
+          "t": "What roles are you after?",
+          "say": "Software engineering, AI engineering, or cybersecurity and SOC roles. Hint hint."
+        },
+        {
+          "t": "Where are you based?",
+          "say": "Singapore! Right here at this booth."
+        },
+        {
+          "t": "Can I see your projects?",
+          "say": "Yes please! Each case file in the box is one project. Pull one out.",
+          "go": "files"
+        },
+        {
+          "t": "How do you work?",
+          "say": "It's all on my whiteboard. Look up!",
           "go": "wall"
         },
         {
-          "t": "Just curious",
-          "next": "tour-offer"
-        },
-        {
-          "t": "How do I get around?",
-          "go": "tour"
-        }
-      ]
-    },
-    {
-      "id": "duration",
-      "q": "Duration of stay?",
-      "a": [
-        {
-          "t": "One minute",
-          "say": "A speed-reader. Printing the short version for you now.",
+          "t": "Got a short version?",
+          "say": "Coming right up. Printing my record!",
           "go": "print"
         },
         {
-          "t": "Long enough to dig in",
-          "say": "Love that. Start with the case files, they're in the box.",
-          "go": "files"
-        }
-      ]
-    },
-    {
-      "id": "tour-offer",
-      "q": "Want the tour?",
-      "a": [
-        {
-          "t": "Yes",
+          "t": "Can you show me around?",
+          "say": "Sure, follow me!",
           "go": "tour"
         },
         {
-          "t": "No thanks",
-          "go": "close"
-        }
-      ]
-    },
-    {
-      "id": "declare",
-      "q": "Anything to declare?",
-      "a": [
-        {
-          "t": "I'd like to talk",
+          "t": "How do I reach you?",
+          "say": "Tear the contact slip off my record. I'd love to hear from you!",
           "go": "contact"
-        },
-        {
-          "t": "No, carry on",
-          "go": "close"
-        }
-      ]
-    },
-    {
-      "id": "again",
-      "q": "Back again? Where to?",
-      "a": [
-        {
-          "t": "Projects",
-          "go": "files"
-        },
-        {
-          "t": "Whiteboard",
-          "go": "wall"
-        },
-        {
-          "t": "Record",
-          "go": "record"
-        },
-        {
-          "t": "Tour",
-          "go": "tour"
         }
       ]
     },

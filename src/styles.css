@@ -2258,3 +2258,8 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 /* the folded corner: the turned-back flap, with the desk showing where the corner was */
 .p-honours::after { width: 28px; height: 28px; background: linear-gradient(135deg, var(--paper-deep) 0 50%, var(--wood-2) 50%); box-shadow: none; filter: drop-shadow(-2px -2px 0 color-mix(in srgb, var(--ink) 18%, transparent)); }
 .hon-clip { left: auto; right: 34px; top: -20px; rotate: 6deg; }
+
+/* the intercom menu is a list of the visitor's questions for Thea */
+.icq { width: auto; max-width: min(340px, calc(100vw - 32px)); padding: 12px 40px 12px 12px; }
+.icq-chips { flex-direction: column; align-items: stretch; gap: 6px; }
+.icq-chip { justify-content: flex-start; text-align: left; }

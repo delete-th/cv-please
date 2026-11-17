@@ -2262,6 +2262,11 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 /* the folded corner: the turned-back flap, with the desk showing where the corner was */
 .p-honours::after { width: 28px; height: 28px; background: linear-gradient(135deg, var(--paper-deep) 0 50%, var(--wood-2) 50%); box-shadow: none; filter: drop-shadow(-2px -2px 0 color-mix(in srgb, var(--ink) 18%, transparent)); }
 .hon-clip { left: auto; right: 34px; top: -20px; rotate: 6deg; }
+
+/* the intercom menu is a list of the visitor's questions for Thea */
+.icq { width: auto; max-width: min(340px, calc(100vw - 32px)); padding: 12px 40px 12px 12px; }
+.icq-chips { flex-direction: column; align-items: stretch; gap: 6px; }
+.icq-chip { justify-content: flex-start; text-align: left; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -2769,91 +2774,44 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
  },
  "intercom": [
   {
-   "id": "purpose",
-   "q": "Purpose of your visit?",
+   "id": "ask",
    "a": [
     {
-     "t": "Hiring",
-     "next": "duration"
+     "t": "What do you do?",
+     "say": "I'm a Computer Science graduate building secure software, AI tools and threat detection."
     },
     {
-     "t": "Reviewing my work",
-     "say": "Oh, a reviewer! My process is pinned up on the wall. Look up.",
+     "t": "What roles are you after?",
+     "say": "Software engineering, AI engineering, or cybersecurity and SOC roles. Hint hint."
+    },
+    {
+     "t": "Where are you based?",
+     "say": "Singapore! Right here at this booth."
+    },
+    {
+     "t": "Can I see your projects?",
+     "say": "Yes please! Each case file in the box is one project. Pull one out.",
+     "go": "files"
+    },
+    {
+     "t": "How do you work?",
+     "say": "It's all on my whiteboard. Look up!",
      "go": "wall"
     },
     {
-     "t": "Just curious",
-     "next": "tour-offer"
-    },
-    {
-     "t": "How do I get around?",
-     "go": "tour"
-    }
-   ]
-  },
-  {
-   "id": "duration",
-   "q": "Duration of stay?",
-   "a": [
-    {
-     "t": "One minute",
-     "say": "A speed-reader. Printing the short version for you now.",
+     "t": "Got a short version?",
+     "say": "Coming right up. Printing my record!",
      "go": "print"
     },
     {
-     "t": "Long enough to dig in",
-     "say": "Love that. Start with the case files, they're in the box.",
-     "go": "files"
-    }
-   ]
-  },
-  {
-   "id": "tour-offer",
-   "q": "Want the tour?",
-   "a": [
-    {
-     "t": "Yes",
+     "t": "Can you show me around?",
+     "say": "Sure, follow me!",
      "go": "tour"
     },
     {
-     "t": "No thanks",
-     "go": "close"
-    }
-   ]
-  },
-  {
-   "id": "declare",
-   "q": "Anything to declare?",
-   "a": [
-    {
-     "t": "I'd like to talk",
+     "t": "How do I reach you?",
+     "say": "Tear the contact slip off my record. I'd love to hear from you!",
      "go": "contact"
-    },
-    {
-     "t": "No, carry on",
-     "go": "close"
-    }
-   ]
-  },
-  {
-   "id": "again",
-   "q": "Back again? Where to?",
-   "a": [
-    {
-     "t": "Projects",
-     "go": "files"
-    },
-    {
-     "t": "Whiteboard",
-     "go": "wall"
-    },
-    {
-     "t": "Record",
-     "go": "record"
-    },
-    {
-     "t": "Tour",
-     "go": "tour"
     }
    ]
   },
@@ -4641,7 +4599,7 @@ window.DEMOS = (function () {
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
       speakerHTML() + "</div>" +
       '<p class="aside" id="aside" aria-live="polite" hidden></p>' +
-      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: answer the officer\'s questions" aria-haspopup="dialog" aria-expanded="false"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: ask Thea a question" aria-haspopup="dialog" aria-expanded="false"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
   // The alarm clock: the visitor's local time in amber seven-segment digits on its blank display, drawn on a canvas
@@ -6469,15 +6427,14 @@ window.DEMOS = (function () {
     const n = icNode(id); if (!n) { icClose(); return; }
     if (ic.tour >= 0) { const tb = $("#thea-say"); if (tb) tb.hidden = true; }
     ic.node = n; ic.tour = -1; spot(null);
-    icShow(n.q, n.a.map((a) => a.t));
+    icShow(n.q || "", n.a.map((a) => a.t));
   }
   function icOpen() {
     if (ui.view !== "desk" || $("#intro") || editing) return;
     ic.open = true;
     if (ui.room === 1 || ui.printed) ic.visitedRecords = true;
-    // after the tour, or once they have been to the Records room, the last question; after that, a quick way around
-    const id = ic.said && ic.visitedRecords && !ic.declared ? "declare" : ic.said ? "again" : "purpose";
-    icAsk(id);
+    // the visitor's questions for Thea
+    icAsk("ask");
   }
   function icClose(keepSpot) {
     if (!ic.open && !$("#icq")) return;
@@ -6494,12 +6451,13 @@ window.DEMOS = (function () {
     ic.said = true; FX.play("tap");
     if (n.id === "declare") ic.declared = true;
     if (a.next) { icAsk(a.next); return; }
-    if (a.go === "tour") { icTour(0); return; }
+    // Thea answers in her speech bubble; a plain answer leaves the questions open for another one
+    if (!a.go) { if (a.say) theaSpeak(a.say, 7000); const c = $$(".icq-chip")[i]; if (c) c.focus({ preventScroll: true }); return; }
+    if (a.go === "tour") { if (a.say) theaSpeak(a.say); setTimeout(() => { if (ic.open) icTour(0); }, reduced() ? 0 : 900); return; }
     if (a.go === "close") { icClose(); return; }
-    // a short reply from Thea in her speech bubble, then off they go
     icClose(true);
-    if (a.say) theaSpeak(a.say, 3200);
     icGo(a.go);
+    if (a.say) setTimeout(() => theaSpeak(a.say, 3600), 30);
   }
   function icGo(go) {
     const back = (fn) => { if (ui.wall) { closeWall(); setTimeout(fn, reduced() ? 0 : 640); } else fn(); };
@@ -6551,7 +6509,7 @@ window.DEMOS = (function () {
   }
   function icTour(i) {
     const n = icNode("tour"); if (!n) { icClose(); return; }
-    if (i >= n.steps.length) { ic.tour = -1; spot(null); ic.declared = false; ic.visitedRecords = true; icAsk("declare"); return; }
+    if (i >= n.steps.length) { ic.tour = -1; spot(null); const tb = $("#thea-say"); if (tb) tb.hidden = true; icAsk("ask"); return; }
     const go = () => {
       ic.tour = i; ic.said = true;
       const st = n.steps[i];
@@ -6590,7 +6548,7 @@ window.DEMOS = (function () {
   document.addEventListener("keydown", (ev) => {
     if (!ic.open || !$("#icq") || $("#icq").hidden) return;
     if (ev.key === "Escape") { ev.preventDefault(); ev.stopImmediatePropagation(); icClose(); return; }
-    if (/^[1-4]$/.test(ev.key) && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable]"))) {
+    if (/^[1-9]$/.test(ev.key) && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable]"))) {
       const b = $$(".icq-chip")[+ev.key - 1];
       if (b) { ev.preventDefault(); ev.stopImmediatePropagation(); icPick(+ev.key - 1); }
     }

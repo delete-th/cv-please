@@ -197,7 +197,7 @@
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
       speakerHTML() + "</div>" +
       '<p class="aside" id="aside" aria-live="polite" hidden></p>' +
-      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: answer the officer\'s questions" aria-haspopup="dialog" aria-expanded="false"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: ask Thea a question" aria-haspopup="dialog" aria-expanded="false"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
   // The alarm clock: the visitor's local time in amber seven-segment digits on its blank display, drawn on a canvas
@@ -2025,15 +2025,14 @@
     const n = icNode(id); if (!n) { icClose(); return; }
     if (ic.tour >= 0) { const tb = $("#thea-say"); if (tb) tb.hidden = true; }
     ic.node = n; ic.tour = -1; spot(null);
-    icShow(n.q, n.a.map((a) => a.t));
+    icShow(n.q || "", n.a.map((a) => a.t));
   }
   function icOpen() {
     if (ui.view !== "desk" || $("#intro") || editing) return;
     ic.open = true;
     if (ui.room === 1 || ui.printed) ic.visitedRecords = true;
-    // after the tour, or once they have been to the Records room, the last question; after that, a quick way around
-    const id = ic.said && ic.visitedRecords && !ic.declared ? "declare" : ic.said ? "again" : "purpose";
-    icAsk(id);
+    // the visitor's questions for Thea
+    icAsk("ask");
   }
   function icClose(keepSpot) {
     if (!ic.open && !$("#icq")) return;
@@ -2050,12 +2049,13 @@
     ic.said = true; FX.play("tap");
     if (n.id === "declare") ic.declared = true;
     if (a.next) { icAsk(a.next); return; }
-    if (a.go === "tour") { icTour(0); return; }
+    // Thea answers in her speech bubble; a plain answer leaves the questions open for another one
+    if (!a.go) { if (a.say) theaSpeak(a.say, 7000); const c = $$(".icq-chip")[i]; if (c) c.focus({ preventScroll: true }); return; }
+    if (a.go === "tour") { if (a.say) theaSpeak(a.say); setTimeout(() => { if (ic.open) icTour(0); }, reduced() ? 0 : 900); return; }
     if (a.go === "close") { icClose(); return; }
-    // a short reply from Thea in her speech bubble, then off they go
     icClose(true);
-    if (a.say) theaSpeak(a.say, 3200);
     icGo(a.go);
+    if (a.say) setTimeout(() => theaSpeak(a.say, 3600), 30);
   }
   function icGo(go) {
     const back = (fn) => { if (ui.wall) { closeWall(); setTimeout(fn, reduced() ? 0 : 640); } else fn(); };
@@ -2107,7 +2107,7 @@
   }
   function icTour(i) {
     const n = icNode("tour"); if (!n) { icClose(); return; }
-    if (i >= n.steps.length) { ic.tour = -1; spot(null); ic.declared = false; ic.visitedRecords = true; icAsk("declare"); return; }
+    if (i >= n.steps.length) { ic.tour = -1; spot(null); const tb = $("#thea-say"); if (tb) tb.hidden = true; icAsk("ask"); return; }
     const go = () => {
       ic.tour = i; ic.said = true;
       const st = n.steps[i];
@@ -2146,7 +2146,7 @@
   document.addEventListener("keydown", (ev) => {
     if (!ic.open || !$("#icq") || $("#icq").hidden) return;
     if (ev.key === "Escape") { ev.preventDefault(); ev.stopImmediatePropagation(); icClose(); return; }
-    if (/^[1-4]$/.test(ev.key) && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable]"))) {
+    if (/^[1-9]$/.test(ev.key) && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable]"))) {
       const b = $$(".icq-chip")[+ev.key - 1];
       if (b) { ev.preventDefault(); ev.stopImmediatePropagation(); icPick(+ev.key - 1); }
     }
