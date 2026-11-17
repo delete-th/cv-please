@@ -2228,6 +2228,22 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 #desk .sticker[data-sticker="mug"] { z-index: 10; }
 .wb-steps { column-gap: 4px; } .wb-step { gap: 5px; padding-inline: 0; } .wb-num { width: 1.35em; height: 1.35em; }
 .wb-pin { right: calc(var(--k) * 5px - 120px); }
+
+/* ---------- the ID card: card stock with rounded corners, a green band, a faint security pattern,
+   a framed photo with a ghost copy, a gold seal and a strip along the foot ---------- */
+.p-id { border: 2px solid var(--ink); border-radius: 14px; overflow: hidden;
+  background-color: var(--field);
+  background-image:
+    repeating-radial-gradient(circle at 78% 60%, transparent 0 9px, color-mix(in srgb, var(--stamp-green) 9%, transparent) 9px 10px),
+    repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--cover-ink) 22%, transparent) 6px 7px); }
+.p-id .pad { position: relative; padding: 0 16px 30px; }
+.p-id .doc-title { margin: 0 -16px 12px; padding: 9px 16px 8px; background: var(--cover); color: var(--cover-ink); border-bottom: 3px solid var(--stamp-red); }
+.p-id .id-photo { padding: 3px; background: var(--field); border: 2px solid var(--ink); border-radius: 3px; box-shadow: 2px 2px 0 color-mix(in srgb, var(--ink) 25%, transparent); line-height: 0; }
+.p-id .fields { position: relative; z-index: 1; }
+.id-ghost { position: absolute; right: 12px; bottom: 26px; opacity: 0.16; filter: grayscale(1); line-height: 0; pointer-events: none; }
+.id-seal { position: absolute; right: 14px; top: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--gold-dark); box-shadow: inset 0 0 0 3px var(--cover-ink), inset 0 0 0 5px var(--gold-dark), 0 0 0 2px var(--cover-edge); }
+.id-strip { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; background: repeating-linear-gradient(90deg, var(--ink-soft) 0 2px, transparent 2px 4px, var(--ink-soft) 4px 5px, transparent 5px 9px) 16px 5px / calc(100% - 32px) 8px no-repeat, var(--paper-deep); border-top: 1px solid var(--rule); }
+.p-id.held, .p-id:hover { border-radius: 14px; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -3588,7 +3604,7 @@ window.ART = {
 "thea-hold": {
 "w": 57,
 "h": 79,
-"src": "data:image/png;base64,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"
+"src": "data:image/png;base64,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"
 },
 "thea-push": {
 "w": 57,
@@ -3608,7 +3624,7 @@ window.ART = {
 "tray-passport": {
 "w": 27,
 "h": 19,
-"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAATCAYAAABhh3Y4AAABUUlEQVR4nL2VMU/CQBiGn2I3jRiHMjRcSIdGR2LCqj/AwZWJROMPYIA/4UiYjKP+AhNXWE2II4aBkCO3dGoNDCQmdcAWpK2Ccr5Le70v33P39s2dMduZASDyIkSTZCANADMCtdpNhqOxFpi4EaEMpGFGH4ajMfcPTwB4yseyD/4M8ZRPq92Mx7m0om2A0pQK26aWf41W2KpDOZEXYb1RxSkVtQCdUpF6o4rIizDema4kLvc1s4o85bO7nzmdqenbO7CwsNPtcXZ6soA5pWJiZ+WKy+B1yN6xWBs06UvKFRcApbzEfOrSbdvKbHh7dR6/X989ZtbZtpUAbuzTd4Cf9AXmKT+2IdKkL3/dHOZ2RkmPYZ1uL1HoHjkbNV1+QvLYM2Eez8vaBdQ2W/W6isJnFA4L4ap1OvTyPCAnA2mkxXTbIPg8Gz3la4XB/AI1/vOm/gDJRXovBDuinQAAAABJRU5ErkJggg=="
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAATCAYAAABhh3Y4AAABQUlEQVR4XmP8yfyTAQTk+OX+gxk0AI8+PmIEGcsCs2jy1DKGew8e08AqBga5brn/IAvBloEAyKKly7aD2a+efmAQkxag2GKQOSBPwAATNhOpYRE2APcZLvD18xecctgANy8PijBy1BC0DBynDvpEWfjowEUUdeghxAJKhYWlkQxKCrI4DXz38j2KXJWHGEPbjlc41SMDkLkg80GJBB5npKZEkIXEAGRzsSYQWIoEpSZsAJ+vQHqQ9R04eBY1NWILQkMzNTDGBXBZiE8f1gQiLY0aRF+uP8JpKS4AMuPpU9R4JZga1TSUSLYIF0CJM1BYo/uKUgDyHSya4D5DjkhyAHqQwRIZcl4DWwZKnknxAQwM8eRYQxjAkj+juJD4f3ypjlrg/KlbDEygoh9bEFATgCwCAXACwZV5qQlAnmKkZ00NAHvnfm3kkohRAAAAAElFTkSuQmCC"
 },
 "wall-strip-fill": {
 "w": 1,
@@ -4465,6 +4481,7 @@ window.DEMOS = (function () {
     const p = state.profile;
     return '<div class="pad stampable" data-stamp="id"><p class="doc-title">Identity card</p><div class="id-body"><div class="id-photo">' + SPR.applicant("thea", 2, portraitAlt) +
       '</div><dl class="fields">' + field("Name", p.name) + field("Nationality", p.nationality) + field("Based in", p.basedIn) + field("Occupation", p.occupation) + "</dl></div>" +
+      '<span class="id-ghost" aria-hidden="true">' + SPR.applicant("thea", 1, "") + '</span><span class="id-seal" aria-hidden="true"></span><span class="id-strip" aria-hidden="true"></span>' +
       '<div class="stamp-box ghost' + (ui.inked.id ? " inked" : "") + '" aria-hidden="true"></div><div class="marks" data-marks="id"></div></div>';
   }
   // A landscape certificate: crest watermark, gold seal, red ribbon, a double rule, and the wording of a real diploma.

@@ -55,6 +55,7 @@
     const p = state.profile;
     return '<div class="pad stampable" data-stamp="id"><p class="doc-title">Identity card</p><div class="id-body"><div class="id-photo">' + SPR.applicant("thea", 2, portraitAlt) +
       '</div><dl class="fields">' + field("Name", p.name) + field("Nationality", p.nationality) + field("Based in", p.basedIn) + field("Occupation", p.occupation) + "</dl></div>" +
+      '<span class="id-ghost" aria-hidden="true">' + SPR.applicant("thea", 1, "") + '</span><span class="id-seal" aria-hidden="true"></span><span class="id-strip" aria-hidden="true"></span>' +
       '<div class="stamp-box ghost' + (ui.inked.id ? " inked" : "") + '" aria-hidden="true"></div><div class="marks" data-marks="id"></div></div>';
   }
   // A landscape certificate: crest watermark, gold seal, red ribbon, a double rule, and the wording of a real diploma.

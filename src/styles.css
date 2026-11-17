@@ -2224,3 +2224,19 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 #desk .sticker[data-sticker="mug"] { z-index: 10; }
 .wb-steps { column-gap: 4px; } .wb-step { gap: 5px; padding-inline: 0; } .wb-num { width: 1.35em; height: 1.35em; }
 .wb-pin { right: calc(var(--k) * 5px - 120px); }
+
+/* ---------- the ID card: card stock with rounded corners, a green band, a faint security pattern,
+   a framed photo with a ghost copy, a gold seal and a strip along the foot ---------- */
+.p-id { border: 2px solid var(--ink); border-radius: 14px; overflow: hidden;
+  background-color: var(--field);
+  background-image:
+    repeating-radial-gradient(circle at 78% 60%, transparent 0 9px, color-mix(in srgb, var(--stamp-green) 9%, transparent) 9px 10px),
+    repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--cover-ink) 22%, transparent) 6px 7px); }
+.p-id .pad { position: relative; padding: 0 16px 30px; }
+.p-id .doc-title { margin: 0 -16px 12px; padding: 9px 16px 8px; background: var(--cover); color: var(--cover-ink); border-bottom: 3px solid var(--stamp-red); }
+.p-id .id-photo { padding: 3px; background: var(--field); border: 2px solid var(--ink); border-radius: 3px; box-shadow: 2px 2px 0 color-mix(in srgb, var(--ink) 25%, transparent); line-height: 0; }
+.p-id .fields { position: relative; z-index: 1; }
+.id-ghost { position: absolute; right: 12px; bottom: 26px; opacity: 0.16; filter: grayscale(1); line-height: 0; pointer-events: none; }
+.id-seal { position: absolute; right: 14px; top: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--gold-dark); box-shadow: inset 0 0 0 3px var(--cover-ink), inset 0 0 0 5px var(--gold-dark), 0 0 0 2px var(--cover-edge); }
+.id-strip { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; background: repeating-linear-gradient(90deg, var(--ink-soft) 0 2px, transparent 2px 4px, var(--ink-soft) 4px 5px, transparent 5px 9px) 16px 5px / calc(100% - 32px) 8px no-repeat, var(--paper-deep); border-top: 1px solid var(--rule); }
+.p-id.held, .p-id:hover { border-radius: 14px; }
