@@ -1560,7 +1560,8 @@
     const c = $("#cm-content");
     c.style.transform = ""; c.style.width = w + "px"; c.style.height = "";
     const k = Math.min(1, h / c.scrollHeight);
-    if (k < 1) { c.style.width = w / k + "px"; const k2 = Math.min(1, h / c.scrollHeight); c.style.transform = "scale(" + k2 + ")"; c.style.height = h / k2 + "px"; }
+    // shrink to fit the height, with the width widened by the same amount so it still fills the screen exactly
+    if (k < 1) { c.style.width = w / k + "px"; c.style.transform = "scale(" + k + ")"; c.style.height = h / k + "px"; }
     else c.style.height = h + "px";
   }
   function openBrowser() {
