@@ -1674,7 +1674,8 @@
     const img = $(".wk-thea", el), tray = $(".wk-tray", el), call = $(".wk-call", el);
     // her hair top sits about 8% of the glass height under its top edge; the held passport (her art rows 50 to 66)
     // then ends a little over 2 scene pixels above the counter's top edge
-    const top = Math.round(9 * S), cx = 56 * S;
+    // she stands low enough that the bottom edge of every frame (her art row 66) is hidden behind the counter top (scene row 56)
+    const top = Math.round(56 * S - 66 * T), cx = 56 * S;
     const show = (name, x) => {
       const sp = ART[name]; img.src = sp.src; img.width = sp.w * T; img.height = sp.h * T;
       img.style.left = Math.round(x) + "px"; img.style.top = top + "px"; img.hidden = false;
