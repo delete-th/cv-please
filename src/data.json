@@ -500,5 +500,127 @@
         "text": "Scure: changed features after user testing and advisor feedback"
       }
     ]
-  }
+  },
+  "intercom": [
+    {
+      "id": "purpose",
+      "q": "Purpose of your visit?",
+      "a": [
+        {
+          "t": "Hiring",
+          "next": "duration"
+        },
+        {
+          "t": "Reviewing my work",
+          "say": "My process is on the wall. Look up.",
+          "go": "wall"
+        },
+        {
+          "t": "Just curious",
+          "next": "tour-offer"
+        },
+        {
+          "t": "How do I get around?",
+          "go": "tour"
+        }
+      ]
+    },
+    {
+      "id": "duration",
+      "q": "Duration of stay?",
+      "a": [
+        {
+          "t": "One minute",
+          "say": "Understood. Printing my record.",
+          "go": "record"
+        },
+        {
+          "t": "Long enough to dig in",
+          "say": "Then start with the files.",
+          "go": "files"
+        }
+      ]
+    },
+    {
+      "id": "tour-offer",
+      "q": "Want the tour?",
+      "a": [
+        {
+          "t": "Yes",
+          "go": "tour"
+        },
+        {
+          "t": "No thanks",
+          "go": "close"
+        }
+      ]
+    },
+    {
+      "id": "declare",
+      "q": "Anything to declare?",
+      "a": [
+        {
+          "t": "I'd like to talk",
+          "go": "contact"
+        },
+        {
+          "t": "No, carry on",
+          "go": "close"
+        }
+      ]
+    },
+    {
+      "id": "again",
+      "q": "Back again? Where to?",
+      "a": [
+        {
+          "t": "Projects",
+          "go": "files"
+        },
+        {
+          "t": "Whiteboard",
+          "go": "wall"
+        },
+        {
+          "t": "Record",
+          "go": "record"
+        },
+        {
+          "t": "Tour",
+          "go": "tour"
+        }
+      ]
+    },
+    {
+      "id": "tour",
+      "next": "Next",
+      "skip": "Skip tour",
+      "steps": [
+        {
+          "at": "passport",
+          "say": "My papers. Open them and stamp them if you like."
+        },
+        {
+          "at": "files",
+          "say": "Case files. One per project. Pull one out to read it."
+        },
+        {
+          "at": "drawers",
+          "say": "Skills in one, my things in the other."
+        },
+        {
+          "at": "up",
+          "say": "My whiteboard is up there. How I work, solo and as a lead."
+        },
+        {
+          "at": "printer",
+          "say": "The 60-second version, printed."
+        },
+        {
+          "at": "stamps",
+          "say": "Approve or deny. Your call."
+        }
+      ]
+    }
+  ]
 }

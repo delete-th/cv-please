@@ -196,7 +196,7 @@
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
       speakerHTML() + "</div>" +
       '<p class="aside" id="aside" aria-live="polite" hidden></p>' +
-      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: answer the officer\'s questions" aria-haspopup="dialog" aria-expanded="false"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
   // The alarm clock: the visitor's local time in amber seven-segment digits on its blank display, drawn on a canvas
@@ -357,7 +357,8 @@
       '<button class="stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("pillstamp", 2) + "<span>Stamps</span>" +
       '<span class="caret" aria-hidden="true">' + SPR.draw("caretup", 2) + SPR.draw("caretdown", 2) + "</span></button></div>" +
       '<nav class="pill" id="pill" aria-label="Areas"><button data-act="step" data-dir="-1" aria-label="Previous area">' + SPR.draw("left", PX) +
-      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav></div>";
+      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button>" +
+      '<button class="pill-down" data-act="wall-down" aria-label="Back down to the desk">' + SPR.draw("caretdown", PX) + "</button></nav></div>";
   }
 
   // ----- scroll scene: the booth builds, then the file unpacks -----
@@ -437,11 +438,15 @@
   }
   function placeFurniture() {
     const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
+    ui.layoutH = $("#desk").clientHeight;
     box.style.left = "16px"; box.style.top = Math.max(8, u.bottom - box.offsetHeight) + "px";
     const front = $("#filebox-front"); front.style.left = box.style.left; front.style.top = box.style.top;
     // the lamp is anchored to the desk's top-right corner in CSS; keep the printer below its arm and clear of the Stamps tab
-    const right = u.w - 14, below = lamp.offsetHeight + 8;
+    const right = u.w - EDGE, below = lamp.offsetHeight + 8;
     pr.style.left = right - pr.offsetWidth + "px"; pr.style.top = Math.min(below, u.bottom - pr.offsetHeight) + "px";
+    computeFit();
+    const plan = colPlan();
+    if (plan) { pr.style.left = Math.round(Math.max(plan.right + GAP, plan.lampLeft - GAP - pr.offsetWidth)) + "px"; pr.style.top = u.top + "px"; }
     env.style.left = Math.round(u.w * 0.3) + "px"; env.style.top = u.top + 16 + "px";
     $("#unpack-hint").style.left = Math.round(u.w * 0.3) + env.offsetWidth + 24 + "px";
   }
@@ -454,9 +459,25 @@
     ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.75, 1);
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
+  const EDGE = 24, GAP = 16;
+  function colPlan() {
+    const dk = $("#desk"), lamp = $("#lamp");
+    if (isPhone() || !dk || dk.classList.contains("short") || !lamp) return null;
+    const u = usable(), s = ui.fit, e = ["id", "diploma", "honours"].map(paperEl);
+    if (e.some((x) => !x)) return null;
+    // a little extra for each paper's tilt
+    const w = e.map((x) => x.offsetWidth * s + 6), h = e.map((x) => x.offsetHeight * s + 6);
+    const hx = u.w - EDGE - w[2], hy = lamp.offsetTop + lamp.offsetHeight + 12, x0 = boxRect().w + 26;
+    const spare = hx - GAP - (x0 + w[0] + GAP + w[1]);
+    if (hy + h[2] > u.bottom || spare < 0) return null;
+    const g = GAP + Math.min(spare / 2, 28);
+    return { id: [x0, u.top + 8], diploma: [x0 + w[0] + g, u.top + 16], honours: [hx, hy], right: x0 + w[0] + g + w[1], lampLeft: lamp.offsetLeft };
+  }
   function landing(id, el) {
     const u = usable(), i = caseIndex(id), s = ui.fit;
     if (i >= 0) return slotPos(i);
+    const plan = colPlan();
+    if (plan && plan[id]) return [Math.round(plan[id][0]), Math.round(plan[id][1])];
     const widths = ["id", "diploma", "honours"].map((k) => { const e = paperEl(k); return (e ? e.offsetWidth : 300) * s; });
     // papers may overlap only by their blank margins: the ID card's right edge, the diploma's side margins
     const ov = [54, 36], left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] - ov[0] + widths[1] - ov[1] + widths[2];
@@ -492,10 +513,10 @@
     const w = pad.offsetWidth || 99, h = pad.offsetHeight || 99, box = boxRect();
     const rect = (q) => { const e = $(q); return e && !e.hidden ? { x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight } : null; };
     const taken = [box, rect("#lamp"), rect("#printer"), rect('.sticker[data-sticker="mug"]'), rect('.sticker[data-sticker="plant"]')].filter(Boolean)
-      .concat(paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open) return null; const at = st.x != null ? [st.x, st.y] : landing(id, e); return { x: at[0], y: at[1], w: e.offsetWidth, h: e.offsetHeight }; }).filter(Boolean));
-    const free = (x, y) => y >= u.top && y + h <= u.bottom && x >= 0 && x + w <= u.w && !taken.some((r) => x < r.x + r.w + 4 && r.x < x + w + 4 && y < r.y + r.h + 4 && r.y < y + h + 4);
+      .concat(paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open) return null; const at = st.x != null ? [st.x, st.y] : landing(id, e); return { x: at[0], y: at[1], w: e.offsetWidth * ui.fit + 8, h: e.offsetHeight * ui.fit + 8 }; }).filter(Boolean));
+    const free = (x, y) => y >= u.top && y + h <= u.bottom && x >= 0 && x + w <= u.w - EDGE && !taken.some((r) => x < r.x + r.w + 12 && r.x < x + w + 12 && y < r.y + r.h + 12 && r.y < y + h + 12);
     const tries = [];
-    for (let y = u.bottom - h; y >= u.top; y -= 12) for (let x = u.w - w - 12; x >= 0; x -= 12) tries.push([x, y]);
+    for (let y = u.bottom - h; y >= u.top; y -= 12) for (let x = u.w - w - EDGE; x >= 0; x -= 12) tries.push([x, y]);
     const spot = tries.find((t) => free(t[0], t[1]));
     const home = spot ? $("#desk") : $("#record");
     // on a desk too short for it, the pad waits in the Records room, left of the record
@@ -505,20 +526,25 @@
   }
   function placeStickers() {
     const u = usable(), w = u.w, pr = $("#printer"), box = boxRect(), mugEl = $('.sticker[data-sticker="mug"]');
-    const mugBelow = pr.offsetTop + pr.offsetHeight + 8 + mugEl.offsetHeight <= u.bottom;
+    const mugBelow = pr.offsetTop + pr.offsetHeight + 8 + mugEl.offsetHeight <= u.bottom, plan = colPlan();
+    const paperBoxes = paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open || st.away || st.x == null) return null; return { x: st.x, y: st.y, w: e.offsetWidth * ui.fit + 8, h: e.offsetHeight * ui.fit + 8 }; }).filter(Boolean);
+    const clear = (x, y, ww, hh) => !paperBoxes.some((r) => x < r.x + r.w && r.x < x + ww && y < r.y + r.h && r.y < y + hh);
+    let mugAt = mugBelow ? [pr.offsetLeft + pr.offsetWidth - mugEl.offsetWidth, pr.offsetTop + pr.offsetHeight + 8] : [pr.offsetLeft - mugEl.offsetWidth - 12, pr.offsetTop + 6];
+    if (plan) mugAt = [plan.honours[0] - 28 - mugEl.offsetWidth, u.bottom - mugEl.offsetHeight - 10];
+    mugEl.hidden = !ui.stickers.mug && !clear(mugAt[0], mugAt[1], mugEl.offsetWidth, mugEl.offsetHeight);
     const spots = {
-      mug: mugBelow ? [pr.offsetLeft + pr.offsetWidth - mugEl.offsetWidth, pr.offsetTop + pr.offsetHeight + 8] : [pr.offsetLeft - mugEl.offsetWidth - 12, pr.offsetTop + 6],
+      mug: mugAt,
       pen: [box.x + box.w + 18, u.bottom - 130],
     };
     $$(".sticker", $("#desk")).forEach((el) => {
       const id = el.dataset.sticker;
       if (id === "plant") return;
       const p = ui.stickers[id] || spots[id];
-      setPos(el, clamp(p[0], 0, w - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
+      setPos(el, clamp(p[0], 0, w - EDGE - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
     });
     placePlant(); placeNotepad();
     const mug = mugEl, ring = $(".cup-ring");
-    if (ring && mug) setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40));
+    if (ring && mug) { ring.hidden = mug.hidden; setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40)); }
   }
   // The plant goes wherever it fits without touching the box, a paper or another object; on a desk too short for it, it stays off.
   function placePlant() {
@@ -1602,45 +1628,54 @@
     lamp.classList.toggle("faded", over);
   }
 
-  // ----- the walk-in: from inside the booth, Thea walks up, turns to the glass and hands her passport through the tray -----
-  // The booth scene is 111x71 art pixels: glass x 10 to 100, y 5 to 55; the counter below; the tray slot under the glass.
+  // ----- the walk-in: from inside the booth, Thea walks up close to the glass, holds up her passport and slides it into the tray -----
+  // The booth scene is 111x71 art pixels: glass x 10 to 101, y 5 to 55; the counter below it, with the tray recess at x 38 to 73.
+  // Her frames share one aligned 57x79 canvas and are drawn at the scene's own scale, behind the counter and in front of the glass.
   let walk = null;
   function walkIn() {
     let seen = false;
     try { seen = sessionStorage.getItem("cvp-walkin") === "1"; } catch (err) { /* storage can be blocked */ }
-    if (seen || reduced() || !$("#intro")) return;
+    if (seen || !$("#intro")) return;
     try { sessionStorage.setItem("cvp-walkin", "1"); } catch (err) { /* storage can be blocked */ }
-    // the scene is drawn at twice the figure's scale (both whole numbers), so she stands at a believable size behind the glass
-    const a = ART["booth-scene"], m = clamp(Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 110) / a.h) / 2), 1, 6), k = 2 * m, P = (v) => v * k + "px";
+    const a = ART["booth-scene"], k = clamp(Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 96) / a.h)), 1, 12), P = (v) => v * k + "px";
     const el = document.createElement("div");
     el.className = "walkin"; el.id = "walkin";
-    el.innerHTML = '<div class="wk-stage" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' + SPR.art("booth-scene", k, "wk-scene", "Inside the booth, looking out through the window at the queue area") +
+    el.innerHTML = '<div class="wk-stage sky-' + dayPhase() + '" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' + SPR.art("booth-scene", k, "wk-scene", "Inside the booth, looking out through the window") +
       '<div class="wk-person"><img class="wk-thea" alt="" aria-hidden="true" draggable="false"></div>' +
-      '<span class="wk-tray" style="left:' + P(42) + ";top:" + P(52) + '">' + SPR.art("tray-closed", k, "wk-closed") + SPR.art("tray-open", k, "wk-open") + "</span></div>" +
+      '<span class="wk-tray open" style="left:' + P(42) + ";top:" + P(52) + '">' + SPR.art("tray-closed", k, "wk-closed") + SPR.art("tray-open", k, "wk-open") + "</span></div>" +
+      '<p class="sr-only" aria-live="polite">Thea walks up to the booth window and hands over her passport.</p>' +
       '<button class="btn-quiet wk-skip" data-act="walkin-skip">Skip intro</button>';
-    fixedRoot.appendChild(el);
+    fixedRoot.appendChild(el); el.style.setProperty("--wk-k", k);
     const person = $(".wk-person", el), img = $(".wk-thea", el), tray = $(".wk-tray", el);
-    const glass = "polygon(" + [[10, 5], [101, 5], [101, 56], [10, 56]].map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
-    const glassTray = "polygon(" + [[10, 5], [101, 5], [101, 56], [73, 56], [73, 71], [38, 71], [38, 56], [10, 56]].map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
-    const show = (name, x, y, clip) => {
-      const s = ART[name]; img.src = s.src; img.width = s.w * m; img.height = s.h * m;
-      img.style.left = P(x); img.style.top = P(y); img.hidden = false; person.style.clipPath = clip || glass; person.classList.toggle("front", !!clip);
+    const poly = (pts) => "polygon(" + pts.map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
+    const glass = poly([[10, 5], [102, 5], [102, 56], [10, 56]]);
+    // pushing the passport down, her hand shows in the tray recess under the glass
+    const glassTray = poly([[10, 5], [102, 5], [102, 56], [73, 56], [73, 71], [38, 71], [38, 56], [10, 56]]);
+    const Y = 0, X = 33;
+    const show = (name, x, clip) => {
+      const sp = ART[name]; img.src = sp.src; img.width = sp.w * k; img.height = sp.h * k;
+      img.style.left = P(x); img.style.top = P(Y); img.hidden = false; person.style.clipPath = clip || glass;
     };
     img.hidden = true;
     walk = { el: el, timers: [] };
     const at = (ms, fn) => walk.timers.push(setTimeout(fn, ms));
-    // walking in from the left along the pavement, feet on the line at y 53
-    // positions are in scene pixels; the figure sprites are half that size, so the walk frames are 11x21 here
-    for (let i = 0; i <= 12; i++) at(150 + i * 125, () => { show("walk-" + (i % 4), -11 + i * 5, 32); if (i % 2 === 0) FX.play("step"); });
-    at(1780, () => show("thea-turn", 49, 32));
-    // at the glass, facing you; then the passport comes up, and goes down into the tray
-    at(2100, () => show("window-0", 41.5, 22));
-    at(2500, () => { show("window-1", 41.5, 22); tray.classList.add("open"); FX.play("tap"); });
-    at(2900, () => show("window-2", 41.5, 22, glassTray));
-    at(3250, () => { show("window-0", 41.5, 22); tray.classList.remove("open"); FX.play("clunk"); });
-    // the camera tilts down from the window to the desk, where the passport lands
-    at(3500, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
-    at(4150, () => walkDone(true));
+    if (reduced()) {
+      // no walking: she is already at the window, holding up her passport, then the desk
+      show("thea-hold", X);
+      at(1000, () => walkDone(true));
+    } else {
+      // 1. the empty window for a moment; 2. she walks in from the left, two frames 140ms apart, about 1.2s to the middle of the glass
+      const x0 = 10 - 57, t0 = 300, dur = 1200;
+      for (let t = 0; t <= dur; t += 70) at(t0 + t, () => { show(Math.floor(t / 140) % 2 ? "thea-walk-1" : "thea-walk-0", Math.round(x0 + (X - x0) * Math.min(1, t / dur))); if (t % 280 === 0) FX.play("step"); });
+      // 3. turn, 4. hold up the passport, 5. slide it into the tray, which closes and slides toward you
+      at(t0 + dur + 70, () => show("thea-turn", X));
+      at(t0 + dur + 370, () => { show("thea-hold", X); FX.play("rustle"); });
+      at(t0 + dur + 970, () => show("thea-push", X, glassTray));
+      at(t0 + dur + 1270, () => { tray.classList.remove("open"); tray.classList.add("shut"); FX.play("clunk"); });
+      // 6. the camera tilts down to the desk, where the closed passport slides out of the tray
+      at(t0 + dur + 1600, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
+      at(t0 + dur + 2100, () => walkDone(true));
+    }
     document.addEventListener("keydown", walkKey, true);
     document.addEventListener("pointerdown", walkPoint, true);
   }
@@ -1674,11 +1709,11 @@
       '<div class="wb-surface"><div class="wb-head"><p class="wb-title wb-i" id="wb-title"></p><div class="wb-mags" role="group" aria-label="Switch the board">' +
       w.modes.map((md, i) => '<button class="wb-mag" data-act="wb-mode" data-m="' + md.id + '" aria-pressed="false">' + SPR.art(i ? "magnet-red" : "magnet-green", 1, "wb-mag-art") + "<span>" + esc(md.label) + "</span></button>").join("") +
       '</div></div><p class="wb-eg wb-i" id="wb-eg"></p><div class="wb-flow" id="wb-flow"></div></div>' +
-      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", 1, "wb-mk wb-mk-1") + SPR.art("marker-red", 1, "wb-mk wb-mk-2") + "</span>" +
+      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", 1, "wb-mk wb-mk-1") + SPR.art("marker-blue", 1, "wb-mk wb-mk-2") + SPR.art("marker-red", 1, "wb-mk wb-mk-3") + "</span>" +
       '<button class="wb-eraser" data-act="wb-erase" aria-label="Eraser: rub out the board. Drag it across the board, or press Enter.">' + SPR.art("eraser", 1, "wb-er-art") + "</button>" +
       w.stickies.map((st, i) => '<p class="wb-sticky wb-s' + i + '"><b>' + esc(st.label) + "</b>" + esc(st.text) + "</p>").join("") +
       '<div class="wb-card" id="wb-card" role="dialog" aria-label="Step note" hidden></div></div></div>' +
-      '<span class="wall-strip" aria-hidden="true" style="background-image: url(' + ART["wall-strip"].src + ')"></span>' +
+      '<span class="wall-strip" aria-hidden="true" style="background-image: url(' + ART["wall-strip-fill"].src + ')"></span>' +
       '<button class="wall-down" data-act="wall-down" aria-label="Back to the desk">' + SPR.draw("caretdown", 3) + "<span>Desk</span></button>";
   }
   function wallEl() {
@@ -1696,15 +1731,18 @@
   // the board at the largest whole-number scale that fits above the desk-edge strip
   function sizeWall() {
     const w = $("#wall"); if (!w) return;
-    const a = ART.whiteboard, strip = isPhone() ? 0 : 126;
-    const k = clamp(Math.floor(Math.min((window.innerWidth - (isPhone() ? 24 : 64)) / a.w, (window.innerHeight - strip - (isPhone() ? 120 : 60)) / a.h)), 3, 12);
+    const a = ART.whiteboard, ss = window.innerHeight < 760 ? 2 : 3, strip = isPhone() ? 0 : 42 * ss;
+    const k = clamp(Math.floor(Math.min((window.innerWidth - (isPhone() ? 24 : 420)) / a.w, (window.innerHeight - strip - (isPhone() ? 120 : 24)) / a.h)), 3, 12);
     const wb = $("#wb", w), img = $(".wb-art", wb);
-    w.style.setProperty("--k", k);
+    w.style.setProperty("--k", k); w.style.setProperty("--ss", ss);
     img.width = a.w * k; img.height = a.h * k;
-    $$(".wb-mag-art, .wb-mk, .wb-er-art", w).forEach((im) => { const n = [...im.classList].find((c) => c.startsWith("art-")).slice(4), s = ART[n]; im.width = s.w * k; im.height = s.h * k; });
+    $$(".wb-mk, .wb-er-art", w).forEach((im) => { const n = [...im.classList].find((c) => c.startsWith("art-")).slice(4), s = ART[n]; im.width = s.w * k; im.height = s.h * k; });
+    const mk = clamp(Math.round(27 / ART["magnet-green"].w), 2, 4);
+    w.style.setProperty("--mk", mk);
+    $$(".wb-mag-art", w).forEach((im) => { im.width = ART["magnet-green"].w * mk; im.height = ART["magnet-green"].h * mk; });
     wb.style.width = a.w * k + "px"; wb.style.height = a.h * k + "px";
     wb.style.left = Math.round((window.innerWidth - a.w * k) / 2) + "px";
-    wb.style.top = Math.max(16, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 20) - a.h * k) / 2)) + "px";
+    wb.style.top = Math.max(8, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 0) - a.h * k) / 2)) + "px";
   }
   function openWall() {
     if (ui.wall || ui.view !== "desk" || $("#intro") || editing) return;
@@ -1845,12 +1883,11 @@
   }
 
   // ----- pill nav -----
-  const AREAS = [["desk", "Desk"], ["wall", "Whiteboard"], ["record", "Records"]];
+  const AREAS = [["desk", "Desk"], ["record", "Records"]];
   function currentArea() {
-    if (ui.view !== "desk" || !$("#scene")) return 0;
-    if (ui.wall) return 1;
-    if (!isPhone()) return ui.room === 1 ? 2 : 0;
-    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 2 : 0;
+    if (ui.view !== "desk" || !$("#scene") || ui.wall) return 0;
+    if (!isPhone()) return ui.room === 1 ? 1 : 0;
+    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 1 : 0;
   }
   // The camera pans sideways between the rooms; with reduced motion they swap with a quick fade.
   function goRoom(i, quiet) {
@@ -1868,7 +1905,6 @@
   }
   function goArea(i) {
     const id = AREAS[i][0];
-    if (id === "wall") { openWall(); return; }
     if (ui.wall) { closeWall(); if (id !== "desk") setTimeout(() => goArea(i), reduced() ? 0 : 640); return; }
     if (id === "desk") { goRoom(0); return; }
     // the record room: print first if nothing is printed yet, otherwise just go there
@@ -1877,7 +1913,10 @@
     if (ui.room !== 0 && !isPhone()) goRoom(0, true);
     printRecord();
   }
-  function updatePill() { const n = $("#area-name"); if (n) n.textContent = AREAS[currentArea()][1]; }
+  function updatePill() {
+    const n = $("#area-name"); if (n) n.textContent = ui.wall ? "Whiteboard" : AREAS[currentArea()][1];
+    const pl = $("#pill"); if (pl) pl.classList.toggle("up", !!ui.wall);
+  }
 
   // the note goes out through the visitor's own mail app; nothing is stored or sent by the page
   function noteLink() {
@@ -1919,6 +1958,173 @@
     clearTimeout(asideTimer);
     asideTimer = setTimeout(() => { el.hidden = true; }, 5000);
   }
+
+  // ----- the intercom: Thea, the officer, asks the visitor a few questions; each answer takes them somewhere useful -----
+  // Every line lives in data.json under "intercom". Answers are kept for this visit only.
+  const ic = { open: false, node: null, tour: -1, said: false, visitedRecords: false, declared: false, timer: null, spotEl: null };
+  const icNode = (id) => (state.intercom || []).find((n) => n.id === id);
+  function icEl() {
+    let el = $("#icq");
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = "icq"; el.className = "icq"; el.hidden = true;
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Intercom"); el.setAttribute("aria-describedby", "icq-q");
+    el.innerHTML = '<p class="icq-q" id="icq-q" aria-live="polite"></p><div class="icq-chips" id="icq-chips" role="group" aria-label="Answers"></div>' +
+      '<button class="icq-x" data-act="ic-close" aria-label="Close the intercom">' + SPR.draw("xmark", 2) + "</button>";
+    fixedRoot.appendChild(el);
+    return el;
+  }
+  // the scrap comes out of the booth window, at its lower right
+  function icPlace() {
+    const el = $("#icq"), w = $(".window-wrap") || $("#booth");
+    if (!el || !w) return;
+    const r = rectOf(w), vw = window.innerWidth;
+    if (isPhone()) { el.style.left = "12px"; el.style.right = "12px"; el.style.top = Math.max(12, Math.min(window.innerHeight - el.offsetHeight - 90, r.bottom - 24)) + "px"; return; }
+    el.style.right = "auto";
+    // under the window, clear of the name, the shortcuts and the intercom button
+    const icb = rectOf($("#intercom") || w);
+    el.style.left = Math.round(Math.min(vw - el.offsetWidth - 24, Math.max(r.left + 24, icb.right + 12))) + "px";
+    el.style.top = Math.round(r.bottom + 10) + "px";
+  }
+  function icShow(text, chips) {
+    const el = icEl();
+    clearTimeout(ic.timer);
+    $("#icq-q", el).textContent = text;
+    $("#icq-chips", el).innerHTML = (chips || []).map((c, i) => '<button class="icq-chip" data-act="ic-pick" data-i="' + i + '"><span class="icq-n" aria-hidden="true">' + (i + 1) + "</span>" + esc(c) + "</button>").join("");
+    // a one-frame paper swap
+    el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap");
+    if (el.hidden) { el.hidden = false; el.classList.add("pop"); setTimeout(() => el.classList.remove("pop"), 160); }
+    icPlace();
+    const b = $(".ic-btn"); if (b) b.setAttribute("aria-expanded", "true");
+    const first = $(".icq-chip", el) || $(".icq-x", el);
+    if (first) first.focus({ preventScroll: true });
+  }
+  function icAsk(id) {
+    const n = icNode(id); if (!n) { icClose(); return; }
+    ic.node = n; ic.tour = -1; spot(null);
+    icShow(n.q, n.a.map((a) => a.t));
+  }
+  function icOpen() {
+    if (ui.view !== "desk" || $("#intro") || editing) return;
+    ic.open = true;
+    if (ui.room === 1 || ui.printed) ic.visitedRecords = true;
+    // after the tour, or once they have been to the Records room, the last question; after that, a quick way around
+    const id = ic.said && ic.visitedRecords && !ic.declared ? "declare" : ic.said ? "again" : "purpose";
+    icAsk(id);
+  }
+  function icClose(keepSpot) {
+    if (!ic.open && !$("#icq")) return;
+    ic.open = false; ic.tour = -1; clearTimeout(ic.timer);
+    if (!keepSpot) spot(null);
+    const el = $("#icq"); if (el) el.hidden = true;
+    const b = $(".ic-btn"); if (b) { b.setAttribute("aria-expanded", "false"); if (el && el.contains(document.activeElement)) b.focus({ preventScroll: true }); }
+  }
+  function icPick(i) {
+    if (ic.tour >= 0) { if (i === 0) icTour(ic.tour + 1); else icClose(); return; }
+    const n = ic.node, a = n && n.a[i];
+    if (!a) return;
+    ic.said = true; FX.play("tap");
+    if (n.id === "declare") ic.declared = true;
+    if (a.next) { icAsk(a.next); return; }
+    if (a.go === "tour") { icTour(0); return; }
+    if (a.go === "close") { icClose(); return; }
+    // a short reply from Thea, then off they go
+    if (a.say) { icShow(a.say, []); ic.timer = setTimeout(() => icClose(true), 2600); } else icClose(true);
+    icGo(a.go);
+  }
+  function icGo(go) {
+    const back = (fn) => { if (ui.wall) { closeWall(); setTimeout(fn, reduced() ? 0 : 640); } else fn(); };
+    if (go === "wall") { openWall(); return; }
+    if (go === "record") { back(() => { ic.visitedRecords = true; goArea(1); }); return; }
+    if (go === "files") {
+      back(() => {
+        if (ui.room !== 0 && !isPhone()) goRoom(0, true);
+        setTimeout(() => {
+          spot($("#filebox"), $("#filebox-front"));
+          ic.timer = setTimeout(() => { spot($("#dw-skills .dw-front") || $(".dw-front")); ic.timer = setTimeout(() => spot(null), 2200); }, 2200);
+          const tab = $(".p-case.filed .folder-tab"); if (tab) tab.focus({ preventScroll: true });
+        }, reduced() ? 0 : 480);
+      });
+      return;
+    }
+    if (go === "contact") {
+      back(() => {
+        ic.visitedRecords = true; goArea(1);
+        // once the record is printed and the room is in view, lift the slip so it can be torn off
+        let tries = 0;
+        const wait = setInterval(() => {
+          tries++;
+          const sl = $("#slip");
+          if ((ui.printed && (ui.room === 1 || isPhone()) && sl) || tries > 60) {
+            clearInterval(wait);
+            if (!sl) return;
+            setTimeout(() => {
+            sl.scrollIntoView({ block: "center", behavior: behavior() });
+            sl.classList.add("lifted"); FX.play("lift");
+            setTimeout(() => sl.classList.remove("lifted"), 2400);
+            const t = $("#perf") || sl; t.focus({ preventScroll: true });
+            }, reduced() ? 0 : 600);
+          }
+        }, 250);
+      });
+    }
+  }
+  // the tour: one thing at a time is spotlit, with a line from Thea
+  function tourTarget(at) {
+    if (at === "passport") return [$('.booth-links [data-act="passport"]')];
+    if (at === "files") return [$("#filebox"), $("#filebox-front")];
+    if (at === "drawers") return $$(".dw .dw-front");
+    if (at === "up") return [$(".to-wall")];
+    if (at === "printer") return [$("#printer")];
+    if (at === "stamps") return [$("#stampdock")];
+    return [];
+  }
+  function icTour(i) {
+    const n = icNode("tour"); if (!n) { icClose(); return; }
+    if (i >= n.steps.length) { ic.tour = -1; spot(null); ic.declared = false; ic.visitedRecords = true; icAsk("declare"); return; }
+    const go = () => {
+      ic.tour = i; ic.said = true;
+      const st = n.steps[i];
+      spot.apply(null, tourTarget(st.at));
+      icShow(st.say, [n.next || "Next", n.skip || "Skip tour"]);
+      ic.tour = i;
+    };
+    if (ui.wall) { closeWall(); setTimeout(go, reduced() ? 0 : 640); }
+    else if (ui.room !== 0 && !isPhone()) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 480); }
+    else go();
+  }
+  // the spotlight: the rest of the screen dims one step; it never takes a click
+  function spot() {
+    const els = [].slice.call(arguments).filter((e) => e && !e.hidden && e.offsetParent !== null);
+    let sp = $("#spot");
+    if (!els.length) { if (sp) sp.hidden = true; ic.spotEls = []; return; }
+    if (!sp) { sp = document.createElement("div"); sp.id = "spot"; sp.className = "spot"; sp.setAttribute("aria-hidden", "true"); fixedRoot.appendChild(sp); }
+    ic.spotEls = els;
+    // a drawer front only counts where it shows (the fronts are cropped to fit the desk edge)
+    const rs = els.map((e) => { const r = rectOf(e), w = e.closest(".dw"), cr = e.classList.contains("dw-front") && w ? parseFloat(getComputedStyle(w).getPropertyValue("--crop")) || 0 : 0; return { left: r.left + cr, right: r.right - cr, top: r.top, bottom: r.bottom }; }), pad = 10;
+    const l = Math.min.apply(null, rs.map((r) => r.left)) - pad, t = Math.min.apply(null, rs.map((r) => r.top)) - pad;
+    const r = Math.max.apply(null, rs.map((q) => q.right)) + pad, b = Math.max.apply(null, rs.map((q) => q.bottom)) + pad;
+    if (isPhone()) els[0].scrollIntoView({ block: "center" });
+    sp.style.left = Math.round(l) + "px"; sp.style.top = Math.round(t) + "px"; sp.style.width = Math.round(r - l) + "px"; sp.style.height = Math.round(b - t) + "px";
+    sp.hidden = false;
+  }
+  // a click on the spotlit thing moves the tour on (after it does its own job); a click anywhere else outside the scrap closes it
+  document.addEventListener("pointerdown", (ev) => {
+    if (!ic.open || !$("#icq") || $("#icq").hidden) return;
+    const t = ev.target;
+    if (t.closest && (t.closest("#icq") || t.closest(".ic-btn"))) return;
+    if (ic.tour >= 0 && ic.spotEls && ic.spotEls.some((e) => e.contains(t))) { const next = ic.tour + 1; setTimeout(() => { if (ic.open) icTour(next); }, 60); return; }
+    icClose(ic.tour < 0);
+  }, true);
+  document.addEventListener("keydown", (ev) => {
+    if (!ic.open || !$("#icq") || $("#icq").hidden) return;
+    if (ev.key === "Escape") { ev.preventDefault(); ev.stopImmediatePropagation(); icClose(); return; }
+    if (/^[1-4]$/.test(ev.key) && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable]"))) {
+      const b = $$(".icq-chip")[+ev.key - 1];
+      if (b) { ev.preventDefault(); ev.stopImmediatePropagation(); icPick(+ev.key - 1); }
+    }
+  }, true);
+  window.addEventListener("resize", () => { if (ic.open) { icPlace(); if (ic.spotEls && ic.spotEls.length) spot.apply(null, ic.spotEls); } });
 
   // ----- list view and amend mode -----
   function f(path, ph, cls, tag) {
@@ -2235,6 +2441,7 @@
       ui.boothForced = true; ui.forced = true; ui.stagger = 0; applyScene(true);
       const dk = $("#desk"); if (dk) dk.classList.remove("slow-unpack");
       $$(".arriving").forEach((e) => e.classList.remove("arriving"));
+      setTimeout(() => { if (!isPhone() && $("#desk")) { relayout(); placeStickers(); } }, reduced() ? 0 : 700);
     };
     if (reduced()) { firstRun = { timers: [] }; finish(); return; }
     firstRun = { timers: [] };
@@ -2398,10 +2605,12 @@
       FX.play("tap");
     },
     intercom() {
+      if (ic.open) { icClose(); return; }
       FX.play("chime");
-      const trigger = AREAS[currentArea()][0] === "desk" ? "unpacked" : "record";
-      setTimeout(() => { if (!sayNow("intercom")) sayNow(trigger); }, reduced() ? 0 : 450);
+      setTimeout(() => icOpen(), reduced() ? 0 : 380);
     },
+    "ic-pick"(b) { icPick(+b.dataset.i); },
+    "ic-close"() { icClose(); },
     note() {
       const f = $("#vnote"), pad = $("#notepad"), desk = $("#desk");
       if (!f) return;
@@ -2436,7 +2645,7 @@
       setTimeout(() => sc.remove(), 1000);
     },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
-    step(b) { goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
+    step(b) { if (!ui.wall) goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
     wall() { openWall(); },
     "wall-down"() { closeWall(); },
     "wb-mode"(b) { wbMode(b.dataset.m); },
@@ -2726,7 +2935,7 @@
     const freeKey = ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"));
     if (ui.wall && (ev.key === "ArrowDown" || ev.key === "Escape")) { ev.preventDefault(); if ($(".wb-card") && !$(".wb-card").hidden) wbCard(null); else closeWall(); return; }
-    if (ev.key === "ArrowUp" && freeKey && !ui.wall && !ui.dwOpen && (isPhone() || ui.room === 0) && !$(".p-case.open")) { ev.preventDefault(); openWall(); return; }
+    if (ev.key === "ArrowUp" && freeKey && !ui.wall && !ui.dwOpen && !$(".p-case.open")) { ev.preventDefault(); openWall(); return; }
     if (ui.wall && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && freeKey) return;
     if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !isPhone() && ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
@@ -2825,7 +3034,7 @@
   document.addEventListener("pointerup", (ev) => {
     if (!swipe || ev.pointerId !== swipe.id) return;
     const dx = ev.clientX - swipe.x, dy = ev.clientY - swipe.y; swipe = null;
-    if (Math.abs(dy) > 70 && Math.abs(dx) < 50) { if (dy > 0 && !ui.wall && ui.room === 0) openWall(); else if (dy < 0 && ui.wall) closeWall(); return; }
+    if (Math.abs(dy) > 70 && Math.abs(dx) < 50) { if (dy > 0 && !ui.wall) openWall(); else if (dy < 0 && ui.wall) closeWall(); return; }
     if (!ui.wall && Math.abs(dx) > 60 && Math.abs(dy) < 50) goRoom(ui.room + (dx < 0 ? 1 : -1));
   });
   let ticking = false;
@@ -2840,6 +3049,8 @@
   }, { passive: true });
   let rz = null;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { onResize(); sizeWall(); }, 120); });
+  // the desk can also change height without a window resize (the booth settles once its fonts load): lay it out again then
+  setInterval(() => { const d = $("#desk"); if (d && !isPhone() && ui.layoutH && d.clientHeight !== ui.layoutH && !held && !document.hidden) onResize(); }, 400);
   narrow.addEventListener("change", () => { if (ui.view === "desk" && !editing) render(); });
 
 

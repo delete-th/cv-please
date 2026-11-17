@@ -2047,6 +2047,88 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .wb-flow { align-content: space-evenly; }
 @media (max-width: 820px) { .wb-box { font-size: 11px; overflow-wrap: anywhere; } .wb-title { font-size: 13px; } }
 .wb-arrow-svg.d { width: max(18px, calc(var(--k) * 3.4px)); }
+
+/* part 15: on the whiteboard the pill has no sideways arrows, just the way back down */
+.pill .pill-down { display: none; }
+.pill.up [data-act="step"] { display: none; }
+.pill.up .pill-down { display: grid; }
+
+/* part 15: the whiteboard */
+/* the desk edge: one plain column repeated, so there are no seams */
+.wall-strip { height: calc(42px * var(--ss, 3)); background-size: calc(1px * var(--ss, 3)) calc(42px * var(--ss, 3)); }
+/* the writing area stops above the eraser, and the flow sits in the middle of what is left under the title */
+.wb-surface { height: calc(50px * var(--k)); }
+.wb-flow { align-content: center; row-gap: max(4px, calc(var(--k) * 0.6px)); }
+.wb-title { font-size: max(22px, calc(var(--k) * 3.3px)); }
+.wb-box { font-size: max(20px, calc(var(--k) * 2.3px)); }
+.wb-note { font-size: max(15px, calc(var(--k) * 1.9px)); }
+.wb-eg { font-size: max(15px, calc(var(--k) * 2.1px)); }
+.wb-mag { font-size: max(16px, calc(var(--k) * 2.1px)); }
+/* magnets: small pins; the one in use is lifted one art pixel and its label underlined */
+.wb-mag[aria-pressed="false"] .wb-mag-art { translate: none; filter: drop-shadow(1px 2px 0 var(--shade-rest)); }
+.wb-mag[aria-pressed="true"] .wb-mag-art { translate: 0 calc(var(--mk, 3) * -1px); filter: drop-shadow(1px 3px 0 var(--shade-rest)); }
+.wb-mag[aria-pressed="false"] span { text-decoration: none; }
+.wb-mag:focus-visible { outline: none; }
+.wb-mag:focus-visible .wb-mag-art { filter: var(--shape-ring) drop-shadow(1px 3px 0 var(--shade-rest)); }
+.wb-mag:focus-visible span { text-decoration: underline 2px var(--ink); text-underline-offset: 3px; }
+.wb-mag[aria-pressed="true"]:focus-visible span { text-decoration-color: var(--stamp-red); text-decoration-thickness: 3px; }
+/* the tray: three markers lying one behind the other, the eraser at the right end */
+.wb-tray { left: calc(18px * var(--k)); top: calc(67px * var(--k)); }
+.wb-mk-1 { left: 0; top: 0; }
+.wb-mk-2 { left: calc(3px * var(--k)); top: calc(2px * var(--k)); }
+.wb-mk-3 { left: calc(6px * var(--k)); top: calc(4px * var(--k)); }
+.wb-eraser { left: calc(60px * var(--k)); top: calc(62px * var(--k)); z-index: 1; }
+/* sticky notes on the wall, just catching the frame: one at the top-left corner, two down the right edge */
+.wb-sticky { width: 168px; }
+.wb-s1 { left: calc(var(--k) * 7px - 160px); right: auto; top: auto; bottom: calc(100% - var(--k) * 12px - 6px); rotate: -3deg; }
+.wb-s0 { left: calc(var(--k) * 98px - 6px); top: 16%; rotate: 2.5deg; }
+.wb-s2 { left: calc(var(--k) * 98px - 2px); top: 52%; rotate: -1.5deg; }
+
+/* part 15: the desk keeps every object 24px inside its right edge */
+.desk .lamp { right: 24px; }
+/* the diploma grows to hold its signature lines inside the border */
+.p-diploma, .desk.short .p-diploma { height: auto; min-height: 280px; }
+.p-diploma .dip { height: auto; min-height: 280px; padding-bottom: 26px; }
+/* the speaker gets its own spot under the pinboard (right-aligned, 8px clear); the pinboard is shorter to make room,
+   with the index card and the voucher side by side */
+@media (min-width: 1100px) {
+  .booth, .booth.pb2 { grid-template-rows: auto auto; grid-template-areas: "win main side" "win main meta"; row-gap: 8px; }
+  .booth-meta { grid-area: meta; margin-top: 0; align-self: start; justify-self: end; }
+  .booth.pb2 .pinboard { height: 104px; }
+  .pb2 .pbi-card { left: 14px; top: 18px; width: 172px; }
+  .pb2 .pbi-ticket { left: 200px; top: 46px; --r: 2deg; }
+}
+
+/* part 15: the walk-in, close up. The sky behind the glass follows the visitor's time of day, like the top bar window */
+.wk-stage { background: var(--booth-light); }
+.wk-stage.sky-dawn { background: linear-gradient(to bottom, var(--paper-deep) 0 28%, var(--folder-tan) 28% 40%, var(--paper) 40%); }
+.wk-stage.sky-dusk { background: linear-gradient(to bottom, var(--gold-dark) 0 28%, var(--wood-4) 28% 40%, var(--gold-dark) 40%); }
+.wk-stage.sky-night { background: var(--booth-dark); }
+.walkin { transition: translate 0.5s ease-in; }
+.wk-tray { transition: translate 0.2s steps(3, end); }
+.wk-tray.shut { translate: 0 calc(var(--wk-k, 6) * 2px); }
+
+/* part 15: the intercom questions, a paper scrap out of the booth window */
+.icq { position: fixed; z-index: 88; width: min(360px, calc(100vw - 32px)); box-sizing: border-box; padding: 14px 40px 14px 16px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); rotate: -0.8deg; filter: var(--rest-shadow); text-align: left; }
+.icq::before { content: ""; position: absolute; left: 22px; top: -9px; width: 12px; height: 12px; background: var(--paper); border-left: 2px solid var(--ink); border-top: 2px solid var(--ink); rotate: 45deg; }
+.icq.pop { animation: icq-out 0.14s steps(2, end); }
+@keyframes icq-out { 0% { translate: -14px -10px; } 100% { translate: 0 0; } }
+.icq.swap { animation: icq-swap 0.02s steps(1, end); }
+@keyframes icq-swap { 0% { rotate: 0.6deg; } 100% { rotate: -0.8deg; } }
+.icq-q { margin: 0; font: 400 16px/1.4 var(--sans); }
+.icq-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.icq-chips:empty { display: none; }
+.icq-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px 5px; background: var(--field); color: var(--ink); border: 1px solid var(--ink); border-radius: 0; font: 700 14px/1.2 var(--typed); cursor: pointer; }
+.icq-chip:hover { background: var(--paper-deep); }
+.icq-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.icq-n { color: var(--ink-soft); font-weight: 400; }
+.icq-x { position: absolute; right: 6px; top: 6px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; background: none; border: 0; color: var(--ink); cursor: pointer; line-height: 0; }
+.icq-x:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* the spotlight: everything but the spotlit thing dims one step; no blur, and it never takes a click */
+.spot { position: fixed; z-index: 87; pointer-events: none; box-shadow: 0 0 0 200vmax color-mix(in srgb, var(--ink) 38%, transparent); transition: left 0.22s ease-out, top 0.22s ease-out, width 0.22s ease-out, height 0.22s ease-out; }
+/* the contact slip lifts off the receipt for a moment */
+#slip.lifted { translate: 0 -6px; filter: drop-shadow(3px 8px 2px var(--shade-lift)); transition: translate 0.15s ease-out; }
+@media (prefers-reduced-motion: reduce) { .icq.pop, .icq.swap { animation: none; } .spot { transition: none; } #slip.lifted { translate: none; transition: none; } }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -2553,7 +2635,129 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
     "text": "Scure: changed features after user testing and advisor feedback"
    }
   ]
- }
+ },
+ "intercom": [
+  {
+   "id": "purpose",
+   "q": "Purpose of your visit?",
+   "a": [
+    {
+     "t": "Hiring",
+     "next": "duration"
+    },
+    {
+     "t": "Reviewing my work",
+     "say": "My process is on the wall. Look up.",
+     "go": "wall"
+    },
+    {
+     "t": "Just curious",
+     "next": "tour-offer"
+    },
+    {
+     "t": "How do I get around?",
+     "go": "tour"
+    }
+   ]
+  },
+  {
+   "id": "duration",
+   "q": "Duration of stay?",
+   "a": [
+    {
+     "t": "One minute",
+     "say": "Understood. Printing my record.",
+     "go": "record"
+    },
+    {
+     "t": "Long enough to dig in",
+     "say": "Then start with the files.",
+     "go": "files"
+    }
+   ]
+  },
+  {
+   "id": "tour-offer",
+   "q": "Want the tour?",
+   "a": [
+    {
+     "t": "Yes",
+     "go": "tour"
+    },
+    {
+     "t": "No thanks",
+     "go": "close"
+    }
+   ]
+  },
+  {
+   "id": "declare",
+   "q": "Anything to declare?",
+   "a": [
+    {
+     "t": "I'd like to talk",
+     "go": "contact"
+    },
+    {
+     "t": "No, carry on",
+     "go": "close"
+    }
+   ]
+  },
+  {
+   "id": "again",
+   "q": "Back again? Where to?",
+   "a": [
+    {
+     "t": "Projects",
+     "go": "files"
+    },
+    {
+     "t": "Whiteboard",
+     "go": "wall"
+    },
+    {
+     "t": "Record",
+     "go": "record"
+    },
+    {
+     "t": "Tour",
+     "go": "tour"
+    }
+   ]
+  },
+  {
+   "id": "tour",
+   "next": "Next",
+   "skip": "Skip tour",
+   "steps": [
+    {
+     "at": "passport",
+     "say": "My papers. Open them and stamp them if you like."
+    },
+    {
+     "at": "files",
+     "say": "Case files. One per project. Pull one out to read it."
+    },
+    {
+     "at": "drawers",
+     "say": "Skills in one, my things in the other."
+    },
+    {
+     "at": "up",
+     "say": "My whiteboard is up there. How I work, solo and as a lead."
+    },
+    {
+     "at": "printer",
+     "say": "The 60-second version, printed."
+    },
+    {
+     "at": "stamps",
+     "say": "Approve or deny. Your call."
+    }
+   ]
+  }
+ ]
 }</script>
 <script id="art">// Thea's desk sprites (transparent PNGs on a clean pixel grid). Swap any object by replacing its data URI.
 // The file box has its drawn folders cleared, so live folders can sit in it and leave it empty when taken out.
@@ -3142,7 +3346,7 @@ window.ART = {
 "booth-scene": {
 "w": 111,
 "h": 71,
-"src": "data:image/png;base64,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"
+"src": "data:image/png;base64,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"
 },
 "window-0": {
 "w": 56,
@@ -3240,9 +3444,9 @@ window.ART = {
 "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAqCAYAAAC3DKvtAAACAUlEQVR4Xq2XzStEURjG78hGspGY1Vio0awmjVIKJVIWUv4HdtYWljbslY01S0oiH4VSQpZyd+4KyUayHD2neW+ne8/7cTW/umXGOc99znPOec+ZUqTQ09XdpCbfvz8lrT0hNoToxOSoa/v+9pF2Gij3R8enV2LfDs4BiZIgxAh8548kRFAYnarVihMgQfobn+M4iWgkHKxj36EPXvB4sOG+klznciK3HHtby+5fjcV1cTI7WYUWGDZBTi3khLGk4jhxGQOInV8+RTPTIxa9lGDGLfF0yLsn94VEATt5vvjaykJOWNssYsbojMmsD5VT920Dwl/JbXN+bqqpbQofde9D1O/QWxlX+4gZhzbA/vaOupUJ8e1Zt2BweFadONWxD9yC15cz0/wVdgwsObPrmIZNfD7fuQdRWBCFMeyLo0On01cbc48VcxS+U23XAXHnQWxzdck1pKLkVzsJMQqAqoYHgij+9AINUdgXKVKLTesYJ0UWS81QTxDf9c31g5ZAihgFMsVDrikO7YQ2ReGDI8qK+SbkxwDH+CytZ3W5ERCzRECYhbNoL/m3sIa63LLQnU5DdCwNV6sZ4jWWcwVRrcKx11jOrUVU3CDc9tWcsstNusa2pVZY6y4He41FB+5WbyG4jukySAJFIiDEItSo13LOteLDTl4IcowfNsjecoL8AV9A4Znp+cg8AAAAAElFTkSuQmCC"
 },
 "thea-turn": {
-"w": 22,
-"h": 42,
-"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAqCAYAAAC3DKvtAAAB5klEQVR4Xu2XsUoDQRCGT7GPwilpk1K0MCCIiKSwtBHyBApWFsFK7AUrSWEl+gaCjaVFELERYqFYxjbogfoEkf+OOeY2M7N7gqTQD47LZvf+nZ39d/cuin6JiRDduBIPqV3ylQQ9M+UTbq4t56Lg+SlKy74OzN5dUU737sF8dlKLmA8/i/Q1vZL3j7RsdQrUVFSr06lIPDuTCl5f7OcxHHSusrpKPNRSIgrzaI/bW9qgTMRUIIrB4DPCBTZ3Tgp3jAB11gSqOeYPURp4OnyuUIUtS/lEgSkMVlqHBVu5ZQ3vKnJtF7I4gCkM0ZfHy6jfu88DqzdWo/mllrcDUZgEORCHKAcdaPn25piA5c46pwVhjKZUjt/63cLGA9yIqTxXb4qjFv+UhDU0YTUViIhPmvublyVGhMleN7e9PAUkwjujesmO5gLZbe/lewTcQBexsd5Q0yMKwz6YfYoSboCtUCb/0qbkuoQzMnkYGm02EMC+LIHdDe3QRvKyeeYtLNZEUXB+tK3WmTmm4Wr46oNXnos1GjNi90E6REMRI4ZHcfxw6JjikJeDFghm2OdR7uVSu1voKWG1+/Hk+fgXzhl/KkJeUjjjj7gsfyhid5NyUU+QzAW19MWFRHDXjiqX4I8bAt8kuHx8A0SJ5Lxn6roTAAAAAElFTkSuQmCC"
+"w": 57,
+"h": 79,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAABPCAYAAABRY21ZAAAEt0lEQVR4Xu2Zu2tUURCHN+I/INjZGNEirUV8CylExNJKEUwpKzYaK8FCsHKxERdLBdEqtUgKQfGVwkpIoRibVAr+CSu/C7NMJnMec84cXeF+sLi5e3f3fmdeZ69zg8Yc2L9vEvqK7z+25vjr+LvF5exu8aEEF1iYn9e+akLHNzY3p+d7y7pLxiKnATm5APQZXrKu6SEF+cVDRsKjmKJG2E0ylJqanCYrz9MWoFTURZIEZdrlCBJ4L50f+5wS0eqa5BGk+oqlJtBel4SES6iKZG6TsdSeBo9ySSSLJXNqMNV4cpGLZBWtTtfA/DMLDi+cmTqPV9e2+WtjxkK1JEerNe0YAbFTxw7tuN7Xn78F65o2DZZoFqUrUjWViryONEKCxNsPX4OywCJpiqSUC3XKWkFvzJEk0VAaxgRT0ZNcXBmrn2eJIiiSlBeTSl1gFSQgKrFKFqerpcmUCtbKEaZIytkY65zEi9FwRzOhWuavacgoWiNYJAmsu5w7186pAuieNA+lLOQQfXq9VK5YMiRKF0qrT3UqJSEnkbOSnwPRWsldO76xAB4J/lwK0gLgwukhoQhjQyB3PqUUSWori4ujCIRqDccRNXqd/uZQVGmBaqMIiiQldx+9NC9yaCFAqiFZcZHkXbZEuDWmESKRndY7AqjhmUlXQtudzAJV6aqtMkS1MZED3kfp7hVFl8YTSqcSUXTW0OahhqpIEp6iwDvtXSQBF0VEtF/8FjwaDuEmqQFR1FjOWKH09o6iS01K5I2t4fDSYOnwwU7012SPuhiAR94zisD0ezIEn5cQ4uyd+939iePj8fPpcy2dPTsqpzpdIfjp3avgAnAgit0RNt4yhVsJgqodD5CSR06c7Y4jbfk40EaK1+/FFFXpqt2941GFMG31kJ6aqHf9aVSn65Nnj6MLybtl7VgppSpdEUncplg4ujhYPH5avYbly1e7OpQ3s7h862gWS/JapDqMNSCS5bdJHt6/Pbh+6163OC1Fi9JV/sSCHBoNREKE0jr0H0aeFEWSR3H9/ZvueihdIRqrU1qIbm6urk2jj2xoFU2zpBwZkJT1mBIFTx+MuptVALsifEYrUVO6avdctYaDSMZSF9CMzLlBXYtJEqD+ED3+yAWRIvlQk8q9ed0EfPnPrS+T80snu3/5A8dCx+k8Omd0c3nbufhcHKPPbyFpimSo1pCeaCSxFEVa4jzMVDzXzqVR5I1JMtY1r9xYUa+NUhQzkbowUhXNBqJ4TvVJ53hHM6u70s4mJMLJ6awEdWYsBNU6wAbBc5xkRzJHsASas61SFSQlramDlMYMzAHjBw+eyqE9cA1JSRobFjDkc0WpTgEfL9bFjZElWQLtZnKhaLagmaQVmaa5t1RyyJakBpFD6od0CIwVnuZeKZstmYNcCMvCtCQpiXmF9r7xcT37OtBAEBUrWmf1iGZSksiZk7hIRA/bNixKi3FQQlLSYyVL8Wo+SUnAvyxVZxS9nMin8NoFme67ovPhV4QU1dJS3haxklpMCyZJEBMKvf6viUrKegylIBe3bOckiB4yxZtoTWJ8WIsfC4H30P3UXGrTO0ZW4/mbeNYiMXOSPT09PT09PT09PT09Pf8FfwBWVvB8wf2lnQAAAABJRU5ErkJggg=="
 },
 "passport-seq-sheet": {
 "w": 832,
@@ -3273,6 +3477,31 @@ window.ART = {
 "w": 26,
 "h": 24,
 "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAYCAYAAADkgu3FAAAA8UlEQVR4XmNgGAWjYNgCRml50f9q6kpgD+anBTEcPnkFzLY11yHL0zD9IHDu4i0wfevmPQYWXKYhayAXGOmrwS1jItcQXGDFqh1gjA6obhEI/DpiRx+LsAGq+ggWZGw2hzCCj6oWgVNuTjgYowOcqY5csH33aaxaUSy6df8xuebDASjPwAAsH4EASoYFAVDaRwYgxehixAK8GRbZFdhcBgPImZEYgBp0N+8xwIoj5CDABgjJw8yBAZyJAV0hqQDZ0eA4+s38k0FBRuY/iEOp4egA5usHT54wwvMRtS1BdzjYRyAA8xW1Acg3IDOpXjLgAgAy61hUkUULoAAAAABJRU5ErkJggg=="
+},
+"thea-walk-0": {
+"w": 57,
+"h": 79,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAABPCAYAAABRY21ZAAAFFElEQVR4Xu2bvWtVQRDFb8R/QLCzMUELWws1ioKFiJWFlSLEUiI2EivBQrBSbMRgqSDaaGElYiEo8SOFlZBCSWxSKeRPiJwr5zEZ92Nmd2+0uD945OXmvvfu2TMzO7vvZqrbJmb27tm0fNTqj/Upy3kednpO9hATdWB6esvbrKyt9b+L45PBaCW4+agBq0BCoSlqBDd1MiROOhcTw3Myf98sFdrMSS3QIk6D10ihofcoEbojGSNGWggEEBjK2dBxD9XhGhOoC0rs9xjaVYLP87pZFa5DCcwJ94qsdlKV/wm6mOSKy5AUi6SLoeJQKmj+3Knu+Oz+id7zC4vBOdUbslWFxyswNR8+uzu/RSDAsVAF9lKUkxhJ6xSRc1W7p3n/8Vu3+OLNX8c9eel2UgqEMyl3SOycnEAgw5d4BIKinAxddGwirxHYiiKRuTyJzXHE4mAMr4vFThKK0W6lQlgK/LW5q1v5tLwl51IDUCKwWqQXLWD31Eafc3igwAAUGTx0ZS0VWC0y5VgopENFRIOBkOi5sgR3TmJEU6t86YDlAm89eNVftxwwCuXfalwE7inEAkMPgvWqQnPzypn+wcEJNQW1FIm0jCyFQoAVnYee16YoEmnh7ZfvltOyQLh1EyxGc5HIIxYYupkL2aEp6l1JbIRDjXUNKGCWFIlRJRLkduZq8ko25zUim4crYfPOkC2BYV8jELjnSU1s3tST+r+kWiTgSOvQ1QXI0vHQeVRnREOti2CwcJVosSnYy9bksqapSDnq2jWLixJMRS1cHMzJ2LzI1YalGHma/xxNclJPJfPzF7qu20h+Npvvkwf39ed5nfZQPU9S4Oel1/3zw8dOJxe+2sXQJpUsZi1o5qQEF+5xplXuxWhaeAAcxQOtGLY3NFr80AKbFB7MjQxVCY4dOnoiuXCOhWprmjupoasSTyi3oEokO5xLFy93yx/eRa8nJBQuYqqpXStaKBbJMIWAR08e9luLKSiUUwe5f+fG4EKLRWrmri30h+BqCk7y29nAF4kMFRsZrpgrQ8jKCyAYe684PmTYupuBmEBUUgkcRRjH4EAgXAFej2NDTCluJ0N9qRYIUgLBdu77uETCRV48KyrCFI/H9+7+ZVooP3FMunz1+u1s0arF3Nbxe0lcIJrqkFMIN9kY4BwdtshDFB0MCs5l2MbyuAVmkbkQRMh+XjrRrX582c3Mng1eG4QwBxcXn3Zz4ix+Q+a9H8CCK1xDIalBvxo7DwKZv1iOsSKjMZA3JLWutKbqylDNFROiQ5ShqHtciGRVpcPI0dYV1uVkKZwfU0DcUGRFMnSsLjJ3LaENF+EmXQQtvvvQZEWC0FIqB7YUrUKZp/gZK1o1mESW0uqbrVrMIlNLqRCe8AaYO9k8tO5lzSKHhquYITCJ9LiIZkDiea2kpA7EyIrEnIXuBI8cslfl81DzHkM2CKBVU5AVCdCNWHIM58h91T+bzHYwILkdhhKyIr2j+b9UVElWJPDkB1ceXheHxLUKAbqQhHIO4e3JxRC5gsUIs/S5JicJPxgCKIKL5u2i3355fnvyr06WdDI5KdszOZ9JtzgANYVDuof3kS7pe97VHSabqTtEskutn+tfTf8tJ+HSqm+2IwvoWIhCHAaSm1oUp++wZBXXN+aHwtcVrl48AsmBI4cmzykwdL8dxWGzmoJjG9VZkbkCEAMfWPpaAvdSNz5BKO8tgFDs4Y6MjIyMjIyMjIyMjPx7fgOdsvMHI8jM1AAAAABJRU5ErkJggg=="
+},
+"thea-walk-1": {
+"w": 57,
+"h": 79,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAABPCAYAAABRY21ZAAAFIklEQVR4Xu2bvYtVVxTF74T8AwG7NM6QFLYWmklQSCGSysJKCUzKMDJNGKtACsFKsQkOlgkEUqVIJWIhKGbUIlVgipEZm6kSyJ8wYV1dj/02+3zsc/YdU9wfDMyb9+57d9299sc5787KcEKsnf742PqogzdHK1OfwodTfUBK1JnVVf2RS+KnED2ZSA9K+DGE4iJFCQ63ihVBKWLv8HBJP5/D3/G7fp70CA4T6RUnkUI18rlWoZOI1HmXio4lSL7WckCL0G6ROoK5qICcdfm8tm5vND/wFAiNJRAnyGjoiJYEppDRTVXtHF0idV4xAjpiNRHUWBY32k8VzXaVV5RVMZeLucpZC9/Dm5fdfZLCSgJr2Lx6abiw/unipde2d5YOE05x9dAmkYxiTY6VChH49e6meQ1qjq3BlZMQpwXKQtMCopfihxtfmbk6uV1rokdKkdD2tLAKkBd34clNNlbrSJ1kyqIWMje9UQSunJRWle0CSDGlq+8RGIErkhCZq6I1aIHPdveHnd8eLw5NVdiWCBK3yBohFrg4ViGRSMG8GLRqj0iXXbnOywmVkeIJliaVW/cfDl+e/WR8W6va9ggErhYCPB9Yk3u8ELCstC3Qw0ArrkiWoCjYDmB6YRRTVtWRlxOP96KmcEfS+8GlPJToyONxy6pD0yTSS6ml5IATeoU2i7RykzkEyz358/Xi3HOjWwmPE0LtmoNC5cnpPDtpXH3SImelmuqaQvZMT0W3aLYrSZ0ALMoq2wKj3ysQhLQQa0jgScp28r4IEZmjJR/1PNtLt11LtiUt1o2wKggTCXhSqVkVQmvEYryLEhgukli9TdoWA/lJEpKTenuyBFYcFIrfW/LWQ4hI8PL5o+Gbr7+tHuEgDrbEyKdXH5FWBWHDAESS819cTi6SZU5G516KrsJDm0qBjOpPvzwwc29qa1p0iaSgFLBiauF7UlHsqq6M4s/37o4/FoywFspo9i6haukqPNKmKDqwqIavQZ5ai+Jr2zuu7zVaaLKrFQFYE0Jy6Ij+c/xR11qzFrdIq9gc7P4+Rgw/KaF8Xgrdunl7OPPZuclt6xIJgTxZAoFr61cWj3NCWagwCMjdAhwzZX66RFpIgSQ1uxJrz0e3oUiqCw+jiEqK/Rs9n0qxKECpQoS/y2ifWvl3oSfyBiVJtUjAE98wLjPbyMZ32+OzllAcTygUE9Da+pBsQxFUi4QFrRZBKC4FBG5uXh8jx4tFoThW7u5FU8xJfrucEyiRg4E+5tznF0dbw+qpAWKKAlQc0JmLHmQ+sqXowoKqDCAar/nxzvfjY7SV6FVItV1bSVVNqyoj0sNwu/WjkmTtan3pGs2rP56Ob/lW4PJtaVFk7dpiVYKcKxWjFLBvpGWLhacVb7WU7SWaKpG01JSwr4LoMa9K5N6LV9X6WDVb4FfqJKqdFEXCRq255RUst0YiZ9msSE/yS0szv6w2kQOvTw0JPRRbCKeWmrzEazCLYpUR8eVpFGHDAPsc89cbxSkpimRe7b3YXypAyB9LCHbhOKL9X0iKZGXjZrAuPhAv508Jo9oC+iuWcov3DvgnmKRIFJ2/j/5K3n0loyjXkqVdAQ/i1rOuHb2iXWtglCG29XYWWdjw+9bNnYXId2KP9W5fbfXPt5B3y6FaWvspRGExDZvrgYAgbSBW7t3WDgvZSLZWSJy0Jy/lPo/GuudA3ao2plQuqtV21U3ailpNL/XAuydzXxJBcNSNhjMzMzMzMzMzMzMzMzH8Bwjw8XTHG6vgAAAAAElFTkSuQmCC"
+},
+"thea-hold": {
+"w": 57,
+"h": 79,
+"src": "data:image/png;base64,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"
+},
+"thea-push": {
+"w": 57,
+"h": 79,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAABPCAYAAABRY21ZAAAGaklEQVR4Xs2bvatdRRTFb8R/wSqNT7QIWNmEEC1ShCAWKawEISkldvrqFNbPdAmWCQSsLKyCWKQI4ZHGSrBQEptU/hGRdbjrZJ399szsPWfOe+8Hl3vv+Zw1+2P2zLn3wu4U+OD9i2/0Ni//fX0B37Gdn7dkutnWWJGWrYVuItITdengYNL216tX07v9vqXwoSJbFvOEYRuFbyX03VGuagVSkEdNmMJrrnXnIZZsCbSWarnqaIuuElmKPY27kitmhYJeiw4VaV20JJDUhHr7ekW+0xuTnhUpCu8tgZppFYjTztLvR9/fXoy3UYYkHm1UKf5KoqxAe5wmqQe//B7VtaBLpFoxIjBiVZI5NkpXTFJkSWBNeA82PrOxmY7JLQTaOBxNypIQ2LJSLWNa7nx5fffZlY/mzc+O/54+e7Gn181aMhWT+4s3M1wtrqwwBYIp1IJrUmh29pJyV2/Y8BpToiZQwXEevUkpZUmQnU2AqDhQs2YvqZgEdvho9W5GoAK3LY2L2ZhMuWvGNbMW3JK0Ja01PRhTmjkzaPKx1sxaEaRjEuBGcNufj+5M3786fLCI115xNXrEkS6RFoilUBtXT//4Z47bVnxqZ1375MPuWtWyWiRcC5Zj1r377efzPWhRNBjA9fCiBxCKs0MHO8XrwAyrEg9jB+8qjvxw/8lCHLBCvPhjHOK9VBxk6BaJGEEjavEH4bofFvSOp2XhDdivlsY91sRjd+KxtBKNdU+F59pjsF3jeQ1dQ4iisxLPZXtBHK61IOl2V8KGtCqfs2S1SECha7OgTVijGCJSYUat0cqY8IpRrgqGiNSiPeK2rUQ1miGJ58Xz33Yvj3+d2kZL9iYhnD/akqsqHrUgxaG6Qer3gJvafdoZWwgE3ZakQFgRXL56Y1HNQEzJmoxJdVsmrZGx2DWEQBhe/73+c1rQokDA2lXrVYjxMi6O8QRuRSjxUBxEqTALXdEmFk8o4T5WPLzXSMHVmNSYq4kDDx//NL3f/vqbhZuiIId4xJt1XwicxV25ubt08GS+zuWrNyahI9zXFWnjjSCDojERaE24LKdaalG4N2ckek10EjoMnYo4zy4/ehQt6VkOjckItZSWGonNzKOEnohJLmtADMc+8Oje0fTOXkdvc5uC7Woxb+DXYUSrn1vfHc4uTyAUnRNZ8y2xGEIoUN2HQtgAha7lgX2wjBVpJ8mex5Sui7Yc/vgwPeydtKSJOU9chFJ5p6Jb7uvRY9FZJE4uZVAIRe9mwLVKlQ8nxNqBkev3dnhonASINWQ7jVMLGooXjgOwpjfj0JkKz7FxXRJd++lMibDIFmwUxkI2pGZNjquA42fEmiDrsimRaHRtvqiDPRsMMXoOMq/GK85BHsBxSFRILlaseo92TpRpnLQPVzOoGHJ3/wFu68U5t9kxlzH3dF8QjGK2ZGb+F+1Zlmy0JqxIgTXX7LFWjbC7Upi6HxtjGwX348tLVNhGN43QWi5p8XYI2ZdsJbDfq3CioCOQkCg6UgOz6uodOkjYkkBvVhtKlIiYWsdapmFs/8vnKHOBnim8I4tVNaLC52FJauYeJktmewbUhpJReAmop1ifRNrB1c5ALLVnGy2iVgScgGfO8Vgknsmq+4kxMhpLLr5nksYIvGGtJwktJs0UwanOLdPSKUbuv12i2BKvyOhlIZJx5sUC0HWctcnnNDkxhESqDY55WxNpS4RZZG2W78Gp1xYgbEZ6yuyutdrV1pmjeriHaBGizCJLaRqlHDuANWTW6kqr6MB+5AY7TGlmf/H85u69ix+H+6i4JMmFKEXXZzj7j6C9XxvzeBxXFJ4dH833hHB6UObeoFjWcUHYW1LEtsyP3imM88wIet9pUh1c1PZwyzrGYO1habbqacWS3a/TtbXM2VVr0Whmg9DougyuX3JVFajPR0CrcyLMIqPCLDgvGyM2EdWwHdMzp12sRuO5I26oD1RrLqts+RB1LSceE+jzf+s6EUb+yGgUi7IO80rretn1FcRpdl10a0IPT7649ukbPrzhTz9rnDfXDYkkEFsr/+zT5PPiuqmFrN4MfNakRHpozMLK2Rg+DVIivQUv+1MVPK6jUCQhuPhpCKmREgnUUvhsLXceXTotkoW5l2W9evY8iE5lV4JxkI/CdTai/xNZ+8fOkXSJBPbPorQYhbLg5/aeBexRdIuk0Mxffs9K6P/uggjULvaLBgAAAABJRU5ErkJggg=="
+},
+"wall-strip-fill": {
+"w": 1,
+"h": 42,
+"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAqCAYAAAByfjF8AAAAN0lEQVR4nGPwstL8zySupMDAxMDAMKgIBnVFuf9MddEGDExykmIMTPOOP8WQVZbkRtZ29/lXBgDLRAu+gQ7gPwAAAABJRU5ErkJggg=="
 }
 };
 </script>
@@ -4260,7 +4489,7 @@ window.DEMOS = (function () {
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
       speakerHTML() + "</div>" +
       '<p class="aside" id="aside" aria-live="polite" hidden></p>' +
-      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: hear the booth assistant"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
+      '<div class="intercom" id="intercom">' + SPR.art("intercom", 2) + '<button class="ic-btn" data-act="intercom" aria-label="Intercom: answer the officer\'s questions" aria-haspopup="dialog" aria-expanded="false"><span class="tip" aria-hidden="true">Intercom</span></button></div></header>';
   }
 
   // The alarm clock: the visitor's local time in amber seven-segment digits on its blank display, drawn on a canvas
@@ -4421,7 +4650,8 @@ window.DEMOS = (function () {
       '<button class="stamp-handle" id="stamp-handle" data-act="bar" aria-expanded="false" aria-controls="bar-rail">' + SPR.draw("pillstamp", 2) + "<span>Stamps</span>" +
       '<span class="caret" aria-hidden="true">' + SPR.draw("caretup", 2) + SPR.draw("caretdown", 2) + "</span></button></div>" +
       '<nav class="pill" id="pill" aria-label="Areas"><button data-act="step" data-dir="-1" aria-label="Previous area">' + SPR.draw("left", PX) +
-      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button></nav></div>";
+      '</button><span class="area" id="area-name" aria-live="polite">Booth</span><button data-act="step" data-dir="1" aria-label="Next area">' + SPR.draw("right", PX) + "</button>" +
+      '<button class="pill-down" data-act="wall-down" aria-label="Back down to the desk">' + SPR.draw("caretdown", PX) + "</button></nav></div>";
   }
 
   // ----- scroll scene: the booth builds, then the file unpacks -----
@@ -4501,11 +4731,15 @@ window.DEMOS = (function () {
   }
   function placeFurniture() {
     const u = usable(), box = $("#filebox"), pr = $("#printer"), env = $("#envelope"), lamp = $("#lamp");
+    ui.layoutH = $("#desk").clientHeight;
     box.style.left = "16px"; box.style.top = Math.max(8, u.bottom - box.offsetHeight) + "px";
     const front = $("#filebox-front"); front.style.left = box.style.left; front.style.top = box.style.top;
     // the lamp is anchored to the desk's top-right corner in CSS; keep the printer below its arm and clear of the Stamps tab
-    const right = u.w - 14, below = lamp.offsetHeight + 8;
+    const right = u.w - EDGE, below = lamp.offsetHeight + 8;
     pr.style.left = right - pr.offsetWidth + "px"; pr.style.top = Math.min(below, u.bottom - pr.offsetHeight) + "px";
+    computeFit();
+    const plan = colPlan();
+    if (plan) { pr.style.left = Math.round(Math.max(plan.right + GAP, plan.lampLeft - GAP - pr.offsetWidth)) + "px"; pr.style.top = u.top + "px"; }
     env.style.left = Math.round(u.w * 0.3) + "px"; env.style.top = u.top + 16 + "px";
     $("#unpack-hint").style.left = Math.round(u.w * 0.3) + env.offsetWidth + 24 + "px";
   }
@@ -4518,9 +4752,25 @@ window.DEMOS = (function () {
     ui.fit = clamp(Math.min(avail / midH, (u.w - LANE - left) / minW), 0.75, 1);
     $("#desk").style.setProperty("--fit", ui.fit.toFixed(3));
   }
+  const EDGE = 24, GAP = 16;
+  function colPlan() {
+    const dk = $("#desk"), lamp = $("#lamp");
+    if (isPhone() || !dk || dk.classList.contains("short") || !lamp) return null;
+    const u = usable(), s = ui.fit, e = ["id", "diploma", "honours"].map(paperEl);
+    if (e.some((x) => !x)) return null;
+    // a little extra for each paper's tilt
+    const w = e.map((x) => x.offsetWidth * s + 6), h = e.map((x) => x.offsetHeight * s + 6);
+    const hx = u.w - EDGE - w[2], hy = lamp.offsetTop + lamp.offsetHeight + 12, x0 = boxRect().w + 26;
+    const spare = hx - GAP - (x0 + w[0] + GAP + w[1]);
+    if (hy + h[2] > u.bottom || spare < 0) return null;
+    const g = GAP + Math.min(spare / 2, 28);
+    return { id: [x0, u.top + 8], diploma: [x0 + w[0] + g, u.top + 16], honours: [hx, hy], right: x0 + w[0] + g + w[1], lampLeft: lamp.offsetLeft };
+  }
   function landing(id, el) {
     const u = usable(), i = caseIndex(id), s = ui.fit;
     if (i >= 0) return slotPos(i);
+    const plan = colPlan();
+    if (plan && plan[id]) return [Math.round(plan[id][0]), Math.round(plan[id][1])];
     const widths = ["id", "diploma", "honours"].map((k) => { const e = paperEl(k); return (e ? e.offsetWidth : 300) * s; });
     // papers may overlap only by their blank margins: the ID card's right edge, the diploma's side margins
     const ov = [54, 36], left = boxRect().w + 32, avail = u.w - LANE - left, min = widths[0] - ov[0] + widths[1] - ov[1] + widths[2];
@@ -4556,10 +4806,10 @@ window.DEMOS = (function () {
     const w = pad.offsetWidth || 99, h = pad.offsetHeight || 99, box = boxRect();
     const rect = (q) => { const e = $(q); return e && !e.hidden ? { x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight } : null; };
     const taken = [box, rect("#lamp"), rect("#printer"), rect('.sticker[data-sticker="mug"]'), rect('.sticker[data-sticker="plant"]')].filter(Boolean)
-      .concat(paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open) return null; const at = st.x != null ? [st.x, st.y] : landing(id, e); return { x: at[0], y: at[1], w: e.offsetWidth, h: e.offsetHeight }; }).filter(Boolean));
-    const free = (x, y) => y >= u.top && y + h <= u.bottom && x >= 0 && x + w <= u.w && !taken.some((r) => x < r.x + r.w + 4 && r.x < x + w + 4 && y < r.y + r.h + 4 && r.y < y + h + 4);
+      .concat(paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open) return null; const at = st.x != null ? [st.x, st.y] : landing(id, e); return { x: at[0], y: at[1], w: e.offsetWidth * ui.fit + 8, h: e.offsetHeight * ui.fit + 8 }; }).filter(Boolean));
+    const free = (x, y) => y >= u.top && y + h <= u.bottom && x >= 0 && x + w <= u.w - EDGE && !taken.some((r) => x < r.x + r.w + 12 && r.x < x + w + 12 && y < r.y + r.h + 12 && r.y < y + h + 12);
     const tries = [];
-    for (let y = u.bottom - h; y >= u.top; y -= 12) for (let x = u.w - w - 12; x >= 0; x -= 12) tries.push([x, y]);
+    for (let y = u.bottom - h; y >= u.top; y -= 12) for (let x = u.w - w - EDGE; x >= 0; x -= 12) tries.push([x, y]);
     const spot = tries.find((t) => free(t[0], t[1]));
     const home = spot ? $("#desk") : $("#record");
     // on a desk too short for it, the pad waits in the Records room, left of the record
@@ -4569,20 +4819,25 @@ window.DEMOS = (function () {
   }
   function placeStickers() {
     const u = usable(), w = u.w, pr = $("#printer"), box = boxRect(), mugEl = $('.sticker[data-sticker="mug"]');
-    const mugBelow = pr.offsetTop + pr.offsetHeight + 8 + mugEl.offsetHeight <= u.bottom;
+    const mugBelow = pr.offsetTop + pr.offsetHeight + 8 + mugEl.offsetHeight <= u.bottom, plan = colPlan();
+    const paperBoxes = paperIds().map((id) => { const e = paperEl(id), st = pst(id); if (!e || st.inBox || st.open || st.away || st.x == null) return null; return { x: st.x, y: st.y, w: e.offsetWidth * ui.fit + 8, h: e.offsetHeight * ui.fit + 8 }; }).filter(Boolean);
+    const clear = (x, y, ww, hh) => !paperBoxes.some((r) => x < r.x + r.w && r.x < x + ww && y < r.y + r.h && r.y < y + hh);
+    let mugAt = mugBelow ? [pr.offsetLeft + pr.offsetWidth - mugEl.offsetWidth, pr.offsetTop + pr.offsetHeight + 8] : [pr.offsetLeft - mugEl.offsetWidth - 12, pr.offsetTop + 6];
+    if (plan) mugAt = [plan.honours[0] - 28 - mugEl.offsetWidth, u.bottom - mugEl.offsetHeight - 10];
+    mugEl.hidden = !ui.stickers.mug && !clear(mugAt[0], mugAt[1], mugEl.offsetWidth, mugEl.offsetHeight);
     const spots = {
-      mug: mugBelow ? [pr.offsetLeft + pr.offsetWidth - mugEl.offsetWidth, pr.offsetTop + pr.offsetHeight + 8] : [pr.offsetLeft - mugEl.offsetWidth - 12, pr.offsetTop + 6],
+      mug: mugAt,
       pen: [box.x + box.w + 18, u.bottom - 130],
     };
     $$(".sticker", $("#desk")).forEach((el) => {
       const id = el.dataset.sticker;
       if (id === "plant") return;
       const p = ui.stickers[id] || spots[id];
-      setPos(el, clamp(p[0], 0, w - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
+      setPos(el, clamp(p[0], 0, w - EDGE - el.offsetWidth), clamp(p[1], u.top, u.bottom - el.offsetHeight));
     });
     placePlant(); placeNotepad();
     const mug = mugEl, ring = $(".cup-ring");
-    if (ring && mug) setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40));
+    if (ring && mug) { ring.hidden = mug.hidden; setPos(ring, clamp(mug.offsetLeft - 48, 0, w - 50), clamp(mug.offsetTop + mug.offsetHeight - 36, u.top, u.bottom - 40)); }
   }
   // The plant goes wherever it fits without touching the box, a paper or another object; on a desk too short for it, it stays off.
   function placePlant() {
@@ -5666,45 +5921,54 @@ window.DEMOS = (function () {
     lamp.classList.toggle("faded", over);
   }
 
-  // ----- the walk-in: from inside the booth, Thea walks up, turns to the glass and hands her passport through the tray -----
-  // The booth scene is 111x71 art pixels: glass x 10 to 100, y 5 to 55; the counter below; the tray slot under the glass.
+  // ----- the walk-in: from inside the booth, Thea walks up close to the glass, holds up her passport and slides it into the tray -----
+  // The booth scene is 111x71 art pixels: glass x 10 to 101, y 5 to 55; the counter below it, with the tray recess at x 38 to 73.
+  // Her frames share one aligned 57x79 canvas and are drawn at the scene's own scale, behind the counter and in front of the glass.
   let walk = null;
   function walkIn() {
     let seen = false;
     try { seen = sessionStorage.getItem("cvp-walkin") === "1"; } catch (err) { /* storage can be blocked */ }
-    if (seen || reduced() || !$("#intro")) return;
+    if (seen || !$("#intro")) return;
     try { sessionStorage.setItem("cvp-walkin", "1"); } catch (err) { /* storage can be blocked */ }
-    // the scene is drawn at twice the figure's scale (both whole numbers), so she stands at a believable size behind the glass
-    const a = ART["booth-scene"], m = clamp(Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 110) / a.h) / 2), 1, 6), k = 2 * m, P = (v) => v * k + "px";
+    const a = ART["booth-scene"], k = clamp(Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 96) / a.h)), 1, 12), P = (v) => v * k + "px";
     const el = document.createElement("div");
     el.className = "walkin"; el.id = "walkin";
-    el.innerHTML = '<div class="wk-stage" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' + SPR.art("booth-scene", k, "wk-scene", "Inside the booth, looking out through the window at the queue area") +
+    el.innerHTML = '<div class="wk-stage sky-' + dayPhase() + '" style="width:' + P(a.w) + ";height:" + P(a.h) + '">' + SPR.art("booth-scene", k, "wk-scene", "Inside the booth, looking out through the window") +
       '<div class="wk-person"><img class="wk-thea" alt="" aria-hidden="true" draggable="false"></div>' +
-      '<span class="wk-tray" style="left:' + P(42) + ";top:" + P(52) + '">' + SPR.art("tray-closed", k, "wk-closed") + SPR.art("tray-open", k, "wk-open") + "</span></div>" +
+      '<span class="wk-tray open" style="left:' + P(42) + ";top:" + P(52) + '">' + SPR.art("tray-closed", k, "wk-closed") + SPR.art("tray-open", k, "wk-open") + "</span></div>" +
+      '<p class="sr-only" aria-live="polite">Thea walks up to the booth window and hands over her passport.</p>' +
       '<button class="btn-quiet wk-skip" data-act="walkin-skip">Skip intro</button>';
-    fixedRoot.appendChild(el);
+    fixedRoot.appendChild(el); el.style.setProperty("--wk-k", k);
     const person = $(".wk-person", el), img = $(".wk-thea", el), tray = $(".wk-tray", el);
-    const glass = "polygon(" + [[10, 5], [101, 5], [101, 56], [10, 56]].map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
-    const glassTray = "polygon(" + [[10, 5], [101, 5], [101, 56], [73, 56], [73, 71], [38, 71], [38, 56], [10, 56]].map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
-    const show = (name, x, y, clip) => {
-      const s = ART[name]; img.src = s.src; img.width = s.w * m; img.height = s.h * m;
-      img.style.left = P(x); img.style.top = P(y); img.hidden = false; person.style.clipPath = clip || glass; person.classList.toggle("front", !!clip);
+    const poly = (pts) => "polygon(" + pts.map((q) => P(q[0]) + " " + P(q[1])).join(", ") + ")";
+    const glass = poly([[10, 5], [102, 5], [102, 56], [10, 56]]);
+    // pushing the passport down, her hand shows in the tray recess under the glass
+    const glassTray = poly([[10, 5], [102, 5], [102, 56], [73, 56], [73, 71], [38, 71], [38, 56], [10, 56]]);
+    const Y = 0, X = 33;
+    const show = (name, x, clip) => {
+      const sp = ART[name]; img.src = sp.src; img.width = sp.w * k; img.height = sp.h * k;
+      img.style.left = P(x); img.style.top = P(Y); img.hidden = false; person.style.clipPath = clip || glass;
     };
     img.hidden = true;
     walk = { el: el, timers: [] };
     const at = (ms, fn) => walk.timers.push(setTimeout(fn, ms));
-    // walking in from the left along the pavement, feet on the line at y 53
-    // positions are in scene pixels; the figure sprites are half that size, so the walk frames are 11x21 here
-    for (let i = 0; i <= 12; i++) at(150 + i * 125, () => { show("walk-" + (i % 4), -11 + i * 5, 32); if (i % 2 === 0) FX.play("step"); });
-    at(1780, () => show("thea-turn", 49, 32));
-    // at the glass, facing you; then the passport comes up, and goes down into the tray
-    at(2100, () => show("window-0", 41.5, 22));
-    at(2500, () => { show("window-1", 41.5, 22); tray.classList.add("open"); FX.play("tap"); });
-    at(2900, () => show("window-2", 41.5, 22, glassTray));
-    at(3250, () => { show("window-0", 41.5, 22); tray.classList.remove("open"); FX.play("clunk"); });
-    // the camera tilts down from the window to the desk, where the passport lands
-    at(3500, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
-    at(4150, () => walkDone(true));
+    if (reduced()) {
+      // no walking: she is already at the window, holding up her passport, then the desk
+      show("thea-hold", X);
+      at(1000, () => walkDone(true));
+    } else {
+      // 1. the empty window for a moment; 2. she walks in from the left, two frames 140ms apart, about 1.2s to the middle of the glass
+      const x0 = 10 - 57, t0 = 300, dur = 1200;
+      for (let t = 0; t <= dur; t += 70) at(t0 + t, () => { show(Math.floor(t / 140) % 2 ? "thea-walk-1" : "thea-walk-0", Math.round(x0 + (X - x0) * Math.min(1, t / dur))); if (t % 280 === 0) FX.play("step"); });
+      // 3. turn, 4. hold up the passport, 5. slide it into the tray, which closes and slides toward you
+      at(t0 + dur + 70, () => show("thea-turn", X));
+      at(t0 + dur + 370, () => { show("thea-hold", X); FX.play("rustle"); });
+      at(t0 + dur + 970, () => show("thea-push", X, glassTray));
+      at(t0 + dur + 1270, () => { tray.classList.remove("open"); tray.classList.add("shut"); FX.play("clunk"); });
+      // 6. the camera tilts down to the desk, where the closed passport slides out of the tray
+      at(t0 + dur + 1600, () => { el.classList.add("tilt"); const pp = $("#passport"); if (pp) { pp.classList.remove("drop-in"); void pp.offsetWidth; pp.classList.add("drop-in"); } });
+      at(t0 + dur + 2100, () => walkDone(true));
+    }
     document.addEventListener("keydown", walkKey, true);
     document.addEventListener("pointerdown", walkPoint, true);
   }
@@ -5738,11 +6002,11 @@ window.DEMOS = (function () {
       '<div class="wb-surface"><div class="wb-head"><p class="wb-title wb-i" id="wb-title"></p><div class="wb-mags" role="group" aria-label="Switch the board">' +
       w.modes.map((md, i) => '<button class="wb-mag" data-act="wb-mode" data-m="' + md.id + '" aria-pressed="false">' + SPR.art(i ? "magnet-red" : "magnet-green", 1, "wb-mag-art") + "<span>" + esc(md.label) + "</span></button>").join("") +
       '</div></div><p class="wb-eg wb-i" id="wb-eg"></p><div class="wb-flow" id="wb-flow"></div></div>' +
-      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", 1, "wb-mk wb-mk-1") + SPR.art("marker-red", 1, "wb-mk wb-mk-2") + "</span>" +
+      '<span class="wb-tray" aria-hidden="true">' + SPR.art("marker-black", 1, "wb-mk wb-mk-1") + SPR.art("marker-blue", 1, "wb-mk wb-mk-2") + SPR.art("marker-red", 1, "wb-mk wb-mk-3") + "</span>" +
       '<button class="wb-eraser" data-act="wb-erase" aria-label="Eraser: rub out the board. Drag it across the board, or press Enter.">' + SPR.art("eraser", 1, "wb-er-art") + "</button>" +
       w.stickies.map((st, i) => '<p class="wb-sticky wb-s' + i + '"><b>' + esc(st.label) + "</b>" + esc(st.text) + "</p>").join("") +
       '<div class="wb-card" id="wb-card" role="dialog" aria-label="Step note" hidden></div></div></div>' +
-      '<span class="wall-strip" aria-hidden="true" style="background-image: url(' + ART["wall-strip"].src + ')"></span>' +
+      '<span class="wall-strip" aria-hidden="true" style="background-image: url(' + ART["wall-strip-fill"].src + ')"></span>' +
       '<button class="wall-down" data-act="wall-down" aria-label="Back to the desk">' + SPR.draw("caretdown", 3) + "<span>Desk</span></button>";
   }
   function wallEl() {
@@ -5760,15 +6024,18 @@ window.DEMOS = (function () {
   // the board at the largest whole-number scale that fits above the desk-edge strip
   function sizeWall() {
     const w = $("#wall"); if (!w) return;
-    const a = ART.whiteboard, strip = isPhone() ? 0 : 126;
-    const k = clamp(Math.floor(Math.min((window.innerWidth - (isPhone() ? 24 : 64)) / a.w, (window.innerHeight - strip - (isPhone() ? 120 : 60)) / a.h)), 3, 12);
+    const a = ART.whiteboard, ss = window.innerHeight < 760 ? 2 : 3, strip = isPhone() ? 0 : 42 * ss;
+    const k = clamp(Math.floor(Math.min((window.innerWidth - (isPhone() ? 24 : 420)) / a.w, (window.innerHeight - strip - (isPhone() ? 120 : 24)) / a.h)), 3, 12);
     const wb = $("#wb", w), img = $(".wb-art", wb);
-    w.style.setProperty("--k", k);
+    w.style.setProperty("--k", k); w.style.setProperty("--ss", ss);
     img.width = a.w * k; img.height = a.h * k;
-    $$(".wb-mag-art, .wb-mk, .wb-er-art", w).forEach((im) => { const n = [...im.classList].find((c) => c.startsWith("art-")).slice(4), s = ART[n]; im.width = s.w * k; im.height = s.h * k; });
+    $$(".wb-mk, .wb-er-art", w).forEach((im) => { const n = [...im.classList].find((c) => c.startsWith("art-")).slice(4), s = ART[n]; im.width = s.w * k; im.height = s.h * k; });
+    const mk = clamp(Math.round(27 / ART["magnet-green"].w), 2, 4);
+    w.style.setProperty("--mk", mk);
+    $$(".wb-mag-art", w).forEach((im) => { im.width = ART["magnet-green"].w * mk; im.height = ART["magnet-green"].h * mk; });
     wb.style.width = a.w * k + "px"; wb.style.height = a.h * k + "px";
     wb.style.left = Math.round((window.innerWidth - a.w * k) / 2) + "px";
-    wb.style.top = Math.max(16, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 20) - a.h * k) / 2)) + "px";
+    wb.style.top = Math.max(8, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 0) - a.h * k) / 2)) + "px";
   }
   function openWall() {
     if (ui.wall || ui.view !== "desk" || $("#intro") || editing) return;
@@ -5909,12 +6176,11 @@ window.DEMOS = (function () {
   }
 
   // ----- pill nav -----
-  const AREAS = [["desk", "Desk"], ["wall", "Whiteboard"], ["record", "Records"]];
+  const AREAS = [["desk", "Desk"], ["record", "Records"]];
   function currentArea() {
-    if (ui.view !== "desk" || !$("#scene")) return 0;
-    if (ui.wall) return 1;
-    if (!isPhone()) return ui.room === 1 ? 2 : 0;
-    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 2 : 0;
+    if (ui.view !== "desk" || !$("#scene") || ui.wall) return 0;
+    if (!isPhone()) return ui.room === 1 ? 1 : 0;
+    return rectOf($("#record")).top < window.innerHeight * 0.55 ? 1 : 0;
   }
   // The camera pans sideways between the rooms; with reduced motion they swap with a quick fade.
   function goRoom(i, quiet) {
@@ -5932,7 +6198,6 @@ window.DEMOS = (function () {
   }
   function goArea(i) {
     const id = AREAS[i][0];
-    if (id === "wall") { openWall(); return; }
     if (ui.wall) { closeWall(); if (id !== "desk") setTimeout(() => goArea(i), reduced() ? 0 : 640); return; }
     if (id === "desk") { goRoom(0); return; }
     // the record room: print first if nothing is printed yet, otherwise just go there
@@ -5941,7 +6206,10 @@ window.DEMOS = (function () {
     if (ui.room !== 0 && !isPhone()) goRoom(0, true);
     printRecord();
   }
-  function updatePill() { const n = $("#area-name"); if (n) n.textContent = AREAS[currentArea()][1]; }
+  function updatePill() {
+    const n = $("#area-name"); if (n) n.textContent = ui.wall ? "Whiteboard" : AREAS[currentArea()][1];
+    const pl = $("#pill"); if (pl) pl.classList.toggle("up", !!ui.wall);
+  }
 
   // the note goes out through the visitor's own mail app; nothing is stored or sent by the page
   function noteLink() {
@@ -5983,6 +6251,173 @@ window.DEMOS = (function () {
     clearTimeout(asideTimer);
     asideTimer = setTimeout(() => { el.hidden = true; }, 5000);
   }
+
+  // ----- the intercom: Thea, the officer, asks the visitor a few questions; each answer takes them somewhere useful -----
+  // Every line lives in data.json under "intercom". Answers are kept for this visit only.
+  const ic = { open: false, node: null, tour: -1, said: false, visitedRecords: false, declared: false, timer: null, spotEl: null };
+  const icNode = (id) => (state.intercom || []).find((n) => n.id === id);
+  function icEl() {
+    let el = $("#icq");
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = "icq"; el.className = "icq"; el.hidden = true;
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Intercom"); el.setAttribute("aria-describedby", "icq-q");
+    el.innerHTML = '<p class="icq-q" id="icq-q" aria-live="polite"></p><div class="icq-chips" id="icq-chips" role="group" aria-label="Answers"></div>' +
+      '<button class="icq-x" data-act="ic-close" aria-label="Close the intercom">' + SPR.draw("xmark", 2) + "</button>";
+    fixedRoot.appendChild(el);
+    return el;
+  }
+  // the scrap comes out of the booth window, at its lower right
+  function icPlace() {
+    const el = $("#icq"), w = $(".window-wrap") || $("#booth");
+    if (!el || !w) return;
+    const r = rectOf(w), vw = window.innerWidth;
+    if (isPhone()) { el.style.left = "12px"; el.style.right = "12px"; el.style.top = Math.max(12, Math.min(window.innerHeight - el.offsetHeight - 90, r.bottom - 24)) + "px"; return; }
+    el.style.right = "auto";
+    // under the window, clear of the name, the shortcuts and the intercom button
+    const icb = rectOf($("#intercom") || w);
+    el.style.left = Math.round(Math.min(vw - el.offsetWidth - 24, Math.max(r.left + 24, icb.right + 12))) + "px";
+    el.style.top = Math.round(r.bottom + 10) + "px";
+  }
+  function icShow(text, chips) {
+    const el = icEl();
+    clearTimeout(ic.timer);
+    $("#icq-q", el).textContent = text;
+    $("#icq-chips", el).innerHTML = (chips || []).map((c, i) => '<button class="icq-chip" data-act="ic-pick" data-i="' + i + '"><span class="icq-n" aria-hidden="true">' + (i + 1) + "</span>" + esc(c) + "</button>").join("");
+    // a one-frame paper swap
+    el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap");
+    if (el.hidden) { el.hidden = false; el.classList.add("pop"); setTimeout(() => el.classList.remove("pop"), 160); }
+    icPlace();
+    const b = $(".ic-btn"); if (b) b.setAttribute("aria-expanded", "true");
+    const first = $(".icq-chip", el) || $(".icq-x", el);
+    if (first) first.focus({ preventScroll: true });
+  }
+  function icAsk(id) {
+    const n = icNode(id); if (!n) { icClose(); return; }
+    ic.node = n; ic.tour = -1; spot(null);
+    icShow(n.q, n.a.map((a) => a.t));
+  }
+  function icOpen() {
+    if (ui.view !== "desk" || $("#intro") || editing) return;
+    ic.open = true;
+    if (ui.room === 1 || ui.printed) ic.visitedRecords = true;
+    // after the tour, or once they have been to the Records room, the last question; after that, a quick way around
+    const id = ic.said && ic.visitedRecords && !ic.declared ? "declare" : ic.said ? "again" : "purpose";
+    icAsk(id);
+  }
+  function icClose(keepSpot) {
+    if (!ic.open && !$("#icq")) return;
+    ic.open = false; ic.tour = -1; clearTimeout(ic.timer);
+    if (!keepSpot) spot(null);
+    const el = $("#icq"); if (el) el.hidden = true;
+    const b = $(".ic-btn"); if (b) { b.setAttribute("aria-expanded", "false"); if (el && el.contains(document.activeElement)) b.focus({ preventScroll: true }); }
+  }
+  function icPick(i) {
+    if (ic.tour >= 0) { if (i === 0) icTour(ic.tour + 1); else icClose(); return; }
+    const n = ic.node, a = n && n.a[i];
+    if (!a) return;
+    ic.said = true; FX.play("tap");
+    if (n.id === "declare") ic.declared = true;
+    if (a.next) { icAsk(a.next); return; }
+    if (a.go === "tour") { icTour(0); return; }
+    if (a.go === "close") { icClose(); return; }
+    // a short reply from Thea, then off they go
+    if (a.say) { icShow(a.say, []); ic.timer = setTimeout(() => icClose(true), 2600); } else icClose(true);
+    icGo(a.go);
+  }
+  function icGo(go) {
+    const back = (fn) => { if (ui.wall) { closeWall(); setTimeout(fn, reduced() ? 0 : 640); } else fn(); };
+    if (go === "wall") { openWall(); return; }
+    if (go === "record") { back(() => { ic.visitedRecords = true; goArea(1); }); return; }
+    if (go === "files") {
+      back(() => {
+        if (ui.room !== 0 && !isPhone()) goRoom(0, true);
+        setTimeout(() => {
+          spot($("#filebox"), $("#filebox-front"));
+          ic.timer = setTimeout(() => { spot($("#dw-skills .dw-front") || $(".dw-front")); ic.timer = setTimeout(() => spot(null), 2200); }, 2200);
+          const tab = $(".p-case.filed .folder-tab"); if (tab) tab.focus({ preventScroll: true });
+        }, reduced() ? 0 : 480);
+      });
+      return;
+    }
+    if (go === "contact") {
+      back(() => {
+        ic.visitedRecords = true; goArea(1);
+        // once the record is printed and the room is in view, lift the slip so it can be torn off
+        let tries = 0;
+        const wait = setInterval(() => {
+          tries++;
+          const sl = $("#slip");
+          if ((ui.printed && (ui.room === 1 || isPhone()) && sl) || tries > 60) {
+            clearInterval(wait);
+            if (!sl) return;
+            setTimeout(() => {
+            sl.scrollIntoView({ block: "center", behavior: behavior() });
+            sl.classList.add("lifted"); FX.play("lift");
+            setTimeout(() => sl.classList.remove("lifted"), 2400);
+            const t = $("#perf") || sl; t.focus({ preventScroll: true });
+            }, reduced() ? 0 : 600);
+          }
+        }, 250);
+      });
+    }
+  }
+  // the tour: one thing at a time is spotlit, with a line from Thea
+  function tourTarget(at) {
+    if (at === "passport") return [$('.booth-links [data-act="passport"]')];
+    if (at === "files") return [$("#filebox"), $("#filebox-front")];
+    if (at === "drawers") return $$(".dw .dw-front");
+    if (at === "up") return [$(".to-wall")];
+    if (at === "printer") return [$("#printer")];
+    if (at === "stamps") return [$("#stampdock")];
+    return [];
+  }
+  function icTour(i) {
+    const n = icNode("tour"); if (!n) { icClose(); return; }
+    if (i >= n.steps.length) { ic.tour = -1; spot(null); ic.declared = false; ic.visitedRecords = true; icAsk("declare"); return; }
+    const go = () => {
+      ic.tour = i; ic.said = true;
+      const st = n.steps[i];
+      spot.apply(null, tourTarget(st.at));
+      icShow(st.say, [n.next || "Next", n.skip || "Skip tour"]);
+      ic.tour = i;
+    };
+    if (ui.wall) { closeWall(); setTimeout(go, reduced() ? 0 : 640); }
+    else if (ui.room !== 0 && !isPhone()) { goRoom(0, true); setTimeout(go, reduced() ? 0 : 480); }
+    else go();
+  }
+  // the spotlight: the rest of the screen dims one step; it never takes a click
+  function spot() {
+    const els = [].slice.call(arguments).filter((e) => e && !e.hidden && e.offsetParent !== null);
+    let sp = $("#spot");
+    if (!els.length) { if (sp) sp.hidden = true; ic.spotEls = []; return; }
+    if (!sp) { sp = document.createElement("div"); sp.id = "spot"; sp.className = "spot"; sp.setAttribute("aria-hidden", "true"); fixedRoot.appendChild(sp); }
+    ic.spotEls = els;
+    // a drawer front only counts where it shows (the fronts are cropped to fit the desk edge)
+    const rs = els.map((e) => { const r = rectOf(e), w = e.closest(".dw"), cr = e.classList.contains("dw-front") && w ? parseFloat(getComputedStyle(w).getPropertyValue("--crop")) || 0 : 0; return { left: r.left + cr, right: r.right - cr, top: r.top, bottom: r.bottom }; }), pad = 10;
+    const l = Math.min.apply(null, rs.map((r) => r.left)) - pad, t = Math.min.apply(null, rs.map((r) => r.top)) - pad;
+    const r = Math.max.apply(null, rs.map((q) => q.right)) + pad, b = Math.max.apply(null, rs.map((q) => q.bottom)) + pad;
+    if (isPhone()) els[0].scrollIntoView({ block: "center" });
+    sp.style.left = Math.round(l) + "px"; sp.style.top = Math.round(t) + "px"; sp.style.width = Math.round(r - l) + "px"; sp.style.height = Math.round(b - t) + "px";
+    sp.hidden = false;
+  }
+  // a click on the spotlit thing moves the tour on (after it does its own job); a click anywhere else outside the scrap closes it
+  document.addEventListener("pointerdown", (ev) => {
+    if (!ic.open || !$("#icq") || $("#icq").hidden) return;
+    const t = ev.target;
+    if (t.closest && (t.closest("#icq") || t.closest(".ic-btn"))) return;
+    if (ic.tour >= 0 && ic.spotEls && ic.spotEls.some((e) => e.contains(t))) { const next = ic.tour + 1; setTimeout(() => { if (ic.open) icTour(next); }, 60); return; }
+    icClose(ic.tour < 0);
+  }, true);
+  document.addEventListener("keydown", (ev) => {
+    if (!ic.open || !$("#icq") || $("#icq").hidden) return;
+    if (ev.key === "Escape") { ev.preventDefault(); ev.stopImmediatePropagation(); icClose(); return; }
+    if (/^[1-4]$/.test(ev.key) && !(ev.target.matches && ev.target.matches("input, textarea, [contenteditable]"))) {
+      const b = $$(".icq-chip")[+ev.key - 1];
+      if (b) { ev.preventDefault(); ev.stopImmediatePropagation(); icPick(+ev.key - 1); }
+    }
+  }, true);
+  window.addEventListener("resize", () => { if (ic.open) { icPlace(); if (ic.spotEls && ic.spotEls.length) spot.apply(null, ic.spotEls); } });
 
   // ----- list view and amend mode -----
   function f(path, ph, cls, tag) {
@@ -6299,6 +6734,7 @@ window.DEMOS = (function () {
       ui.boothForced = true; ui.forced = true; ui.stagger = 0; applyScene(true);
       const dk = $("#desk"); if (dk) dk.classList.remove("slow-unpack");
       $$(".arriving").forEach((e) => e.classList.remove("arriving"));
+      setTimeout(() => { if (!isPhone() && $("#desk")) { relayout(); placeStickers(); } }, reduced() ? 0 : 700);
     };
     if (reduced()) { firstRun = { timers: [] }; finish(); return; }
     firstRun = { timers: [] };
@@ -6462,10 +6898,12 @@ window.DEMOS = (function () {
       FX.play("tap");
     },
     intercom() {
+      if (ic.open) { icClose(); return; }
       FX.play("chime");
-      const trigger = AREAS[currentArea()][0] === "desk" ? "unpacked" : "record";
-      setTimeout(() => { if (!sayNow("intercom")) sayNow(trigger); }, reduced() ? 0 : 450);
+      setTimeout(() => icOpen(), reduced() ? 0 : 380);
     },
+    "ic-pick"(b) { icPick(+b.dataset.i); },
+    "ic-close"() { icClose(); },
     note() {
       const f = $("#vnote"), pad = $("#notepad"), desk = $("#desk");
       if (!f) return;
@@ -6500,7 +6938,7 @@ window.DEMOS = (function () {
       setTimeout(() => sc.remove(), 1000);
     },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
-    step(b) { goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
+    step(b) { if (!ui.wall) goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
     wall() { openWall(); },
     "wall-down"() { closeWall(); },
     "wb-mode"(b) { wbMode(b.dataset.m); },
@@ -6790,7 +7228,7 @@ window.DEMOS = (function () {
     const freeKey = ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"));
     if (ui.wall && (ev.key === "ArrowDown" || ev.key === "Escape")) { ev.preventDefault(); if ($(".wb-card") && !$(".wb-card").hidden) wbCard(null); else closeWall(); return; }
-    if (ev.key === "ArrowUp" && freeKey && !ui.wall && !ui.dwOpen && (isPhone() || ui.room === 0) && !$(".p-case.open")) { ev.preventDefault(); openWall(); return; }
+    if (ev.key === "ArrowUp" && freeKey && !ui.wall && !ui.dwOpen && !$(".p-case.open")) { ev.preventDefault(); openWall(); return; }
     if (ui.wall && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && freeKey) return;
     if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !isPhone() && ui.view === "desk" && !editing && !held && !ui.contactOpen && !$("#intro") &&
       !(ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable], .f, [data-drag], .pobj, .passport, .cm-device, .pager, .sk-lift"))) {
@@ -6889,7 +7327,7 @@ window.DEMOS = (function () {
   document.addEventListener("pointerup", (ev) => {
     if (!swipe || ev.pointerId !== swipe.id) return;
     const dx = ev.clientX - swipe.x, dy = ev.clientY - swipe.y; swipe = null;
-    if (Math.abs(dy) > 70 && Math.abs(dx) < 50) { if (dy > 0 && !ui.wall && ui.room === 0) openWall(); else if (dy < 0 && ui.wall) closeWall(); return; }
+    if (Math.abs(dy) > 70 && Math.abs(dx) < 50) { if (dy > 0 && !ui.wall) openWall(); else if (dy < 0 && ui.wall) closeWall(); return; }
     if (!ui.wall && Math.abs(dx) > 60 && Math.abs(dy) < 50) goRoom(ui.room + (dx < 0 ? 1 : -1));
   });
   let ticking = false;
@@ -6904,6 +7342,8 @@ window.DEMOS = (function () {
   }, { passive: true });
   let rz = null;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { onResize(); sizeWall(); }, 120); });
+  // the desk can also change height without a window resize (the booth settles once its fonts load): lay it out again then
+  setInterval(() => { const d = $("#desk"); if (d && !isPhone() && ui.layoutH && d.clientHeight !== ui.layoutH && !held && !document.hidden) onResize(); }, 400);
   narrow.addEventListener("change", () => { if (ui.view === "desk" && !editing) render(); });
 
 
