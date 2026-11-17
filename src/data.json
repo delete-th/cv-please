@@ -532,7 +532,7 @@
         {
           "t": "One minute",
           "say": "Understood. Printing my record.",
-          "go": "record"
+          "go": "print"
         },
         {
           "t": "Long enough to dig in",

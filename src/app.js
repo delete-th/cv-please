@@ -189,7 +189,7 @@
       '<p class="denied-note" id="denied-note"' + (ui.admitted === "denied" ? "" : " hidden") + ">" + esc(deniedLine()) + "</p>" +
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
         '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") +
-      '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="area" data-to="record">Summary</button><button class="btn-quiet" data-act="view" data-v="list">Simplify</button>' +
+      '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="summary">Summary</button><button class="btn-quiet" data-act="view" data-v="list">Simplify</button>' +
       '<button class="btn-quiet" data-act="passport">Inspect passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
       '<div class="booth-side">' + pinboardHTML() + "</div>" +
       '<div class="booth-meta">' +
@@ -1907,7 +1907,13 @@
     const id = AREAS[i][0];
     if (ui.wall) { closeWall(); if (id !== "desk") setTimeout(() => goArea(i), reduced() ? 0 : 640); return; }
     if (id === "desk") { goRoom(0); return; }
-    // the record room: print first if nothing is printed yet, otherwise just go there
+    // walking over to the Records room prints nothing; only the printer and the Summary link print
+    if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
+    goRoom(1);
+  }
+  // print the record if nothing is printed yet (from the desk, where the printer is), otherwise just go to it
+  function printAndShow() {
+    if (ui.wall) { closeWall(); setTimeout(printAndShow, reduced() ? 0 : 640); return; }
     if (!ui.forced) { ui.forced = true; ui.boothForced = true; applyScene(); }
     if (ui.printed) { goRoom(1); return; }
     if (ui.room !== 0 && !isPhone()) goRoom(0, true);
@@ -2036,6 +2042,7 @@
     const back = (fn) => { if (ui.wall) { closeWall(); setTimeout(fn, reduced() ? 0 : 640); } else fn(); };
     if (go === "wall") { openWall(); return; }
     if (go === "record") { back(() => { ic.visitedRecords = true; goArea(1); }); return; }
+    if (go === "print") { back(() => { ic.visitedRecords = true; printAndShow(); }); return; }
     if (go === "files") {
       back(() => {
         if (ui.room !== 0 && !isPhone()) goRoom(0, true);
@@ -2049,7 +2056,7 @@
     }
     if (go === "contact") {
       back(() => {
-        ic.visitedRecords = true; goArea(1);
+        ic.visitedRecords = true; printAndShow();
         // once the record is printed and the room is in view, lift the slip so it can be torn off
         let tries = 0;
         const wait = setInterval(() => {
@@ -2645,6 +2652,7 @@
       setTimeout(() => sc.remove(), 1000);
     },
     area(b) { goArea(AREAS.findIndex((a) => a[0] === b.dataset.to)); },
+    summary() { printAndShow(); },
     step(b) { if (!ui.wall) goArea(clamp(currentArea() + +b.dataset.dir, 0, AREAS.length - 1)); },
     wall() { openWall(); },
     "wall-down"() { closeWall(); },
