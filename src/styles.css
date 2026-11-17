@@ -2240,3 +2240,21 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .id-seal { position: absolute; right: 14px; top: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--gold-dark); box-shadow: inset 0 0 0 3px var(--cover-ink), inset 0 0 0 5px var(--gold-dark), 0 0 0 2px var(--cover-edge); }
 .id-strip { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; background: repeating-linear-gradient(90deg, var(--ink-soft) 0 2px, transparent 2px 4px, var(--ink-soft) 4px 5px, transparent 5px 9px) 16px 5px / calc(100% - 32px) 8px no-repeat, var(--paper-deep); border-top: 1px solid var(--rule); }
 .p-id.held, .p-id:hover { border-radius: 14px; }
+
+/* ---------- the Commendations: a sheet of letter paper. Ruled lines, a letterhead rule under the title,
+   a paperclip on the top edge and a folded-over bottom corner ---------- */
+.p-honours { overflow: visible; box-shadow: none; filter: drop-shadow(3px 3px 0 var(--shade));
+  background-color: var(--field);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 25px, color-mix(in srgb, var(--rule) 38%, transparent) 25px 26px);
+  background-position: 0 58px; background-size: 100% calc(100% - 58px); background-repeat: no-repeat;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%); }
+.p-honours.held { box-shadow: none; filter: drop-shadow(8px 12px 4px var(--shade-lift)); }
+.p-honours::after { content: ""; position: absolute; right: 0; bottom: 0; width: 26px; height: 26px; background: linear-gradient(135deg, var(--paper-deep) 50%, transparent 50%); box-shadow: -1px -1px 0 color-mix(in srgb, var(--rule) 60%, transparent); pointer-events: none; }
+.p-honours .doc-title { padding-bottom: 7px; border-bottom: 3px double var(--ink); }
+.hon-clip { position: absolute; z-index: 2; left: 22px; top: -14px; line-height: 0; rotate: -8deg; pointer-events: none; filter: drop-shadow(1px 2px 0 var(--shade-rest)); }
+.p-honours .honour { background: transparent; }
+
+.p-honours { clip-path: none; background-image: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 55%, transparent), transparent 70%); background-position: 0 0; background-size: 100% 100%; }
+/* the folded corner: the turned-back flap, with the desk showing where the corner was */
+.p-honours::after { width: 28px; height: 28px; background: linear-gradient(135deg, var(--paper-deep) 0 50%, var(--wood-2) 50%); box-shadow: none; filter: drop-shadow(-2px -2px 0 color-mix(in srgb, var(--ink) 18%, transparent)); }
+.hon-clip { left: auto; right: 34px; top: -20px; rotate: 6deg; }

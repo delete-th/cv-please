@@ -84,7 +84,7 @@
     return "";
   }
   function honoursInner() {
-    return '<div class="pad"><p class="doc-title">Commendations</p>' + state.awards.filter((a) => a.result).map((a, i) => {
+    return '<span class="hon-clip" aria-hidden="true">' + SPR.art("paperclip", 3) + '</span><div class="pad"><p class="doc-title">Commendations</p>' + state.awards.filter((a) => a.result).map((a, i) => {
       const pin = pinFor(a);
       return '<div class="honour' + (pin ? " pinned" : "") + (ui.pinHot === i ? " lit" : "") + '">' +
         (pin ? '<button class="pin" data-act="pin" data-i="' + i + '" aria-pressed="' + (ui.pinHot === i) + '" aria-label="Pin for ' + esc(a.result) + '. Highlight this award.">' + SPR.art(pin, 2) + "</button>" : "") +
