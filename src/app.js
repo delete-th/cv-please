@@ -141,7 +141,8 @@
     // page count and the way back sit at the bottom right, beside the corner that turns the page
     const foot = n > 1 ? '<div class="pg-foot">' + (page > 0 ? '<button class="pg-back" data-act="page" data-id="' + id + '" data-dir="-1" aria-label="Back to page ' + page + '">Previous page</button>' : "") +
       '<span class="pg">Page ' + (page + 1) + " of " + n + "</span></div>" : "";
-    return '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' +
+    const note = boardFor(p) && !isPhone() ? '<button class="cf-board" data-act="cf-board" data-id="' + id + '">How I built it ↑</button>' : "";
+    return note + '<header class="paper-head"><h2>' + esc(p.name) + '</h2><div class="ph-row">' +
       '<button class="close icon-btn" data-act="to-box" data-id="' + id + '" aria-label="Return to box">' + SPR.draw("tobox", 2) + '<span class="ib-tip" aria-hidden="true">Return to box</span></button>' +
       '<button class="close icon-btn" data-act="close-case" data-id="' + id + '" aria-label="Close file">' + SPR.draw("xmark", 2) + '<span class="ib-tip" aria-hidden="true">Close file</span></button></div></header>' +
       '<div class="sheets"><div class="paper-body">' + pages[page] + "</div></div>" + foot +
@@ -284,7 +285,9 @@
     const sticker = (id, art) => '<span class="sticker" data-sticker="' + id + '" data-drag aria-hidden="true">' + SPR.art(art, SC) + (id === "mug" ? '<span class="steam">' + SPR.draw("steam1", PX) + SPR.draw("steam2", PX) + "</span>" : "") + "</span>";
     return '<section class="desk" id="desk" aria-label="Desk">' +
       '<p class="phone-hint">Swipe through the papers. Tap a folder to open it.</p>' +
-      '<div class="counter" id="counter"><button class="to-wall" data-act="wall" aria-label="Look up at the whiteboard">' + SPR.draw("caretup", 3) + '<span class="tip" aria-hidden="true">Whiteboard</span></button><div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
+      '<div class="counter" id="counter"><button class="peek-btn" data-act="wall" data-tag="Whiteboard" aria-label="Look up at the whiteboard"><span class="peek-art">' + SPR.art("board-peek", SC) +
+        '<span class="pk-mk pk-blue">' + SPR.art("marker-blue", SC) + '</span><span class="pk-mk pk-black">' + SPR.art("marker-black", SC) + '</span><span class="pk-mk pk-red">' + SPR.art("marker-red", SC) + "</span></span></button>" +
+        '<button class="desk-marker" data-act="marker-back" data-tag="Whiteboard" aria-label="Put the marker back on the whiteboard">' + SPR.art("marker-desk", SC) + "</button>" + '<div class="put-away" id="putaway"></div><span class="counter-hint" id="counter-hint">Drop here to put it away</span></div>' +
       '<div class="filebox" id="filebox" data-act="all-back"><span class="box-art" aria-hidden="true">' + SPR.art("filebox", BX) + "</span></div>" +
       '<div class="filebox-front" id="filebox-front">' + SPR.art("filebox-front", BX) + '<button class="box-plate" data-act="all-back" aria-label="Put all files back"></button></div>' +
       '<div class="printer" id="printer"><button class="printer-btn" data-act="print" aria-label="Print the entry record">' + SPR.art("printer-off", 4, "pr-off") + SPR.art("printer-on", 4, "pr-on") + "</button>" +
@@ -1659,6 +1662,7 @@
     try { sessionStorage.setItem("cvp-walkin", "1"); } catch (err) { /* storage can be blocked */ }
     // reduced motion: straight to the passport on the desk
     if (reduced()) return;
+    const sayEl = $("#say"); if (sayEl) sayEl.textContent = "Click the passport to open it.";
     const a = ART["booth-scene"], fit = Math.floor(Math.min((window.innerWidth - 32) / a.w, (window.innerHeight - 96) / a.h));
     const S = Math.max(3, Math.min(9, fit - (fit % 3))), T = (S / 3) * 2, P = (v) => Math.round(v * S) + "px";
     const el = document.createElement("div");
@@ -1772,8 +1776,14 @@
     wb.style.left = Math.round((window.innerWidth - a.w * k) / 2) + "px";
     wb.style.top = Math.max(8, Math.round((window.innerHeight - strip - (isPhone() ? 90 : 0) - a.h * k) / 2)) + "px";
   }
-  function openWall() {
+  function openWall(fromCase) {
     if (ui.wall || ui.view !== "desk" || $("#intro") || editing) return;
+    const from = typeof fromCase === "string" ? fromCase : null;
+    if (from !== (ui.wbFrom || null) || from) {
+      ui.wbFrom = from;
+      if (from) { const pr = state.projects[caseIndex(from)]; ui.wbMode = boardFor(pr) || ui.wbMode; ui.wbFromMode = ui.wbMode; }
+      if ($("#wall") && ui.wbShown) wbDraw(false);
+    }
     if (ui.dwOpen) setDrawer(null);
     const go = () => {
       const w = wallEl();
@@ -1796,14 +1806,14 @@
     const site = $(".site"); if (site) site.inert = false;
     const w = $("#wall"); if (w) w.inert = true;
     FX.play("dwslide"); updatePill();
-    setTimeout(() => { const b = $(".to-wall"); if (b && !isPhone()) b.focus({ preventScroll: true }); }, reduced() ? 0 : 620);
+    setTimeout(() => { const b = $(".desk-marker:not([hidden])") || $(".peek-btn"); if (b && !isPhone() && !ui.wbBackTo) b.focus({ preventScroll: true }); }, reduced() ? 0 : 620);
   }
   // write the current mode on the board: each piece appears in turn, about 80ms apart, like it is being written
   function wbDraw(animate, quiet) {
     const md = wbModeOf(); if (!md) return;
     $$(".wb-mag").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === md.id)));
     $("#wb-title").textContent = md.title;
-    $("#wb-eg").textContent = "e.g. " + md.case;
+    $("#wb-eg").textContent = "e.g. " + wbCaseName(md);
     $("#wb-steps").innerHTML = md.steps.map((st, i) => '<button class="wb-step wb-i" data-act="wb-step" data-i="' + i + '" aria-pressed="false"><span class="wb-num">' + ringSVG + "<b>" + (i + 1) + '</b></span><span class="wb-name">' + esc(st.t) + "</span></button>").join("");
     // step 1 is chosen when the board is first written, so the note is never empty
     wbSelect(0, true);
@@ -1814,6 +1824,10 @@
     items.forEach((x, n) => setTimeout(() => { x.classList.add("on"); if (n % 2 === 0) FX.play("marker"); }, 60 + n * 80));
     setTimeout(() => { if (pin) { pin.classList.add("on"); FX.play("peel"); } }, 60 + items.length * 80 + 120);
   }
+  // which board a project belongs on: "lead" in its role opens the team lead board, any other role the solo board
+  function boardFor(p) { const r = String((p && p.role) || "").trim(); return !r ? null : /lead/i.test(r) ? "lead" : "solo"; }
+  const wbFromCase = (md) => (ui.wbFrom && ui.wbFromMode === md.id ? ui.wbFrom : null);
+  const wbCaseName = (md) => { const c = wbFromCase(md); return c ? shortName(state.projects[caseIndex(c)]) : md.case; };
   // drawing order: title, example, then the steps
   function wbRank(x) { return x.id === "wb-title" ? 0 : x.id === "wb-eg" ? 1 : 2 + +(x.dataset.i || 0); }
   function wbMode(id) {
@@ -1855,10 +1869,11 @@
     ui.wbSel = i;
     $$(".wb-step").forEach((b) => { const on = i != null && +b.dataset.i === i; b.classList.toggle("sel", on); b.setAttribute("aria-pressed", String(on)); });
     if (i == null) { pin.hidden = true; if (!quiet) FX.play("peel"); return; }
-    const st = md.steps[i], id = caseByName(md.case);
+    const st = md.steps[i], fromCase = wbFromCase(md), id = fromCase || caseByName(md.case);
     pin.innerHTML = '<b class="wbp-h">' + (i + 1) + ". " + esc(st.t) + '</b><p class="wbp-n">' + esc(st.n) + "</p>" +
       (st.x ? '<p class="wbp-x"><b>' + esc(st.x.label) + "</b> " + esc(st.x.text) + "</p>" : "") +
-      (id ? '<button class="wbp-case" data-act="wb-case" data-id="' + id + '">Open the ' + esc(md.case) + " file</button>" : "");
+      (id ? (fromCase ? '<button class="wbp-case" data-act="wb-back" data-id="' + id + '">Back to the ' + esc(wbCaseName(md)) + " file ↓</button>"
+        : '<button class="wbp-case" data-act="wb-case" data-id="' + id + '">Open the ' + esc(md.case) + " file ↓</button>") : "");
     pin.hidden = false;
     if (!quiet) { FX.play("peel"); pin.classList.remove("swap"); void pin.offsetWidth; pin.classList.add("swap", "on"); }
   }
@@ -1904,6 +1919,49 @@
     const eat = (e) => { e.stopPropagation(); e.preventDefault(); document.removeEventListener("click", eat, true); };
     document.addEventListener("click", eat, true); setTimeout(() => document.removeEventListener("click", eat, true), 300);
   }
+
+  // ----- the blue marker on the desk: putting it back in the board's tray takes you up to the board -----
+  let markerDrag = null, markerDragged = false;
+  function markerSlot() { return rectOf($(".pk-blue")); }
+  function markerHome(btn, fromDrag) {
+    if (ui.markerBack || !btn) { openWall(); return; }
+    const r = rectOf(btn), t = markerSlot();
+    const done = () => {
+      ui.markerBack = true; document.documentElement.classList.add("marker-back");
+      btn.hidden = true; btn.style.translate = ""; btn.classList.remove("sliding", "held");
+      FX.play("usbclick");
+      setTimeout(() => openWall(), reduced() ? 0 : 180);
+    };
+    if (reduced()) { done(); return; }
+    const dx = t.left - r.left + (fromDrag ? fromDrag[0] : 0), dy = t.top - r.top + (fromDrag ? fromDrag[1] : 0);
+    btn.classList.add("sliding");
+    btn.style.translate = Math.round(dx) + "px " + Math.round(dy) + "px";
+    setTimeout(done, 260);
+  }
+  document.addEventListener("pointerdown", (ev) => {
+    const b = ev.target.closest && ev.target.closest(".desk-marker");
+    if (!b || ev.button !== 0 || ui.markerBack) return;
+    markerDrag = { b: b, x: ev.clientX, y: ev.clientY, id: ev.pointerId, moved: false };
+  });
+  document.addEventListener("pointermove", (ev) => {
+    const d = markerDrag; if (!d || ev.pointerId !== d.id) return;
+    const dx = ev.clientX - d.x, dy = ev.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < 5) return;
+    if (!d.moved) { d.moved = true; d.b.classList.add("held"); hideTag(); }
+    d.b.style.translate = Math.round(dx) + "px " + Math.round(dy) + "px";
+  });
+  document.addEventListener("pointerup", (ev) => {
+    const d = markerDrag; if (!d || ev.pointerId !== d.id) return;
+    markerDrag = null;
+    if (!d.moved) return;
+    markerDragged = true; setTimeout(() => { markerDragged = false; }, 300);
+    const r = rectOf(d.b), t = markerSlot(), pk = rectOf($(".peek-btn")), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const near = Math.hypot(cx - (t.left + t.width / 2), cy - (t.top + t.height / 2)) < 60 + t.width / 2 || (cx > pk.left && cx < pk.right && cy > pk.top && cy < pk.bottom);
+    if (near) { const tr = (d.b.style.translate || "0px 0px").split(" ").map(parseFloat); d.b.style.translate = ""; markerHome(d.b, [0, 0]); void tr; return; }
+    // not near the tray: it rolls back to where it was lying
+    d.b.classList.remove("held"); d.b.classList.add("sliding"); d.b.style.translate = "";
+    setTimeout(() => d.b.classList.remove("sliding"), 260);
+  });
 
   // ----- pill nav -----
   const AREAS = [["desk", "Desk"], ["record", "Records"]];
@@ -2107,7 +2165,7 @@
     if (at === "passport") return [$('.booth-links [data-act="passport"]')];
     if (at === "files") return [$("#filebox"), $("#filebox-front")];
     if (at === "drawers") return $$(".dw .dw-front");
-    if (at === "up") return [$(".to-wall")];
+    if (at === "up") return [ui.markerBack ? $(".peek-btn") : $(".desk-marker")];
     if (at === "printer") return [$("#printer")];
     if (at === "stamps") return [$("#stampdock")];
     return [];
@@ -2555,7 +2613,7 @@
 
   // ----- name tags: objects first, names when pointed at -----
   let tagTimer = null, tagFor = null;
-  function tagTarget(el) { return el && el.closest && (el.closest(".spk") || el.closest(".pbi") || el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
+  function tagTarget(el) { return el && el.closest && (el.closest(".peek-btn") || el.closest(".desk-marker") || el.closest(".spk") || el.closest(".pbi") || el.closest(".dw-front") || el.closest(".p-case.filed .folder-tab") || (!isPhone() && el.closest("#desk .p-diploma:not(.held)"))); }
   function showTag(el, now) {
     clearTimeout(tagTimer);
     const go = () => {
@@ -2589,6 +2647,12 @@
         t.className = "tag side pop"; t.hidden = false;
         t.style.left = Math.round(box.right + 14) + "px";
         t.style.top = Math.round(clamp(r.top + r.height / 2 - t.offsetHeight / 2, 8, window.innerHeight - t.offsetHeight - 8)) + "px";
+      } else if (el.closest(".peek-btn, .desk-marker")) {
+        // the board peek and the marker: the word just under them
+        t.innerHTML = '<span class="tg-word">' + esc(el.dataset.tag) + "</span>";
+        t.className = "tag pop"; t.hidden = false;
+        t.style.left = Math.round(clamp(r.left + r.width / 2 - t.offsetWidth / 2, 8, window.innerWidth - t.offsetWidth - 8)) + "px";
+        t.style.top = Math.round(r.bottom + 10) + "px";
       } else {
         t.innerHTML = '<span class="tg-word">' + esc(el.dataset.tag) + "</span>";
         t.className = "tag above pop"; t.hidden = false;
@@ -2691,6 +2755,20 @@
     "wb-case"(b) { const id = b.dataset.id; closeWall(); setTimeout(() => { goRoom(0, true); openCase(id); const el = paperEl(id); if (el) el.focus({ preventScroll: true }); }, reduced() ? 0 : 640); },
     "wb-erase"() { wbWipe(() => wbDraw(true)); },
     "walkin-skip"() { walkDone(); },
+    "marker-back"(b) { if (markerDragged) { markerDragged = false; return; } markerHome(b); },
+    "cf-board"(b) { ui.wbSel = 0; openWall(b.dataset.id); },
+    // back down to the case file the board was opened from; it lifts for a moment so the eye finds it
+    "wb-back"(b) {
+      const id = b.dataset.id;
+      closeWall();
+      setTimeout(() => {
+        if (ui.room !== 0 && !isPhone()) goRoom(0, true);
+        if (!pst(id).open) openCase(id);
+        const el = paperEl(id); if (!el) return;
+        el.classList.add("nudge"); setTimeout(() => el.classList.remove("nudge"), 120);
+        el.focus({ preventScroll: true });
+      }, reduced() ? 0 : 640);
+    },
     // the walk-in plays once per visit; this forgets that it has played and starts the visit over
     "replay-intro"() { try { sessionStorage.removeItem("cvp-walkin"); } catch (err) { /* storage can be blocked */ } location.reload(); },
     "open-booth"() { ui.boothForced = true; applyScene(); $("#hello").focus({ preventScroll: true }); },

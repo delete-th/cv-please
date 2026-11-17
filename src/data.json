@@ -522,7 +522,7 @@
         },
         {
           "t": "How do you work?",
-          "say": "It's all on my whiteboard. Look up!",
+          "say": "My process is on the wall. Look up.",
           "go": "wall"
         },
         {
@@ -561,7 +561,7 @@
         },
         {
           "at": "up",
-          "say": "My whiteboard's up there: how I work solo, and how I run a team."
+          "say": "That marker belongs on my whiteboard. Put it back and look up."
         },
         {
           "at": "printer",
