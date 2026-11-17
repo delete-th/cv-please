@@ -996,7 +996,7 @@
   }
   // Thea says a line in her speech bubble: typed out a few letters at a time with a small talking blip,
   // her mouth opening and closing in the booth window and her shoulders bobbing a pixel as she talks
-  function theaSpeak(said, holdMs) {
+  function theaSpeak(said, holdMs, away) {
     if (!said || isPhone()) return;
     let b = $("#thea-say");
     if (!b) {
@@ -1021,7 +1021,8 @@
         if (i >= said.length) { clearInterval(theaSpeak.typer); tx.style.minWidth = ""; done(); }
       }, 34);
     }
-    const ww = $(".window-wrap"), wr = ww ? rectOf(ww) : null, inView = wr && wr.bottom > 40 && wr.top >= -4;
+    // "away": the view is about to leave the booth, so she speaks from her own corner with her face beside the line
+    const ww = $(".window-wrap"), wr = ww ? rectOf(ww) : null, inView = !away && !ui.wall && wr && wr.bottom > 40 && wr.top >= -4;
     b.classList.toggle("own", !inView);
     b.hidden = false;
     if (inView) { b.style.left = Math.round(wr.right + 14) + "px"; b.style.top = Math.round(wr.top + 26) + "px"; }
@@ -2060,7 +2061,7 @@
     if (a.go === "close") { icClose(); return; }
     icClose(true);
     icGo(a.go);
-    if (a.say) setTimeout(() => theaSpeak(a.say, 3600), 30);
+    if (a.say) setTimeout(() => theaSpeak(a.say, 3600, a.go !== "files"), 30);
   }
   function icGo(go) {
     const back = (fn) => { if (ui.wall) { closeWall(); setTimeout(fn, reduced() ? 0 : 640); } else fn(); };
