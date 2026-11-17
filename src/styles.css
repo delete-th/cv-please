@@ -2204,3 +2204,16 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .wb-mag:focus-visible span { text-decoration: underline dashed 2px var(--ink); text-underline-offset: 4px; }
 .wb-mag[aria-pressed="true"]:focus-visible span { text-decoration-style: solid; text-decoration-thickness: 3px; }
 .wb-title { max-width: 72%; }
+
+/* Thea talking at the window: her mouth (art x 26 to 29, rows 31 and 32 of the portrait) opens on letters,
+   and she bobs one art pixel every few beats */
+.window .mouth { position: absolute; z-index: 1; left: 50%; bottom: 3px; width: 110px; height: 118px; translate: -50% 0; visibility: hidden; pointer-events: none; }
+.window .mouth i { position: absolute; left: 52px; top: 62px; width: 8px; height: 4px; background: var(--ink); box-shadow: 0 4px 0 var(--red-dark); }
+.window.mouth-open .mouth { visibility: visible; }
+.window.bob .applicant, .window.bob .blink, .window.bob .mouth { translate: -50% -2px; }
+/* the question menu beside the intercom, pointing back at it */
+.icq::before { left: -9px; top: 18px; border-left: 2px solid var(--ink); border-top: 0; border-bottom: 2px solid var(--ink); }
+.icq-q:empty { display: none; }
+.icq-q:empty + .icq-chips { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) { .window.bob .applicant, .window.bob .blink, .window.bob .mouth { translate: -50% 0; } }
+.thea-say { z-index: 89; }

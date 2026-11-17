@@ -181,7 +181,7 @@
   function boothHTML() {
     const p = state.profile, qs = state.interview.map((q, i) => [q, i]).filter((x) => x[0].q && x[0].a);
     return '<header class="booth" id="booth"><div class="window-wrap"><div class="window"><span class="skyline" id="skyline" data-phase="' + dayPhase() + '">' + SPR.scene(PX, dayPhase()) + "</span>" +
-      SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="blink" id="blink" aria-hidden="true"><i></i><i></i></span><span class="ledge" aria-hidden="true"></span>' +
+      SPR.applicant(p.applicant || "thea", 2, portraitAlt + ", standing at the booth window", "applicant") + '<span class="blink" id="blink" aria-hidden="true"><i></i><i></i></span><span class="mouth" id="mouth" aria-hidden="true"><i></i></span><span class="ledge" aria-hidden="true"></span>' +
       '<div class="shutter" id="shutter"><span>Booth closed.</span><button class="btn-quiet" data-act="open-booth">Open the shutter</button></div></div>' +
       '<div class="board" id="board" aria-hidden="true"></div><p class="sr-only">Departure board: ' + esc(p.board.join(", ")) + "</p></div>" +
       '<div class="booth-main">' + (p.eyebrow ? '<p class="eyebrow">' + esc(p.eyebrow) + "</p>" : "") +
@@ -991,26 +991,36 @@
     const id = el.dataset.p, lines = (line || noteOf(id)).split("|").map((x) => x.trim()).filter(Boolean);
     if (!lines.length || isPhone()) return;
     noteTurn[id] = ((noteTurn[id] == null ? -1 : noteTurn[id]) + 1) % lines.length;
+    theaSpeak(lines[noteTurn[id]]);
+  }
+  // Thea says a line in her speech bubble: typed out a few letters at a time with a small talking blip,
+  // her mouth opening and closing in the booth window and her shoulders bobbing a pixel as she talks
+  function theaSpeak(said, holdMs) {
+    if (!said || isPhone()) return;
     let b = $("#thea-say");
     if (!b) {
       b = document.createElement("div"); b.id = "thea-say"; b.className = "thea-say"; b.setAttribute("role", "status");
       b.innerHTML = '<span class="ts-face" aria-hidden="true">' + SPR.applicant(state.profile.applicant || "thea", 1, "") + '</span><p class="ts-text"></p>';
       fixedRoot.appendChild(b);
     }
-    // the line is typed out a few letters at a time, with a small talking blip every few letters
-    const tx = $(".ts-text", b), said = lines[noteTurn[id]];
-    clearInterval(showNote.typer);
-    if (reduced()) tx.textContent = said;
+    const tx = $(".ts-text", b), win = $(".window");
+    clearInterval(theaSpeak.typer); clearTimeout(theaSpeak.hide);
+    const done = () => { if (win) win.classList.remove("talking", "mouth-open", "bob"); if (holdMs) theaSpeak.hide = setTimeout(() => { b.hidden = true; }, holdMs); };
+    if (reduced()) { tx.textContent = said; done(); }
     else {
-      let i = 0;
+      let i = 0, beat = 0;
       tx.textContent = ""; tx.style.minWidth = Math.min(380, said.length * 8) + "px";
-      showNote.typer = setInterval(() => {
+      if (win) win.classList.add("talking");
+      theaSpeak.typer = setInterval(() => {
         i = Math.min(said.length, i + 2); tx.textContent = said.slice(0, i);
         if (i % 4 === 0 && /\w/.test(said[i - 1] || "")) FX.play("talk");
-        if (i >= said.length) { clearInterval(showNote.typer); tx.style.minWidth = ""; }
+        // the mouth opens on letters and shuts on spaces and stops; a bob every few beats
+        beat++;
+        if (win) { win.classList.toggle("mouth-open", /\w/.test(said[i - 1] || "") && beat % 2 === 0); if (beat % 4 === 0) win.classList.toggle("bob"); }
+        if (i >= said.length) { clearInterval(theaSpeak.typer); tx.style.minWidth = ""; done(); }
       }, 34);
     }
-    const win = $(".window-wrap"), wr = win ? rectOf(win) : null, inView = wr && wr.bottom > 40 && wr.top >= -4;
+    const ww = $(".window-wrap"), wr = ww ? rectOf(ww) : null, inView = wr && wr.bottom > 40 && wr.top >= -4;
     b.classList.toggle("own", !inView);
     b.hidden = false;
     if (inView) { b.style.left = Math.round(wr.right + 14) + "px"; b.style.top = Math.round(wr.top + 26) + "px"; }
@@ -1992,10 +2002,10 @@
     const r = rectOf(w), vw = window.innerWidth;
     if (isPhone()) { el.style.left = "12px"; el.style.right = "12px"; el.style.top = Math.max(12, Math.min(window.innerHeight - el.offsetHeight - 90, r.bottom - 24)) + "px"; return; }
     el.style.right = "auto";
-    // under the window, clear of the name, the shortcuts and the intercom button
+    // beside the intercom box, its pointer aimed back at it
     const icb = rectOf($("#intercom") || w);
-    el.style.left = Math.round(Math.min(vw - el.offsetWidth - 24, Math.max(r.left + 24, icb.right + 12))) + "px";
-    el.style.top = Math.round(r.bottom + 10) + "px";
+    el.style.left = Math.round(Math.min(vw - el.offsetWidth - 24, icb.right + 14)) + "px";
+    el.style.top = Math.round(Math.max(12, icb.top - 6)) + "px";
   }
   function icShow(text, chips) {
     const el = icEl();
@@ -2012,6 +2022,7 @@
   }
   function icAsk(id) {
     const n = icNode(id); if (!n) { icClose(); return; }
+    if (ic.tour >= 0) { const tb = $("#thea-say"); if (tb) tb.hidden = true; }
     ic.node = n; ic.tour = -1; spot(null);
     icShow(n.q, n.a.map((a) => a.t));
   }
@@ -2025,6 +2036,7 @@
   }
   function icClose(keepSpot) {
     if (!ic.open && !$("#icq")) return;
+    if (ic.tour >= 0) { const tb = $("#thea-say"); if (tb) tb.hidden = true; }
     ic.open = false; ic.tour = -1; clearTimeout(ic.timer);
     if (!keepSpot) spot(null);
     const el = $("#icq"); if (el) el.hidden = true;
@@ -2039,8 +2051,9 @@
     if (a.next) { icAsk(a.next); return; }
     if (a.go === "tour") { icTour(0); return; }
     if (a.go === "close") { icClose(); return; }
-    // a short reply from Thea, then off they go
-    if (a.say) { icShow(a.say, []); ic.timer = setTimeout(() => icClose(true), 2600); } else icClose(true);
+    // a short reply from Thea in her speech bubble, then off they go
+    icClose(true);
+    if (a.say) theaSpeak(a.say, 3200);
     icGo(a.go);
   }
   function icGo(go) {
@@ -2098,7 +2111,8 @@
       ic.tour = i; ic.said = true;
       const st = n.steps[i];
       spot.apply(null, tourTarget(st.at));
-      icShow(st.say, [n.next || "Next", n.skip || "Skip tour"]);
+      icShow("", [n.next || "Next", n.skip || "Skip tour"]);
+      theaSpeak(st.say);
       ic.tour = i;
     };
     if (ui.wall) { closeWall(); setTimeout(go, reduced() ? 0 : 640); }

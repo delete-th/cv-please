@@ -510,7 +510,7 @@
         },
         {
           "t": "Reviewing my work",
-          "say": "My process is on the wall. Look up.",
+          "say": "Oh, a reviewer! My process is pinned up on the wall. Look up.",
           "go": "wall"
         },
         {
@@ -529,12 +529,12 @@
       "a": [
         {
           "t": "One minute",
-          "say": "Understood. Printing my record.",
+          "say": "A speed-reader. Printing the short version for you now.",
           "go": "print"
         },
         {
           "t": "Long enough to dig in",
-          "say": "Then start with the files.",
+          "say": "Love that. Start with the case files, they're in the box.",
           "go": "files"
         }
       ]
@@ -596,27 +596,27 @@
       "steps": [
         {
           "at": "passport",
-          "say": "My papers. Open them and stamp them if you like."
+          "say": "My papers! Go on, open them. Stamp them too, if you like."
         },
         {
           "at": "files",
-          "say": "Case files. One per project. Pull one out to read it."
+          "say": "Case files, one per project. Pull one out and have a read."
         },
         {
           "at": "drawers",
-          "say": "Skills in one, my things in the other."
+          "say": "Skills in this drawer, my odds and ends in that one. Snooping allowed."
         },
         {
           "at": "up",
-          "say": "My whiteboard is up there. How I work, solo and as a lead."
+          "say": "My whiteboard's up there: how I work solo, and how I run a team."
         },
         {
           "at": "printer",
-          "say": "The 60-second version, printed."
+          "say": "Short on time? The printer does the 60-second version."
         },
         {
           "at": "stamps",
-          "say": "Approve or deny. Your call."
+          "say": "Approve or deny. No pressure!"
         }
       ]
     }
