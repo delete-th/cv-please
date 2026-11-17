@@ -239,7 +239,7 @@
   // the portable speaker is the sound switch: light off when the site is quiet, amber light on when it makes sounds
   function speakerHTML() {
     const on = FX.soundOn;
-    return '<button class="spk' + (on ? " on" : "") + '" data-act="sound" aria-pressed="' + on + '" aria-label="Sound" data-tag="' + (on ? "Sound on" : "Sound off") + '">' +
+    return '<button class="spk' + (on ? " on" : "") + '" data-act="sound" aria-pressed="' + on + '" aria-label="Sound and music" data-tag="' + (on ? "Sound and jazz on" : "Sound off") + '">' +
       SPR.art("speaker-off", 2, "spk-off") + SPR.art("speaker-on", 2, "spk-on") + '<span class="spk-light" aria-hidden="true"></span></button>';
   }
   // The pinboard: the prize voucher, an index card with the roles Thea is open to, and an optional "Currently" note.
@@ -1116,6 +1116,15 @@
       (ui.pobjAt = ui.pobjAt || {})[el.dataset.p] = [(r.left - hr.left) / sc, (r.top - hr.top) / sc];
       placePobj(el); FX.play("tap"); return;
     }
+    // only the visible slice of each closed front counts (the fronts are cropped to fit the desk edge)
+    const fronts = $$(".dw:not(.pulled)").map((w) => { const q = rectOf($(".dw-front", w)), cr = parseFloat(getComputedStyle(w).getPropertyValue("--crop")) || 0; return { left: q.left + cr, right: q.right - cr, top: q.top, bottom: q.bottom }; });
+    const overFront = fronts.some((q) => ev.clientX > q.left && ev.clientX < q.right && ev.clientY > q.top && ev.clientY < q.bottom);
+    const dkr = rectOf($("#desk")), stripTop = dkr.top + usable().bottom;
+    const underFronts = !pobjFloor() && (ev.clientY > stripTop || fronts.some((q) => r.bottom > q.top + 8 && r.top < q.bottom && r.right > q.left && r.left < q.right));
+    if (overFront || underFronts) {
+      if (ui.pobjAt) delete ui.pobjAt[el.dataset.p];
+      pobjHome(el); FX.play("dwslide"); return;
+    }
     const dk = rectOf($("#desk"));
     pobjToDesk(el, r.left - dk.left, r.top - dk.top);
     FX.play("tap");
@@ -1125,7 +1134,7 @@
     el.classList.remove("rot"); el.classList.add("sticker", "on-desk");
     el.dataset.sticker = el.dataset.p;
     desk.appendChild(el);
-    moveTo(el, x, y); raise(el); drawHands();
+    moveTo(el, x, Math.min(y, usable().bottom - el.offsetHeight)); raise(el); drawHands();
   }
   function pobjHome(el) {
     const id = el.dataset.p, o = POBJ[id], fl = $("#dw-things");
@@ -2444,7 +2453,7 @@
     snooze(b) { snooze(b); },
     sound(b) {
       const on = FX.toggle();
-      b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); b.dataset.tag = on ? "Sound on" : "Sound off";
+      b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); b.dataset.tag = on ? "Sound and jazz on" : "Sound off";
       if (tagFor === b) showTag(b, true);
       b.classList.remove("press"); void b.offsetWidth; b.classList.add("press"); setTimeout(() => b.classList.remove("press"), 80);
       if (on) FX.play("spkon");

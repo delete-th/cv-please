@@ -34,7 +34,7 @@ window.FX = (function () {
     const c = ctx();
     if (c && name === "flip") { paperFlip(c); return; }
     if (c && (name === "tear" || name === "rip")) { paperTear(c, name === "tear" ? 0.42 : 0.07); return; }
-    if (c && name === "chime") { cuteChime(c); return; }
+    if (c && name === "chime") { intercomBuzz(c); return; }
     if (c && name === "tin") { tinRattle(c); return; }
     if (c && name === "talk") { talkBlip(c); return; }
     if (c && name === "scan") { scanSound(c); return; }
@@ -197,9 +197,99 @@ window.FX = (function () {
     s.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 1300; bp.Q.value = 0.6; g.gain.value = vol;
     s.connect(bp); bp.connect(g); g.connect(snd.gain); s.start();
   }
+  // a booth intercom: the press-to-talk click, a short buzzer through a small speaker, then a breath of line static
+  function intercomBuzz(c) {
+    const t0 = c.currentTime + 0.005, bus = c.createGain(), hp = c.createBiquadFilter(), lp = c.createBiquadFilter();
+    hp.type = "highpass"; hp.frequency.value = 350; lp.type = "lowpass"; lp.frequency.value = 2600;
+    bus.gain.value = 0.7; hp.connect(lp); lp.connect(bus); bus.connect(snd.gain);
+    tick(c, 0.012, 2000, 0.45, t0);
+    // the buzzer: a rough square wave, chopped at mains rate
+    const o = c.createOscillator(), g = c.createGain(), am = c.createOscillator(), amg = c.createGain();
+    o.type = "square"; o.frequency.value = 330; am.type = "square"; am.frequency.value = 50; amg.gain.value = 0.05;
+    am.connect(amg); amg.connect(g.gain);
+    const a0 = t0 + 0.04, len = 0.32;
+    g.gain.setValueAtTime(0.0001, a0); g.gain.linearRampToValueAtTime(0.09, a0 + 0.01); g.gain.setValueAtTime(0.09, a0 + len - 0.03); g.gain.linearRampToValueAtTime(0.0001, a0 + len);
+    o.connect(g); g.connect(hp); o.start(a0); am.start(a0); o.stop(a0 + len + 0.02); am.stop(a0 + len + 0.02);
+    // line static as the channel opens
+    const n = Math.floor(c.sampleRate * 0.22), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) { const x = i / n; d[i] = (Math.random() * 2 - 1) * (1 - x) * (Math.random() < 0.04 ? 2.2 : 0.6); }
+    const s2 = c.createBufferSource(), sg = c.createGain(); s2.buffer = buf; sg.gain.value = 0.18;
+    s2.connect(sg); sg.connect(hp); s2.start(a0 + len + 0.03);
+    tick(c, 0.01, 1700, 0.3, a0 + len + 0.26);
+  }
+
+  // ----- a little jazz from the speaker: a soft ii-V-I loop with electric piano, walking bass and brushes -----
+  // Made in the browser, so it is free to use and costs nothing to download.
+  const JAZZ = { bpm: 84, bars: [
+    { root: 38, third: 3, chord: [53, 57, 60, 64] },   // Dm9
+    { root: 43, third: 4, chord: [53, 59, 64, 69] },   // G13
+    { root: 36, third: 4, chord: [52, 55, 59, 62] },   // Cmaj9
+    { root: 45, third: 4, chord: [55, 58, 61, 64] },   // A7b9
+    { root: 38, third: 3, chord: [53, 57, 60, 65] },   // Dm11
+    { root: 43, third: 4, chord: [53, 59, 62, 65] },   // G7
+    { root: 36, third: 4, chord: [52, 55, 59, 64] },   // Cmaj7
+    { root: 36, third: 4, chord: [50, 55, 59, 64] },   // Cmaj9 turnaround
+  ] };
+  const music = { on: false, timer: null, next: 0, beat: 0, bus: null };
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  function epNote(c, at, m, len, vol) {
+    const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+    o.type = "sine"; o.frequency.value = hz(m); o2.type = "triangle"; o2.frequency.value = hz(m) * 2; o2.detune.value = 4;
+    const g2 = c.createGain(); g2.gain.value = 0.25;
+    lp.type = "lowpass"; lp.frequency.value = 1800;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(lp); lp.connect(music.bus);
+    o.start(at); o2.start(at); o.stop(at + len + 0.05); o2.stop(at + len + 0.05);
+  }
+  function bassNote(c, at, m, len) {
+    const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+    o.type = "triangle"; o.frequency.value = hz(m); lp.type = "lowpass"; lp.frequency.value = 520;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.28, at + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(lp); lp.connect(g); g.connect(music.bus); o.start(at); o.stop(at + len + 0.05);
+  }
+  function brush(c, at, vol) {
+    const n = Math.floor(c.sampleRate * 0.09), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+    const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 6500; bp.Q.value = 0.8; g.gain.value = vol;
+    s.connect(bp); bp.connect(g); g.connect(music.bus); s.start(at);
+  }
+  // schedule one beat: bass every beat, brushes on the beat and the swung "and" of 2 and 4, piano comping now and then
+  function jazzBeat(c, at) {
+    const spb = 60 / JAZZ.bpm, bi = Math.floor(music.beat / 4) % JAZZ.bars.length, b = JAZZ.bars[bi], beat = music.beat % 4, nb = JAZZ.bars[(bi + 1) % JAZZ.bars.length];
+    const walk = [b.root, b.root + b.third, b.root + 7, nb.root + (Math.random() < 0.5 ? 1 : -1)];
+    bassNote(c, at, walk[beat], spb * 0.95);
+    brush(c, at, beat % 2 ? 0.05 : 0.035);
+    if (beat % 2) brush(c, at + spb * 2 / 3, 0.025);
+    if (beat === 0) b.chord.forEach((m, k) => epNote(c, at + k * 0.012, m, spb * 2.2, 0.045));
+    if (beat === 1 && Math.random() < 0.6) b.chord.slice(1).forEach((m) => epNote(c, at + spb * 2 / 3, m, spb * 1.1, 0.03));
+    if (beat === 3 && Math.random() < 0.35) epNote(c, at + spb * 2 / 3, b.chord[3] + 12, spb * 0.9, 0.025);
+    music.beat++;
+  }
+  function startMusic() {
+    const c = ctx();
+    if (!c || music.on) return;
+    music.on = true;
+    if (!music.bus) { music.bus = c.createGain(); music.bus.gain.value = 0.5; music.bus.connect(snd.gain); }
+    music.bus.gain.cancelScheduledValues(c.currentTime); music.bus.gain.setValueAtTime(0.0001, c.currentTime); music.bus.gain.exponentialRampToValueAtTime(0.5, c.currentTime + 1.2);
+    music.next = c.currentTime + 0.1;
+    music.timer = setInterval(() => {
+      const spb = 60 / JAZZ.bpm;
+      while (music.next < c.currentTime + 0.25) { jazzBeat(c, music.next); music.next += spb; }
+    }, 60);
+  }
+  function stopMusic() {
+    if (!music.on) return;
+    music.on = false; clearInterval(music.timer);
+    const c = snd.ctx; if (c && music.bus) { music.bus.gain.cancelScheduledValues(c.currentTime); music.bus.gain.setValueAtTime(music.bus.gain.value, c.currentTime); music.bus.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.4); }
+  }
+  // browsers only let sound start after a click or key, so a remembered "on" waits for the first one
+  ["pointerdown", "keydown"].forEach((ev) => document.addEventListener(ev, () => { if (snd.on && !music.on && !document.hidden) startMusic(); }, true));
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stopMusic(); else if (snd.on && snd.ctx) startMusic(); });
+
   function toggle() {
     snd.on = !snd.on;
-    if (snd.on) ctx();
+    if (snd.on) { ctx(); startMusic(); } else stopMusic();
     try { sessionStorage.setItem("cvp-sound", snd.on ? "on" : "off"); } catch (err) { /* storage can be blocked */ }
     return snd.on;
   }
