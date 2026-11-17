@@ -2221,6 +2221,13 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .icq-q:empty + .icq-chips { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) { .window.bob .applicant, .window.bob .blink, .window.bob .mouth { translate: -50% 0; } }
 .thea-say { z-index: 89; }
+
+/* the writing stays on the cream surface (art x 10 to 96, y 12 to 70), clear of the frame */
+.wb-surface { left: calc(10px * var(--k)); top: calc(12px * var(--k)); width: calc(87px * var(--k)); height: calc(57px * var(--k)); padding: calc(2px * var(--k)) calc(2.5px * var(--k)) calc(1.5px * var(--k)) calc(2.5px * var(--k)); }
+/* the mug stands on top of the printer where they meet */
+#desk .sticker[data-sticker="mug"] { z-index: 10; }
+.wb-steps { column-gap: 4px; } .wb-step { gap: 5px; padding-inline: 0; } .wb-num { width: 1.35em; height: 1.35em; }
+.wb-pin { right: calc(var(--k) * 5px - 120px); }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -6158,8 +6165,8 @@ window.DEMOS = (function () {
   function sizeWall() {
     const w = $("#wall"); if (!w) return;
     const a = ART.whiteboard, ss = window.innerHeight < 760 ? 2 : 3, strip = isPhone() ? 0 : 42 * ss;
-    const byW = isPhone() ? (window.innerWidth - 24) / a.w : Math.min(window.innerWidth * 0.75, 920) / a.w;
-    const k = clamp(Math.floor(Math.min(byW, (window.innerHeight - strip - (isPhone() ? 120 : 24)) / a.h)), 3, 12);
+    const byW = isPhone() ? (window.innerWidth - 24) / a.w : Math.min(window.innerWidth * 0.8, 1000) / a.w;
+    const k = clamp(Math.floor(Math.min(byW, (window.innerHeight - strip - (isPhone() ? 120 : 16)) / a.h)), 3, 12);
     const wb = $("#wb", w), img = $(".wb-art", wb);
     w.style.setProperty("--k", k); w.style.setProperty("--ss", ss);
     img.width = a.w * k; img.height = a.h * k;

@@ -2217,3 +2217,10 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .icq-q:empty + .icq-chips { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) { .window.bob .applicant, .window.bob .blink, .window.bob .mouth { translate: -50% 0; } }
 .thea-say { z-index: 89; }
+
+/* the writing stays on the cream surface (art x 10 to 96, y 12 to 70), clear of the frame */
+.wb-surface { left: calc(10px * var(--k)); top: calc(12px * var(--k)); width: calc(87px * var(--k)); height: calc(57px * var(--k)); padding: calc(2px * var(--k)) calc(2.5px * var(--k)) calc(1.5px * var(--k)) calc(2.5px * var(--k)); }
+/* the mug stands on top of the printer where they meet */
+#desk .sticker[data-sticker="mug"] { z-index: 10; }
+.wb-steps { column-gap: 4px; } .wb-step { gap: 5px; padding-inline: 0; } .wb-num { width: 1.35em; height: 1.35em; }
+.wb-pin { right: calc(var(--k) * 5px - 120px); }

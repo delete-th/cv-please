@@ -1755,8 +1755,8 @@
   function sizeWall() {
     const w = $("#wall"); if (!w) return;
     const a = ART.whiteboard, ss = window.innerHeight < 760 ? 2 : 3, strip = isPhone() ? 0 : 42 * ss;
-    const byW = isPhone() ? (window.innerWidth - 24) / a.w : Math.min(window.innerWidth * 0.75, 920) / a.w;
-    const k = clamp(Math.floor(Math.min(byW, (window.innerHeight - strip - (isPhone() ? 120 : 24)) / a.h)), 3, 12);
+    const byW = isPhone() ? (window.innerWidth - 24) / a.w : Math.min(window.innerWidth * 0.8, 1000) / a.w;
+    const k = clamp(Math.floor(Math.min(byW, (window.innerHeight - strip - (isPhone() ? 120 : 16)) / a.h)), 3, 12);
     const wb = $("#wb", w), img = $(".wb-art", wb);
     w.style.setProperty("--k", k); w.style.setProperty("--ss", ss);
     img.width = a.w * k; img.height = a.h * k;
