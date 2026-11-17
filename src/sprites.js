@@ -94,6 +94,8 @@ window.SPR = (function () {
   S.xmark = ["kk.....kk", "kkk...kkk", ".kkk.kkk.", "..kkkkk..", "...kkk...", "..kkkkk..", ".kkk.kkk.", "kkk...kkk", "kk.....kk"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
+  // replay: a loop of arrow, its head at the top right
+  S.replay = ["..yyyy.y.", ".y....yy.", "y....yyy.", "y........", "y.......y", "y.......y", ".y.....y.", "..yyyyy.."];
   // a generic squiggle for the signature lines (no real signatures)
   S.squiggle = ["..............kk..........", "..k.........k...k......k..", ".k.k...kk..k.....k..kk.k.k", "k...k.k..kk.......kk..k...", ".....k...................."];
   S.squiggle2 = ["......kk...............", ".k...k..k....kk....k...", "k.k.k....k..k..k..k.k.k", "...k......kk....kk...k."];

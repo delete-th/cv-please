@@ -2264,6 +2264,9 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .icq-chips { flex-direction: column; align-items: stretch; gap: 6px; }
 .icq-chip { justify-content: flex-start; text-align: left; }
 
-/* a quieter link than the shortcuts beside it */
-.booth-links .replay { opacity: 0.75; font-size: 0.85em; }
-.booth-links .replay:hover, .booth-links .replay:focus-visible { opacity: 1; }
+/* the replay icon on the passport screen, with its label on hover or focus */
+.replay-btn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: none; color: var(--cover-ink); cursor: pointer; line-height: 0; }
+.replay-btn:hover .spr, .replay-btn:focus-visible .spr { translate: 0 -2px; }
+.replay-btn:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: 2px; }
+.replay-btn .tip { position: absolute; left: 50%; top: calc(100% + 4px); translate: -50% 0; display: none; padding: 3px 6px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); font: 400 var(--t-label)/1 var(--pixel); white-space: nowrap; -webkit-font-smoothing: none; z-index: 3; }
+.replay-btn:hover .tip, .replay-btn:focus-visible .tip { display: block; }

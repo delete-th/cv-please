@@ -2268,9 +2268,12 @@ html.on-wall .wall-pan { translate: 0 0; transition: translate 0.45s ease-out 0.
 .icq-chips { flex-direction: column; align-items: stretch; gap: 6px; }
 .icq-chip { justify-content: flex-start; text-align: left; }
 
-/* a quieter link than the shortcuts beside it */
-.booth-links .replay { opacity: 0.75; font-size: 0.85em; }
-.booth-links .replay:hover, .booth-links .replay:focus-visible { opacity: 1; }
+/* the replay icon on the passport screen, with its label on hover or focus */
+.replay-btn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: none; color: var(--cover-ink); cursor: pointer; line-height: 0; }
+.replay-btn:hover .spr, .replay-btn:focus-visible .spr { translate: 0 -2px; }
+.replay-btn:focus-visible { outline: 2px solid var(--cover-ink); outline-offset: 2px; }
+.replay-btn .tip { position: absolute; left: 50%; top: calc(100% + 4px); translate: -50% 0; display: none; padding: 3px 6px; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); font: 400 var(--t-label)/1 var(--pixel); white-space: nowrap; -webkit-font-smoothing: none; z-index: 3; }
+.replay-btn:hover .tip, .replay-btn:focus-visible .tip { display: block; }
 </style>
 <div id="app"></div>
 <div id="intro-root"></div>
@@ -3709,6 +3712,8 @@ window.SPR = (function () {
   S.xmark = ["kk.....kk", "kkk...kkk", ".kkk.kkk.", "..kkkkk..", "...kkk...", "..kkkkk..", ".kkk.kkk.", "kkk...kkk", "kk.....kk"];
   S.caretup = ["...y...", "..yyy..", ".yyyyy.", "yyyyyyy"];
   S.caretdown = S.caretup.slice().reverse();
+  // replay: a loop of arrow, its head at the top right
+  S.replay = ["..yyyy.y.", ".y....yy.", "y....yyy.", "y........", "y.......y", "y.......y", ".y.....y.", "..yyyyy.."];
   // a generic squiggle for the signature lines (no real signatures)
   S.squiggle = ["..............kk..........", "..k.........k...k......k..", ".k.k...kk..k.....k..kk.k.k", "k...k.k..kk.......kk..k...", ".....k...................."];
   S.squiggle2 = ["......kk...............", ".k...k..k....kk....k...", "k.k.k....k..k..k..k.k.k", "...k......kk....kk...k."];
@@ -4597,7 +4602,7 @@ window.DEMOS = (function () {
       (qs.length ? '<div class="ask">' + qs.map((x) => '<button class="btn-quiet" data-act="ask" data-q="' + x[1] + '">' + esc(x[0].q) + "</button>").join("") + "</div>" +
         '<p class="bubble" id="bubble" aria-live="polite"' + (ui.asked == null ? " hidden" : "") + ">" + (ui.asked == null ? "" : esc(state.interview[ui.asked].a)) + "</p>" : "") +
       '<nav class="booth-links" aria-label="Shortcuts"><button class="btn-quiet" data-act="summary">Summary</button><button class="btn-quiet" data-act="view" data-v="list">Simplify</button>' +
-      '<button class="btn-quiet" data-act="passport">Inspect passport</button><button class="btn-quiet replay" data-act="replay-intro">Replay intro</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
+      '<button class="btn-quiet" data-act="passport">Inspect passport</button><span class="owner" id="owner">' + ownerBar() + "</span></nav></div>" +
       '<div class="booth-side">' + pinboardHTML() + "</div>" +
       '<div class="booth-meta">' +
       (hasRadio() ? '<div class="radio">' + SPR.draw("radio", PX) + '<button class="btn-quiet" data-act="radio" aria-pressed="' + ui.radioOn + '">' + (ui.radioOn ? "Mute radio" : "Unmute radio") + "</button></div>" : "") +
@@ -6703,6 +6708,8 @@ window.DEMOS = (function () {
     setTimeout(() => { pp.classList.remove("turning"); face(); }, 340);
   }
   function flipPass() { setLeaf(ui.passPage ? 0 : 1, true); }
+  // the walk-in plays once per visit; this icon on the passport screen plays it again
+  const replayBtn = () => (reduced() ? "" : '<button class="replay-btn" data-act="replay-intro" aria-label="Replay intro">' + SPR.draw("replay", 3) + '<span class="tip" aria-hidden="true">Replay intro</span></button>');
   function renderIntro() {
     const p = state.profile, e = state.education;
     const parts = p.name.trim().split(/\s+/), surname = parts.length > 1 ? parts.pop() : "", given = parts.join(" ");
@@ -6725,7 +6732,7 @@ window.DEMOS = (function () {
       '<div class="pp-data" style="left:' + X(4) + ";top:" + Y(63) + ";width:" + px(37) + ";height:" + px(35) + '"><p class="pp-name">' + esc(surname + (given ? ", " + given : "")) + "</p>" +
       '<dl class="pp-rows">' + row("NAT", pv.nat || p.nationality) + row("OCC", pv.occ || p.occupation) + row("BASE", base) + row("GRAD", pv.grad || e.graduated) + "</dl></div>" + 
       '<p class="pp-code" aria-hidden="true" style="left:' + X(4) + ";top:" + Y(101) + ";width:" + px(66) + ";height:" + px(8) + '">' + mrz("P " + p.nationality.slice(0, 3) + " " + surname + "  " + given, 30) + "</p></div></div>" +
-      '<div class="intro-actions"><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
+      '<div class="intro-actions"><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button>' + replayBtn() + "</div></div></div>";
     renderMarks("visa");
     placePassport(0);
     document.documentElement.classList.add("locked");
@@ -6758,7 +6765,7 @@ window.DEMOS = (function () {
       '<div class="stamp-box' + (ui.inked.visa ? " inked" : "") + '">Stamp here</div><div class="marks" data-marks="visa"></div></div></div>' +
       '<span class="dp-spine" aria-hidden="true"></span>' +
       '<div class="dp-cover" data-act="intro-next" aria-hidden="true"><div class="dp-face"><span class="dp-emb">' + SPR.draw("emblem", Math.max(2, S - 2)) + '</span><b>Passport</b><span class="dp-name">' + esc(p.name) + "</span></div><i></i><i></i><i></i><i></i></div></div>" +
-      '<div class="intro-actions"><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button></div></div></div>';
+      '<div class="intro-actions"><button class="btn-quiet" data-act="intro-skip">Skip to the booth</button>' + replayBtn() + "</div></div></div>";
     renderMarks("visa");
     placePassport(0);
     document.documentElement.classList.add("locked");
