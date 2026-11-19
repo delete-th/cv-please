@@ -1,0 +1,16 @@
+{
+  "name": "cv-please",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Thea Saguid's portfolio: a border-inspection desk to explore",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:artifact": "python3 build.py"
+  },
+  "devDependencies": {
+    "vite": "^6.4.1"
+  }
+}

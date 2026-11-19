@@ -1,8 +1,9 @@
 """Assemble the portfolio page from src/.
 
 Writes two files:
-  index.html           a complete page you can open with any static server
-  build/artifact.html  the same page without the document wrapper, for publishing as a Claude artifact
+  build/standalone.html  the whole site in one file (CSS, scripts, images and sounds inline), to open without a server
+  build/artifact.html    the same page without the document wrapper, for publishing as a Claude artifact
+The website itself is built by Vite (npm run build), which keeps the scripts, styles, images and sounds as separate files.
 """
 import json
 import pathlib
@@ -38,8 +39,8 @@ def main():
             '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
             '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}'
             'body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>\n')
-    (ROOT / "index.html").write_text(head + page + "</body></html>\n", encoding="utf-8")
-    print("built index.html and build/artifact.html")
+    (ROOT / "build" / "standalone.html").write_text(head + page + "</body></html>\n", encoding="utf-8")
+    print("built build/standalone.html and build/artifact.html")
 
 
 if __name__ == "__main__":

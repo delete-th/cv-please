@@ -16,10 +16,14 @@ window.FX = (function () {
       snd.ctx = new C();
       snd.gain = snd.ctx.createGain(); snd.gain.gain.value = 0.35; snd.gain.connect(snd.ctx.destination);
       // decode the embedded files once
+      // each sound is either inline (the single-file artifact) or a file beside the page (the website)
       Object.keys(window.SOUNDS || {}).forEach((name) => {
-        const b64 = window.SOUNDS[name].split(",")[1], bin = atob(b64), bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        snd.ctx.decodeAudioData(bytes.buffer, (buf) => { snd.bufs[name] = buf; }, () => {});
+        const src = window.SOUNDS[name], decode = (ab) => snd.ctx.decodeAudioData(ab, (buf) => { snd.bufs[name] = buf; }, () => {});
+        if (String(src).startsWith("data:")) {
+          const bin = atob(src.split(",")[1]), bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          decode(bytes.buffer);
+        } else fetch(src).then((r) => r.arrayBuffer()).then(decode).catch(() => {});
       });
     }
     if (snd.ctx.state === "suspended") snd.ctx.resume();
