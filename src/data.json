@@ -1,0 +1,577 @@
+{
+  "profile": {
+    "name": "Thea Saguid",
+    "eyebrow": "Software · Security · AI",
+    "greeting": "Hi, I'm Thea.",
+    "tagline": "Computer Science graduate building secure software, AI tools and threat detection.",
+    "summary": "Computer Science graduate from the University of Wollongong (SIM) with a double specialisation in Cybersecurity and Digital Systems Security. Built full-stack web and mobile applications, REST APIs and AI-powered tools using TypeScript, Python, JavaScript, React and SQL, mostly as part of student teams. Looking for a software engineering role where I can contribute to building reliable, secure products.",
+    "nationality": "Filipino",
+    "basedIn": "Singapore",
+    "occupation": "Software and security engineer",
+    "email": "th.saguid@gmail.com",
+    "links": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/thea-saguid/"
+      },
+      {
+        "label": "GitHub",
+        "url": "https://github.com/delete-th"
+      }
+    ],
+    "seeking": "Software engineering, AI engineering, or cybersecurity and SOC roles",
+    "openTo": "software, AI and security roles",
+    "currently": "",
+    "board": [
+      "SOFTWARE ENGINEER",
+      "SECURITY",
+      "BUILDS WITH AI",
+      "CS GRADUATE"
+    ],
+    "passport": {
+      "nat": "Filipino",
+      "occ": "Software engineer",
+      "base": "Singapore",
+      "grad": "Sep 2026"
+    }
+  },
+  "education": {
+    "school": "University of Wollongong (Singapore Institute of Management)",
+    "degree": "Bachelor of Computer Science (with Distinction)",
+    "major": "Cybersecurity and Digital Systems Security, double specialisation",
+    "graduated": "September 2026",
+    "coursework": "Cryptography, network security, ethical hacking"
+  },
+  "strengths": [
+    "Has shipped a working product under a deadline",
+    "Builds security in by default",
+    "Has led a team",
+    "Has used AI in a real product",
+    "Has written tests and set up CI/CD"
+  ],
+  "interview": [
+    {
+      "q": "Why cybersecurity?",
+      "a": ""
+    },
+    {
+      "q": "Hardest bug?",
+      "a": ""
+    },
+    {
+      "q": "What did you lead?",
+      "a": ""
+    },
+    {
+      "q": "Why this kind of role?",
+      "a": ""
+    }
+  ],
+  "assistant": [
+    {
+      "when": "arrive",
+      "line": ""
+    },
+    {
+      "when": "unpacked",
+      "line": ""
+    },
+    {
+      "when": "drawer",
+      "line": ""
+    },
+    {
+      "when": "record",
+      "line": ""
+    },
+    {
+      "when": "approved",
+      "line": ""
+    },
+    {
+      "when": "denied",
+      "line": ""
+    },
+    {
+      "when": "firstcase",
+      "line": ""
+    },
+    {
+      "when": "personal",
+      "line": ""
+    },
+    {
+      "when": "watch",
+      "line": ""
+    },
+    {
+      "when": "sketchbook",
+      "line": ""
+    },
+    {
+      "when": "intercom",
+      "line": ""
+    },
+    {
+      "when": "idle",
+      "line": ""
+    }
+  ],
+  "projects": [
+    {
+      "name": "Scure: Weblink Scanner",
+      "icon": "scure",
+      "demo": "scure",
+      "role": "Team Lead and Back-End Developer",
+      "dates": "Jan to May 2026",
+      "event": "",
+      "award": "",
+      "line": "A mobile app that tells you whether a link is safe, just by pointing your phone camera at it.",
+      "points": [
+        "A mobile app with camera-based QR scanning and on-device text recognition, so users can check a suspicious link by pointing their phone at it instead of typing it out.",
+        "A threat analysis engine in Node.js and Express.js that checks links against VirusTotal, Google Safe Browsing, URLScan.io, and a blocklist seeded from URLhaus and government-banned sites, so users are warned about phishing and malware before opening a link.",
+        "Sandboxed page analysis: suspicious pages open in an isolated Playwright headless browser, and Google Gemini flags obfuscated scripts and credential-harvesting forms, so threats that slip past blocklists still get caught.",
+        "Gemini and Groq combine all scanner results into one plain-English verdict, so people without technical knowledge can tell whether a link is safe.",
+        "The REST API is secured with JWT login, bcrypt password hashing and rate limiting, so user accounts and scan history stay protected from abuse.",
+        "As team lead I ran weekly sprints and code reviews, set up automatic deployment to Railway from the develop branch, and changed features based on user testing and our faculty advisor's feedback."
+      ],
+      "stack": "React Native, Expo, Node.js, Express.js, PostgreSQL (Supabase), JWT, bcrypt, Playwright, Google Gemini, Groq, VirusTotal, Google Safe Browsing, URLScan.io, URLhaus, Railway",
+      "aside": "",
+      "featured": "yes",
+      "short": "",
+      "tab": "Scure"
+    },
+    {
+      "name": "PolicyLens: Policy Compliance Checker",
+      "icon": "policy",
+      "demo": "policy",
+      "role": "Lead Back-End Developer",
+      "dates": "Jul 2026",
+      "event": "SIM ITC HackXperience 2026, single-day hackathon",
+      "award": "Best Entrepreneurial Award",
+      "line": "Checks company contracts against compliance policies, and re-checks them automatically whenever a rule changes.",
+      "points": [
+        "A Python and FastAPI back-end that parses uploaded PDF and Word policies, saves each version, and re-checks every stored contract when a rule changes, so legal teams learn right away when an approved contract stops complying.",
+        "A retrieval-augmented generation (RAG) pipeline that pulls the most similar clauses from the company's own records before the AI gives its verdict, so every answer is based on real documents instead of guesses.",
+        "Deployed the React front-end and API through GitHub Actions with a teammate, so we could show judges a live, working product by the end of the day."
+      ],
+      "stack": "Python, FastAPI, PostgreSQL, Supabase, pgvector, Azure AI Foundry (GPT-4o), OpenAI embeddings, React, GitHub Actions",
+      "aside": "",
+      "featured": "yes",
+      "short": "",
+      "tab": "PolicyLens"
+    },
+    {
+      "name": "S.H.I.E.L.D: AI Incident Response Assistant",
+      "icon": "shield",
+      "demo": "shield",
+      "role": "Developer",
+      "dates": "May 2026",
+      "event": "National AI Student Challenge 2026, Certis Track",
+      "award": "",
+      "line": "A hands-free voice assistant that helps security officers report, classify and respond to incidents while on patrol.",
+      "points": [
+        "A push-to-talk voice assistant that streams audio over WebSockets into speech-to-text and a local Mistral model, which classifies the incident, assesses severity and suggests escalation.",
+        "Spoken replies with ElevenLabs text-to-speech, so officers hear the next step out loud.",
+        "DeepFace face search across CCTV frames against a missing-person watchlist.",
+        "Incident logging to Supabase PostgreSQL with Redis caching, so supervisors get a clear timeline.",
+        "Packaged with Docker Compose. I split features with a teammate so both halves fit together for the final demo."
+      ],
+      "stack": "Python, FastAPI, React, WebSockets, faster-whisper (Whisper STT), Ollama with Mistral, ElevenLabs TTS, DeepFace, Redis, Supabase PostgreSQL, Docker Compose",
+      "aside": "",
+      "featured": "",
+      "short": "",
+      "tab": "S.H.I.E.L.D"
+    },
+    {
+      "name": "STEMulate: Learning Management System",
+      "icon": "stem",
+      "demo": "",
+      "role": "Full-Stack Developer",
+      "dates": "2026",
+      "event": "",
+      "award": "",
+      "line": "An all-in-one system for a tutoring centre to run classes, grading, payments and progress updates.",
+      "points": [
+        "Separate dashboards for admins, teachers, students and parents.",
+        "Live quizzes and proctored tests with Express.js and Socket.IO, so teachers can follow each student's progress in real time during an online exam.",
+        "AES-256 encryption for uploaded files and row-level security in PostgreSQL, so student records stay private.",
+        "PayMongo payments through webhooks, so parents can pay fees online."
+      ],
+      "stack": "Next.js, TypeScript, Supabase (PostgreSQL), Express.js, Socket.IO, AES-256, PayMongo",
+      "aside": "",
+      "featured": "",
+      "short": "",
+      "tab": "STEMulate"
+    },
+    {
+      "name": "IOC Enricher: Threat Intelligence Tool",
+      "icon": "ioc",
+      "demo": "ioc",
+      "role": "Developer",
+      "dates": "Apr 2026",
+      "event": "",
+      "award": "",
+      "line": "Paste in alert text and get every IP, domain and hash checked against threat intelligence sources in one step.",
+      "points": [
+        "A command-line tool that uses regular expressions to pull IP addresses, domains and MD5/SHA hashes out of alert text, then looks each one up on VirusTotal, AbuseIPDB and Shodan, so an analyst can triage indicators in one step.",
+        "Reports in JSON, Markdown and Word (DOCX), so findings can be attached to a ticket or shared with non-technical managers."
+      ],
+      "stack": "Python, regular expressions, VirusTotal API, AbuseIPDB API, Shodan API, DOCX/Markdown/JSON reporting",
+      "aside": "",
+      "featured": "",
+      "short": "",
+      "tab": "IOC Enricher"
+    },
+    {
+      "name": "Help Out, Reach Out: CSR Volunteer Matching Platform",
+      "icon": "hands",
+      "demo": "",
+      "role": "Team Lead and Full-Stack Developer",
+      "dates": "Oct to Nov 2025",
+      "event": "",
+      "award": "",
+      "line": "Matches company volunteers with people who need help.",
+      "points": [
+        "A volunteer matching platform with separate menus for CSR representatives, people in need, and admins.",
+        "PHPUnit tests running in GitHub Actions.",
+        "Led weekly sprints and updated features after client feedback, so each release matched what users asked for."
+      ],
+      "stack": "PHP, MySQL, object-oriented programming (boundary-control-entity design), PHPUnit, GitHub Actions",
+      "aside": "",
+      "featured": "",
+      "short": "",
+      "tab": "Help Out"
+    },
+    {
+      "name": "Shadow AI Data Leakage Prevention Prototype",
+      "icon": "shadow",
+      "demo": "",
+      "role": "Team member",
+      "dates": "2026",
+      "event": "Singapore Cybersecurity Camp 2026, group hackathon",
+      "award": "Best Solution",
+      "line": "A proxy that stops staff from pasting confidential data into personal AI chatbots.",
+      "points": [
+        "A proxy that screens prompts sent to AI chatbots like ChatGPT and Claude, blocks unapproved AI services and confidential keywords, and alerts admins, so companies can let staff use AI safely without leaking sensitive data."
+      ],
+      "stack": "Python, mitmproxy",
+      "aside": "",
+      "featured": "yes",
+      "short": "Shadow AI DLP",
+      "tab": "Shadow AI"
+    }
+  ],
+  "awards": [
+    {
+      "year": "2026",
+      "result": "Best Entrepreneurial Award",
+      "event": "SIM ITC HackXperience",
+      "note": "For PolicyLens."
+    },
+    {
+      "year": "2026",
+      "result": "Runner-Up, Friction to Flow Track",
+      "event": "SIM ITC HackXperience",
+      "note": "For PolicyLens, judged on technical execution."
+    },
+    {
+      "year": "2026",
+      "result": "Best Solution, Group Hackathon",
+      "event": "Singapore Cybersecurity Camp",
+      "note": "For the Shadow AI data leakage prevention prototype. The prize was a CREST exam voucher."
+    }
+  ],
+  "skills": [
+    {
+      "group": "Languages",
+      "items": [
+        "Python",
+        "TypeScript",
+        "JavaScript",
+        "PHP",
+        "SQL",
+        "Java",
+        "C",
+        "C++",
+        "Bash",
+        "HTML/CSS"
+      ]
+    },
+    {
+      "group": "Frameworks",
+      "items": [
+        "React",
+        "Next.js",
+        "React Native",
+        "Expo",
+        "Node.js",
+        "Express.js",
+        "FastAPI",
+        "Socket.IO",
+        "WebSockets"
+      ]
+    },
+    {
+      "group": "Data and platforms",
+      "items": [
+        "PostgreSQL",
+        "Supabase",
+        "MySQL",
+        "MongoDB",
+        "Firebase",
+        "Redis",
+        "Azure",
+        "Railway",
+        "Vercel",
+        "JWT"
+      ]
+    },
+    {
+      "group": "AI and LLMs",
+      "items": [
+        "Azure AI Foundry (GPT-4o)",
+        "Ollama/Mistral",
+        "Gemini",
+        "Groq",
+        "Whisper STT",
+        "ElevenLabs TTS",
+        "DeepFace",
+        "RAG",
+        "pgvector",
+        "OpenAI embeddings"
+      ]
+    },
+    {
+      "group": "Security tools",
+      "items": [
+        "Wireshark",
+        "mitmproxy",
+        "Docker",
+        "Linux",
+        "VMware",
+        "VirtualBox",
+        "Cisco Packet Tracer",
+        "Playwright"
+      ]
+    },
+    {
+      "group": "Threat intel",
+      "items": [
+        "VirusTotal",
+        "AbuseIPDB",
+        "Shodan",
+        "URLScan.io",
+        "Google Safe Browsing",
+        "URLhaus"
+      ]
+    },
+    {
+      "group": "Tools",
+      "items": [
+        "Docker Compose",
+        "Git/GitHub/GitLab",
+        "PHPUnit",
+        "Claude",
+        "Cursor"
+      ]
+    },
+    {
+      "group": "Practices",
+      "items": [
+        "CI/CD (GitHub Actions, GitLab CI)",
+        "Agile/Scrum",
+        "Test-Driven Development",
+        "Unit Testing",
+        "REST API Design",
+        "Responsive Design"
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "id": "watch",
+      "note": "I like to tell the time.|Analog watches are nice to look at."
+    },
+    {
+      "id": "sketchbook",
+      "note": "Writing stuff down is an effective way to recall."
+    },
+    {
+      "id": "bottle",
+      "note": "My favourite dose of sugar."
+    },
+    {
+      "id": "usb",
+      "note": "The tape label was a rush job. My GitHub is tidier, promise."
+    },
+    {
+      "id": "gum",
+      "note": "One stick per merge conflict.|The pack empties faster than I would like."
+    },
+    {
+      "id": "mints",
+      "note": "Fresh breath for stand-ups."
+    },
+    {
+      "id": "keycap",
+      "note": "Go on, click it. Nobody is counting.|It is quieter than my actual keyboard."
+    }
+  ],
+  "sketches": [],
+  "whiteboard": {
+    "modes": [
+      {
+        "id": "solo",
+        "label": "Solo",
+        "title": "How I build on my own",
+        "case": "IOC Enricher",
+        "steps": [
+          {
+            "t": "Understand",
+            "n": "What's the actual problem, and who has it?"
+          },
+          {
+            "t": "Sketch",
+            "n": "Inputs, outputs, edge cases on paper first"
+          },
+          {
+            "t": "Spike",
+            "n": "Smallest thing that proves the risky part works"
+          },
+          {
+            "t": "Build",
+            "n": "Small commits, one feature at a time"
+          },
+          {
+            "t": "Test",
+            "n": "Break it on purpose: bad input, API down, rate limits",
+            "x": {
+              "label": "Edge case",
+              "text": "IOC Enricher: what if VirusTotal, AbuseIPDB or Shodan is down?"
+            }
+          },
+          {
+            "t": "Write it up",
+            "n": "README, report, what I'd do next"
+          }
+        ]
+      },
+      {
+        "id": "lead",
+        "label": "Team lead",
+        "title": "How I lead a team",
+        "case": "Scure",
+        "steps": [
+          {
+            "t": "Kickoff",
+            "n": "Agree the goal, scope and what \"done\" means"
+          },
+          {
+            "t": "Break it down",
+            "n": "Tasks on a board, sized small, with owners",
+            "x": {
+              "label": "Task breakdown",
+              "text": "Scure: QR scan, threat engine, sandbox, verdict, auth"
+            }
+          },
+          {
+            "t": "Set the rules",
+            "n": "Branches, small PRs, review before merge"
+          },
+          {
+            "t": "Check in",
+            "n": "Short stand-ups, and unblock people first"
+          },
+          {
+            "t": "Review and integrate",
+            "n": "PR reviews, pull often, fix conflicts early"
+          },
+          {
+            "t": "Demo and retro",
+            "n": "Show it, then what to keep and change",
+            "x": {
+              "label": "Retro",
+              "text": "Scure: changed features after user testing and advisor feedback"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "intercom": [
+    {
+      "id": "ask",
+      "a": [
+        {
+          "t": "What do you do?",
+          "say": "I'm a Computer Science graduate building secure software, AI tools and threat detection."
+        },
+        {
+          "t": "What roles are you after?",
+          "say": "Software engineering, AI engineering, or cybersecurity and SOC roles. Hint hint."
+        },
+        {
+          "t": "Where are you based?",
+          "say": "Singapore! Right here at this booth."
+        },
+        {
+          "t": "Can I see your projects?",
+          "say": "Yes please! Each case file in the box is one project. Pull one out.",
+          "go": "files"
+        },
+        {
+          "t": "How do you work?",
+          "say": "My process is on the wall. Look up.",
+          "go": "wall"
+        },
+        {
+          "t": "Got a short version?",
+          "say": "Coming right up. Printing my record!",
+          "go": "print"
+        },
+        {
+          "t": "Can you show me around?",
+          "say": "Sure, follow me!",
+          "go": "tour"
+        },
+        {
+          "t": "How do I reach you?",
+          "say": "Tear the contact slip off my record. I'd love to hear from you!",
+          "go": "contact"
+        }
+      ]
+    },
+    {
+      "id": "tour",
+      "next": "Next",
+      "skip": "Skip tour",
+      "steps": [
+        {
+          "at": "passport",
+          "say": "My papers! Go on, open them. Stamp them too, if you like."
+        },
+        {
+          "at": "files",
+          "say": "Case files, one per project. Pull one out and have a read."
+        },
+        {
+          "at": "drawers",
+          "say": "Skills in this drawer, my odds and ends in that one. Snooping allowed."
+        },
+        {
+          "at": "up",
+          "say": "That marker belongs on my whiteboard. Put it back and look up."
+        },
+        {
+          "at": "printer",
+          "say": "Short on time? The printer does the 60-second version."
+        },
+        {
+          "at": "stamps",
+          "say": "Approve or deny. No pressure!"
+        }
+      ]
+    }
+  ]
+}
