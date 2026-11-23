@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "build:artifact": "python3 build.py"
+    "build:artifact": "python3 build.py",
+    "art": "python3 tools/make_art.py"
   },
   "devDependencies": {
     "vite": "^6.4.1"
